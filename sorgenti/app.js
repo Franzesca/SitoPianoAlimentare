@@ -14,7 +14,7 @@ let stato = {
   grp:'tipo', filtro:'tutti', passo:'dispensa',
   sel:{}, modiBase:{}, hoGia:{}, preso:{}, pesi:[], pesoUid:null, aperti:{}, extra:[],
   scorte:{ingredienti:{}, basi:{}}, importanza:{ingredienti:{}, basi:{}}, pastiExtra:{},
-  mostraArchiviati:false
+  mostraArchiviati:false, wishlist:[]
 };
 let modificaAperta = null; // id del pasto in modifica, solo locale, non sincronizzato
 function salvaLocale(){
@@ -98,6 +98,20 @@ function osservaImportanza(){
     stato.importanza.basi = r.basi || {};
     renderTutto();
   }, err => erroreSync('importanza', err));
+}
+
+function osservaWishlist(){
+  const q = query(collection(db, 'households', HOUSEHOLD_ID, 'wishlist'), orderBy('creatoIl'));
+  onSnapshot(q, snap => {
+    stato.wishlist = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderWishlist();
+  }, err => erroreSync('wishlist', err));
+}
+function aggiungiWishlist(nome, link, nota){
+  addDoc(collection(db, 'households', HOUSEHOLD_ID, 'wishlist'), { nome, link, nota, creatoIl: Date.now(), creatoDa: UID });
+}
+function rimuoviWishlist(id){
+  deleteDoc(doc(db, 'households', HOUSEHOLD_ID, 'wishlist', id));
 }
 
 function impostaPastoExtra(pastoId, campi){
@@ -662,6 +676,27 @@ function renderScorte(){
 }
 
 /* ==========================================================================
+   VISTA · WISHLIST (pasti da provare)
+   ========================================================================== */
+function renderWishlist(){
+  const c = $('#wishlist-corpo');
+  if (!c) return;
+  if (!stato.wishlist.length){
+    c.innerHTML = `<div class="vuoto">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.35-9.5-8.8C1 8.5 3 5 6.5 5c2 0 3.5 1.3 4 2.7C11 6.3 12.5 5 14.5 5 18 5 20 8.5 18.5 12.2 16 16.65 12 21 12 21z"/></svg>
+      <p>Ancora vuota. Aggiungi qui le ricette che vuoi provare.</p></div>`;
+  } else {
+    c.innerHTML = `<div class="rep">${stato.wishlist.map(w => `<div class="voce" style="cursor:default;align-items:flex-start">
+      <span class="n">${esc(w.nome)}
+        ${w.link ? `<br><a href="${esc(w.link)}" target="_blank" rel="noopener">${esc(w.link)}</a>` : ''}
+        ${w.nota ? `<small>${esc(w.nota)}</small>` : ''}
+      </span>
+      <button class="q" data-del-wish="${w.id}" style="background:none;border:0;cursor:pointer;font-size:17px;color:var(--fumo)" aria-label="Rimuovi">×</button>
+    </div>`).join('')}</div>`;
+  }
+}
+
+/* ==========================================================================
    VISTA · PESO
    ========================================================================== */
 function renderPeso(){
@@ -732,7 +767,7 @@ function verdetto(p){
    ========================================================================== */
 function renderTutto(){
   ricalcola();
-  renderCatalogo(); renderLista(); renderSpesa(); renderBasi(); renderPeso(); renderScorte();
+  renderCatalogo(); renderLista(); renderSpesa(); renderBasi(); renderPeso(); renderScorte(); renderWishlist();
   const n = nPorzioni();
   $('#b-lista').textContent = n ? String(n) : '';
 }
@@ -851,6 +886,18 @@ document.addEventListener('click', e => {
     renderCatalogo(); salvaLocale(); return;
   }
 
+  if (t.closest('#wish-add')){
+    const nome = ($('#wish-nome').value || '').trim();
+    if (!nome) { toast('Serve almeno un nome'); return; }
+    const link = ($('#wish-link').value || '').trim();
+    const nota = ($('#wish-nota').value || '').trim();
+    aggiungiWishlist(nome, link, nota);
+    $('#wish-nome').value = ''; $('#wish-link').value = ''; $('#wish-nota').value = '';
+    return;
+  }
+  const delWish = t.closest('[data-del-wish]');
+  if (delWish){ rimuoviWishlist(delWish.dataset.delWish); return; }
+
   if (t.closest('#carica-settimana')){
     PASTI.forEach(p => stato.sel[p.id] = 2);
     renderTutto(); salvaCondiviso(); toast('Settimana intera caricata: 27 pasti'); vaiA('lista'); return;
@@ -954,4 +1001,5 @@ quandoPronto(() => {
   osservaScorte();
   osservaImportanza();
   osservaPastiExtra();
+  osservaWishlist();
 });

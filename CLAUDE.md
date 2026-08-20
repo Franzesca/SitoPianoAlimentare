@@ -67,6 +67,29 @@ fonte. Il peso resta personale, attribuito automaticamente a chi è loggato.
 - `localStorage['dietacosi.v1']` (il vecchio formato) resta leggibile solo per la
   migrazione una tantum al primo accesso — non è più scritto da nessuna parte.
 
+### Scorte, archiviazione, ricette proprie (dal 2026-08-21)
+
+`PASTI`/`BASI`/`ING` restano statici da `dati.js` — le funzionalità sotto vivono
+tutte come override/aggiunte in Firestore, per household, e si fondono con i
+dati statici solo a runtime in `sorgenti/app.js`:
+
+- `households/{id}/scorte/corrente` — dispensa virtuale (`ingredienti`/`basi`,
+  booleano acceso/spento). `households/{id}/importanza/corrente` — override
+  per-ingrediente del livello (`fondamentale`/`medio`/`opzionale`); default
+  calcolato dal reparto se non sovrascritto (`importanzaDefault()` in app.js).
+- `households/{id}/pastiExtra/{pastoId}` — override leggeri su un pasto
+  esistente (`nome`, `tempo`, `difficolta`, `nota`, `archiviato`), letti da
+  `pastoEffettivo(p)`. Un pasto senza documento qui usa `dati.js` così com'è.
+- `households/{id}/ricetteExtra/{autoId}` — ricette create da zero dal form
+  "+ Nuova ricetta" in Pasti. Stessa forma di un pasto di `dati.js` (`ing`,
+  `val`, ecc.) più `mia:true`. `tuttiIPasti()` = `PASTI` + queste, usato
+  ovunque al posto di `PASTI` diretto (catalogo, lista, calcolo, Scorte) —
+  eccetto "Carica la settimana intera", che resta scoped ai soli 27 originali.
+  Non hanno un giorno fisso (`g` assente); in "raggruppa per giorno" finiscono
+  in "Senza giorno".
+- `households/{id}/wishlist/{autoId}` — semplici promemoria (`nome`, `link`,
+  `nota`), non sono pasti veri: niente ingredienti, non entrano nel calcolo.
+
 ## Regole del modello dati
 
 - Le quantità nei pasti sono **per persona**, in grammi salvo unità `pz` — lei e lui

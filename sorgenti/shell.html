@@ -175,6 +175,18 @@ input:focus{outline:2px solid var(--accento);outline-offset:-1px}
 .modifica-form{margin-top:12px;padding-top:12px;border-top:1px solid var(--bordo)}
 .modifica-form input[type=text],.modifica-form input[type=number]{width:100%}
 
+/* ---------- form nuova ricetta ---------- */
+.ing-riga{display:flex;gap:6px;margin-top:6px;align-items:center}
+.ing-riga select.ing-tipo{flex:0 0 100px;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);
+  border-radius:9px;padding:9px 6px;font-family:inherit;font-size:13px}
+.ing-campo{flex:1;min-width:0}
+.ing-campo input,.ing-campo select{width:100%;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);
+  border-radius:9px;padding:9px 10px;font-family:inherit;font-size:14px}
+.ing-riga .ing-q{flex:0 0 64px;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);
+  border-radius:9px;padding:9px 8px;font-family:inherit;font-size:14px}
+.ing-riga .ing-rimuovi{flex:0 0 auto;background:none;border:0;color:var(--fumo);cursor:pointer;font-size:19px;padding:0 4px;line-height:1}
+.ing-riga .ing-rimuovi:hover{color:var(--harissa)}
+
 /* ---------- basi ---------- */
 .base-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .qta-base{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fumo);margin-top:5px}
@@ -328,7 +340,48 @@ ol.passi li{margin-bottom:6px}
     <div class="riga-btn">
       <button class="btn" id="carica-settimana">CARICA LA SETTIMANA INTERA</button>
       <button class="btn ghost" id="svuota-sel">SVUOTA LA SELEZIONE</button>
+      <button class="btn ghost" id="nuova-ricetta-toggle">+ NUOVA RICETTA</button>
     </div>
+
+    <div class="card" id="nuova-ricetta" hidden>
+      <div class="card-t">Nuova ricetta</div>
+      <input type="text" id="nr-nome" placeholder="Nome del piatto" style="margin-top:10px">
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <select id="nr-tipo" style="flex:1;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;padding:10px;font-family:inherit;font-size:15px">
+          <option value="colazione">Colazione</option>
+          <option value="pranzo">Pranzo</option>
+          <option value="cena">Cena</option>
+          <option value="spuntino">Spuntino</option>
+        </select>
+        <input type="number" id="nr-tempo" placeholder="Minuti" style="flex:1">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <select id="nr-difficolta" style="flex:1;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;padding:10px;font-family:inherit;font-size:15px">
+          <option value="">Difficoltà…</option>
+          <option value="facile">Facile</option>
+          <option value="media">Media</option>
+          <option value="difficile">Difficile</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input type="number" id="nr-kcal" placeholder="kcal (tua stima, facoltativo)" style="flex:1">
+        <input type="number" id="nr-prot" placeholder="g proteine (facoltativo)" style="flex:1">
+      </div>
+
+      <div class="eyebrow" style="margin-top:18px">Ingredienti</div>
+      <div id="nr-ingredienti" style="margin-top:8px"></div>
+      <button type="button" class="btn ghost" id="nr-add-riga" style="margin-top:8px">+ INGREDIENTE</button>
+
+      <textarea id="nr-proc" placeholder="Procedura (facoltativa)" style="margin-top:14px;width:100%;min-height:70px;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;padding:10px;font-family:inherit;font-size:15px"></textarea>
+      <textarea id="nr-nota" placeholder="Nota (facoltativa)" style="margin-top:8px;width:100%;min-height:50px;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;padding:10px;font-family:inherit;font-size:15px"></textarea>
+
+      <div class="riga-btn">
+        <button class="btn" id="nr-salva">SALVA RICETTA</button>
+        <button class="btn ghost" id="nr-annulla">ANNULLA</button>
+      </div>
+    </div>
+    <datalist id="lista-ingredienti"></datalist>
+
     <div id="catalogo"></div>
   </section>
 

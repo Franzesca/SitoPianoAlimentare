@@ -7,6 +7,11 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const BASE_BY_ID = {}; BASI.forEach(b => BASE_BY_ID[b.id] = b);
 const PASTO_BY_ID = {}; PASTI.forEach(p => PASTO_BY_ID[p.id] = p);
 const TIPO_LABEL = Object.fromEntries(TIPI);
+const tuttiIPasti = () => PASTI.concat(stato.ricetteExtra);
+function aggiornaPastoById(){
+  Object.keys(PASTO_BY_ID).forEach(k => { if (PASTO_BY_ID[k].mia) delete PASTO_BY_ID[k]; });
+  stato.ricetteExtra.forEach(p => PASTO_BY_ID[p.id] = p);
+}
 
 /* ---------- stato + persistenza ---------- */
 const CHIAVE_UI = 'dietacosi.ui.v1';
@@ -14,7 +19,7 @@ let stato = {
   grp:'tipo', filtro:'tutti', passo:'dispensa',
   sel:{}, modiBase:{}, hoGia:{}, preso:{}, pesi:[], pesoUid:null, aperti:{}, extra:[],
   scorte:{ingredienti:{}, basi:{}}, importanza:{ingredienti:{}, basi:{}}, pastiExtra:{},
-  mostraArchiviati:false, wishlist:[]
+  mostraArchiviati:false, wishlist:[], ricetteExtra:[]
 };
 let modificaAperta = null; // id del pasto in modifica, solo locale, non sincronizzato
 function salvaLocale(){
@@ -98,6 +103,20 @@ function osservaImportanza(){
     stato.importanza.basi = r.basi || {};
     renderTutto();
   }, err => erroreSync('importanza', err));
+}
+
+function osservaRicetteExtra(){
+  onSnapshot(collection(db, 'households', HOUSEHOLD_ID, 'ricetteExtra'), snap => {
+    stato.ricetteExtra = snap.docs.map(d => Object.assign({ id: d.id, mia: true }, d.data()));
+    aggiornaPastoById();
+    renderTutto();
+  }, err => erroreSync('ricette extra', err));
+}
+function aggiungiRicetta(ricetta){
+  return addDoc(collection(db, 'households', HOUSEHOLD_ID, 'ricetteExtra'), Object.assign({ creatoDa: UID, creatoIl: Date.now() }, ricetta));
+}
+function eliminaRicetta(id){
+  deleteDoc(doc(db, 'households', HOUSEHOLD_ID, 'ricetteExtra', id));
 }
 
 function osservaWishlist(){
@@ -250,7 +269,7 @@ const nPasti    = () => Object.values(stato.sel).filter(n => (n||0) > 0).length;
 /* ---------- calcolo corrente ---------- */
 let CALC = null;
 function ricalcola(){
-  CALC = calcola(stato.sel, stato.modiBase, {ING, BASI, PASTI});
+  CALC = calcola(stato.sel, stato.modiBase, {ING, BASI, PASTI: tuttiIPasti()});
   return CALC;
 }
 function vociSpesa(){                     // ingredienti ordinati per reparto
@@ -323,7 +342,8 @@ function schedaPasto(p){
         ${pe.tempo ? `<span class="tag tempo">${pe.tempo} min</span>` : ''}
         ${pe.difficolta ? `<span class="tag diff-${pe.difficolta}">${esc(pe.difficolta)}</span>` : ''}
         <span class="tag t-${p.tipo}">${TIPO_LABEL[p.tipo]}</span>
-        <span class="tag">${GIORNI[p.g]}</span>
+        ${p.g != null ? `<span class="tag">${GIORNI[p.g]}</span>` : ''}
+        ${p.mia ? '<span class="tag" style="background:rgba(143,181,116,.16);color:var(--pistacchio)">tua</span>' : ''}
         ${p.nuovo ? '<span class="tag" style="background:rgba(232,163,61,.16);color:var(--curcuma)">nuovo</span>' : ''}
         ${basi.map(b => `<span class="tag base">${esc(BASE_BY_ID[b].breve)}</span>`).join('')}
       </div>
@@ -342,7 +362,9 @@ function schedaPasto(p){
       ${modificaForm}
       <div class="riga-btn">
         <button class="btn ghost" data-cucinato="${p.id}">L'HO CUCINATO</button>
-        <button class="btn ghost" data-archivia="${p.id}">${pe.archiviato ? 'DISARCHIVIA' : 'ARCHIVIA'}</button>
+        ${p.mia
+          ? `<button class="btn ghost" data-elimina-ricetta="${p.id}">ELIMINA</button>`
+          : `<button class="btn ghost" data-archivia="${p.id}">${pe.archiviato ? 'DISARCHIVIA' : 'ARCHIVIA'}</button>`}
         <button class="btn ghost" data-modifica="${p.id}">${inModifica ? 'CHIUDI' : 'MODIFICA'}</button>
       </div>
     </div>
@@ -351,7 +373,8 @@ function schedaPasto(p){
 
 function renderCatalogo(){
   const q = ($('#cerca').value || '').trim().toLowerCase();
-  let lista = PASTI.filter(p => {
+  const tutti = tuttiIPasti();
+  let lista = tutti.filter(p => {
     const pe = pastoEffettivo(p);
     if (!!pe.archiviato !== !!stato.mostraArchiviati) return false;
     if (stato.filtro !== 'tutti' && p.tipo !== stato.filtro) return false;
@@ -364,6 +387,7 @@ function renderCatalogo(){
   let gruppi;
   if (stato.grp === 'giorno'){
     gruppi = GIORNI.map((g,i) => [g, lista.filter(p => p.g === i)]);
+    gruppi.push(['Senza giorno', lista.filter(p => p.g == null)]);
   } else if (stato.grp === 'base'){
     const m = new Map();
     BASI.forEach(b => m.set(b.nome, []));
@@ -389,9 +413,9 @@ function renderCatalogo(){
 
   $('#pasti-sub').textContent = stato.mostraArchiviati
     ? `${lista.length} pasti archiviati: disarchivia quello che vuoi rifare.`
-    : (lista.length === PASTI.length
-      ? `${PASTI.length} pasti, nessun giorno obbligato`
-      : `${lista.length} pasti su ${PASTI.length}`)
+    : (lista.length === tutti.length
+      ? `${tutti.length} pasti, nessun giorno obbligato`
+      : `${lista.length} pasti su ${tutti.length}`)
       + ': scegli quelli che vuoi cucinare e la lista fa il resto.';
   $('#vedi-archiviati').textContent = stato.mostraArchiviati ? 'Torna al catalogo' : 'Vedi archiviati';
   $('#catalogo').innerHTML = html || `<div class="vuoto">
@@ -413,7 +437,7 @@ function renderLista(){
     return;
   }
   const v = CALC.val;
-  const colazioni = PASTI.filter(p => p.tipo === 'colazione')
+  const colazioni = tuttiIPasti().filter(p => p.tipo === 'colazione')
     .reduce((a,p) => a + (stato.sel[p.id]||0), 0);
 
   const mediaBlocco = () => {
@@ -432,7 +456,7 @@ function renderLista(){
       </div></div>`;
   };
 
-  const gruppi = TIPI.map(([k,label]) => [label, PASTI.filter(p => {
+  const gruppi = TIPI.map(([k,label]) => [label, tuttiIPasti().filter(p => {
     return !pastoEffettivo(p).archiviato && p.tipo === k && (stato.sel[p.id]||0) > 0;
   })]).filter(([,ps]) => ps.length);
 
@@ -644,7 +668,7 @@ function renderScorte(){
   const c = $('#scorte-corpo');
   if (!c) return;
   const puoi = [], quasi = [];
-  PASTI.forEach(p => {
+  tuttiIPasti().forEach(p => {
     if (pastoEffettivo(p).archiviato) return;
     const mancano = pastoFattibile(p);
     if (mancano === null) return;
@@ -673,6 +697,27 @@ function renderScorte(){
     ${BASI.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'it')).map(b => rigaScorta(b.id, true)).join('')}</div>`;
 
   c.innerHTML = html;
+}
+
+/* ==========================================================================
+   FORM · NUOVA RICETTA
+   ========================================================================== */
+function htmlRigaIngrediente(){
+  return `<div class="ing-riga">
+    <select class="ing-tipo">
+      <option value="n">Ingrediente</option>
+      <option value="b">Base</option>
+    </select>
+    <span class="ing-campo"><input type="text" class="ing-nome" list="lista-ingredienti" placeholder="Nome"></span>
+    <input type="number" class="ing-q" placeholder="g">
+    <button type="button" class="ing-rimuovi" aria-label="Rimuovi">×</button>
+  </div>`;
+}
+function svuotaFormRicetta(){
+  $('#nuova-ricetta').hidden = true;
+  $('#nr-ingredienti').innerHTML = '';
+  ['nr-nome','nr-tempo','nr-kcal','nr-prot','nr-proc','nr-nota'].forEach(id => { $('#'+id).value = ''; });
+  $('#nr-difficolta').value = ''; $('#nr-tipo').value = 'colazione';
 }
 
 /* ==========================================================================
@@ -886,6 +931,57 @@ document.addEventListener('click', e => {
     renderCatalogo(); salvaLocale(); return;
   }
 
+  if (t.closest('#nuova-ricetta-toggle')){
+    const el = $('#nuova-ricetta');
+    el.hidden = !el.hidden;
+    if (!el.hidden && !$('#nr-ingredienti').children.length) $('#nr-ingredienti').insertAdjacentHTML('beforeend', htmlRigaIngrediente());
+    return;
+  }
+  if (t.closest('#nr-annulla')){ svuotaFormRicetta(); return; }
+  if (t.closest('#nr-add-riga')){
+    $('#nr-ingredienti').insertAdjacentHTML('beforeend', htmlRigaIngrediente());
+    return;
+  }
+  const rimuoviRiga = t.closest('.ing-rimuovi');
+  if (rimuoviRiga){ rimuoviRiga.closest('.ing-riga').remove(); return; }
+  if (t.closest('#nr-salva')){
+    const nome = ($('#nr-nome').value || '').trim();
+    if (!nome){ toast('Serve almeno un nome'); return; }
+    const tipo = $('#nr-tipo').value;
+    const tempo = parseInt($('#nr-tempo').value, 10);
+    const difficolta = $('#nr-difficolta').value;
+    const kcal = parseFloat($('#nr-kcal').value) || 0;
+    const prot = parseFloat($('#nr-prot').value) || 0;
+    const proc = ($('#nr-proc').value || '').trim();
+    const nota = ($('#nr-nota').value || '').trim();
+    const ing = [];
+    $$('#nr-ingredienti .ing-riga').forEach(riga => {
+      const tipoRiga = riga.querySelector('.ing-tipo').value;
+      const q = parseFloat(riga.querySelector('.ing-q').value) || 0;
+      if (!q) return;
+      if (tipoRiga === 'b'){
+        const bSel = riga.querySelector('.ing-base');
+        if (bSel) ing.push({ b: bSel.value, q });
+      } else {
+        const nSel = riga.querySelector('.ing-nome');
+        const nomeIngRiga = nSel ? nSel.value.trim() : '';
+        if (nomeIngRiga) ing.push({ n: nomeIngRiga, q });
+      }
+    });
+    if (!ing.length){ toast('Aggiungi almeno un ingrediente con quantità'); return; }
+    const ricetta = { nome, tipo, val: [kcal, prot], ing };
+    if (!isNaN(tempo)) ricetta.tempo = tempo;
+    if (difficolta) ricetta.difficolta = difficolta;
+    if (proc) ricetta.proc = proc;
+    if (nota) ricetta.nota = nota;
+    aggiungiRicetta(ricetta);
+    svuotaFormRicetta();
+    toast('Ricetta aggiunta');
+    return;
+  }
+  const eliminaRic = t.closest('[data-elimina-ricetta]');
+  if (eliminaRic){ eliminaRicetta(eliminaRic.dataset.eliminaRicetta); return; }
+
   if (t.closest('#wish-add')){
     const nome = ($('#wish-nome').value || '').trim();
     if (!nome) { toast('Serve almeno un nome'); return; }
@@ -941,6 +1037,15 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('change', e => {
+  if (e.target.classList.contains('ing-tipo')){
+    const riga = e.target.closest('.ing-riga');
+    const campo = riga.querySelector('.ing-campo');
+    campo.innerHTML = e.target.value === 'b'
+      ? `<select class="ing-base">${BASI.map(b => `<option value="${esc(b.id)}">${esc(b.nome)}</option>`).join('')}</select>`
+      : `<input type="text" class="ing-nome" list="lista-ingredienti" placeholder="Nome">`;
+    return;
+  }
+
   const scorta = e.target.closest('[data-scorta]');
   if (scorta){
     const [tipo, nome] = scorta.dataset.scorta.split('|');
@@ -996,10 +1101,13 @@ quandoPronto(() => {
   $$('#filtro-vista button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.grp === stato.grp)));
   $$('#passo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.passo === stato.passo)));
   $('#p-data').value = new Date().toISOString().slice(0,10);
+  $('#lista-ingredienti').innerHTML = Object.keys(ING).sort((a,b)=>a.localeCompare(b,'it'))
+    .map(n => `<option value="${esc(n)}">`).join('');
   osservaCondiviso();
   osservaPesi();
   osservaScorte();
   osservaImportanza();
   osservaPastiExtra();
   osservaWishlist();
+  osservaRicetteExtra();
 });

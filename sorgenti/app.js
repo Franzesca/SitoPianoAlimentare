@@ -38,12 +38,11 @@ function salvaCondiviso(){
 }
 
 function erroreSync(dove, err){
-  console.error('DEBUG sync', dove, '| UID=', UID, '| HOUSEHOLD_ID=', HOUSEHOLD_ID, '| errore=', err);
+  console.error('Errore di sincronizzazione:', dove, err);
   toast('Errore di sincronizzazione (' + dove + '): ' + ((err && err.code) || err));
 }
 
 function osservaCondiviso(){
-  console.log('DEBUG osservaCondiviso: UID=', UID, 'HOUSEHOLD_ID=', HOUSEHOLD_ID);
   onSnapshot(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), snap => {
     const r = snap.exists() ? snap.data() : {};
     stato.sel = r.sel || {};

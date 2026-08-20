@@ -471,7 +471,6 @@ async function dopoLogin(user){
   }
   const dati = s.data();
   MIO_NOME = dati.nome || '';
-  console.log('DEBUG dopoLogin: UID=', UID, '| dati.householdId=', JSON.stringify(dati.householdId));
   if (dati.householdId){
     HOUSEHOLD_ID = dati.householdId;
     segnalaPronto();
@@ -510,7 +509,6 @@ document.getElementById('crea-famiglia').addEventListener('click', async () => {
   await setDoc(ref, { creatoDa: UID, creatoIl: Date.now() });
   await setDoc(doc(db, 'users', UID), { householdId: ref.id }, { merge: true });
   HOUSEHOLD_ID = ref.id;
-  console.log('DEBUG crea-famiglia: UID=', UID, '| nuovo HOUSEHOLD_ID=', HOUSEHOLD_ID);
   document.getElementById('codice-testo').textContent = ref.id;
   mostraGate('gate-codice');
 });
@@ -1209,12 +1207,11 @@ function salvaCondiviso(){
 }
 
 function erroreSync(dove, err){
-  console.error('DEBUG sync', dove, '| UID=', UID, '| HOUSEHOLD_ID=', HOUSEHOLD_ID, '| errore=', err);
+  console.error('Errore di sincronizzazione:', dove, err);
   toast('Errore di sincronizzazione (' + dove + '): ' + ((err && err.code) || err));
 }
 
 function osservaCondiviso(){
-  console.log('DEBUG osservaCondiviso: UID=', UID, 'HOUSEHOLD_ID=', HOUSEHOLD_ID);
   onSnapshot(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), snap => {
     const r = snap.exists() ? snap.data() : {};
     stato.sel = r.sel || {};

@@ -72,6 +72,7 @@ async function dopoLogin(user){
   }
   const dati = s.data();
   MIO_NOME = dati.nome || '';
+  console.log('DEBUG dopoLogin: UID=', UID, '| dati.householdId=', JSON.stringify(dati.householdId));
   if (dati.householdId){
     HOUSEHOLD_ID = dati.householdId;
     segnalaPronto();
@@ -110,6 +111,7 @@ document.getElementById('crea-famiglia').addEventListener('click', async () => {
   await setDoc(ref, { creatoDa: UID, creatoIl: Date.now() });
   await setDoc(doc(db, 'users', UID), { householdId: ref.id }, { merge: true });
   HOUSEHOLD_ID = ref.id;
+  console.log('DEBUG crea-famiglia: UID=', UID, '| nuovo HOUSEHOLD_ID=', HOUSEHOLD_ID);
   document.getElementById('codice-testo').textContent = ref.id;
   mostraGate('gate-codice');
 });

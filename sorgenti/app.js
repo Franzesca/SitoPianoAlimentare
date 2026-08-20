@@ -37,7 +37,13 @@ function salvaCondiviso(){
   }, 400);
 }
 
+function erroreSync(dove, err){
+  console.error('DEBUG sync', dove, '| UID=', UID, '| HOUSEHOLD_ID=', HOUSEHOLD_ID, '| errore=', err);
+  toast('Errore di sincronizzazione (' + dove + '): ' + ((err && err.code) || err));
+}
+
 function osservaCondiviso(){
+  console.log('DEBUG osservaCondiviso: UID=', UID, 'HOUSEHOLD_ID=', HOUSEHOLD_ID);
   onSnapshot(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), snap => {
     const r = snap.exists() ? snap.data() : {};
     stato.sel = r.sel || {};
@@ -47,7 +53,7 @@ function osservaCondiviso(){
     stato.extra = r.extra || [];
     renderTutto();
     controllaMigrazione();
-  });
+  }, err => erroreSync('stato condiviso', err));
 }
 
 function osservaPesi(){
@@ -55,7 +61,7 @@ function osservaPesi(){
   onSnapshot(q, snap => {
     stato.pesi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderPeso();
-  });
+  }, err => erroreSync('pesi', err));
 }
 
 let migrazioneControllata = false;

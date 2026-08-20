@@ -1,0 +1,680 @@
+/* ==========================================================================
+   UI
+   ========================================================================== */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const BASE_BY_ID = {}; BASI.forEach(b => BASE_BY_ID[b.id] = b);
+const PASTO_BY_ID = {}; PASTI.forEach(p => PASTO_BY_ID[p.id] = p);
+const TIPO_LABEL = Object.fromEntries(TIPI);
+
+/* ---------- stato + persistenza ---------- */
+const CHIAVE_UI = 'dietacosi.ui.v1';
+let stato = {
+  grp:'tipo', filtro:'tutti', passo:'dispensa',
+  sel:{}, modiBase:{}, hoGia:{}, preso:{}, pesi:[], pesoUid:null, aperti:{}, extra:[]
+};
+function salvaLocale(){
+  try {
+    const { grp, filtro, passo, aperti, pesoUid } = stato;
+    localStorage.setItem(CHIAVE_UI, JSON.stringify({ grp, filtro, passo, aperti, pesoUid }));
+  } catch(e){}
+}
+function caricaLocale(){
+  try {
+    const r = localStorage.getItem(CHIAVE_UI);
+    if (r) Object.assign(stato, JSON.parse(r));
+  } catch(e){}
+}
+
+let salvaCondivisoTimer = null;
+function salvaCondiviso(){
+  if (!HOUSEHOLD_ID) return;
+  clearTimeout(salvaCondivisoTimer);
+  salvaCondivisoTimer = setTimeout(() => {
+    const { sel, modiBase, hoGia, preso, extra } = stato;
+    setDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), { sel, modiBase, hoGia, preso, extra });
+  }, 400);
+}
+
+function osservaCondiviso(){
+  onSnapshot(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), snap => {
+    const r = snap.exists() ? snap.data() : {};
+    stato.sel = r.sel || {};
+    stato.modiBase = r.modiBase || {};
+    stato.hoGia = r.hoGia || {};
+    stato.preso = r.preso || {};
+    stato.extra = r.extra || [];
+    renderTutto();
+    controllaMigrazione();
+  });
+}
+
+function osservaPesi(){
+  const q = query(collection(db, 'households', HOUSEHOLD_ID, 'pesi'), orderBy('data'));
+  onSnapshot(q, snap => {
+    stato.pesi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderPeso();
+  });
+}
+
+let migrazioneControllata = false;
+function controllaMigrazione(){
+  if (migrazioneControllata) return;
+  migrazioneControllata = true;
+  let vecchio = null;
+  try { const r = localStorage.getItem('dietacosi.v1'); if (r) vecchio = JSON.parse(r); } catch(e){}
+  const vuoto = !Object.keys(stato.sel).length && !Object.keys(stato.hoGia).length && !Object.keys(stato.preso).length;
+  if (vecchio && vuoto) $('#migra-banner').hidden = false;
+}
+function importaDatiVecchi(){
+  let vecchio = null;
+  try { const r = localStorage.getItem('dietacosi.v1'); if (r) vecchio = JSON.parse(r); } catch(e){}
+  if (!vecchio) return;
+  let sel = vecchio.sel || {};
+  Object.keys(sel).forEach(id => { const s = sel[id]; if (s && typeof s === 'object') sel[id] = (s.lei||0)+(s.lui||0); });
+  stato.sel = sel; stato.modiBase = vecchio.modiBase||{}; stato.hoGia = vecchio.hoGia||{};
+  stato.preso = vecchio.preso||{}; stato.extra = vecchio.extra||[];
+  renderTutto(); salvaCondiviso();
+  $('#migra-banner').hidden = true;
+  toast('Dati importati');
+}
+function toast(m){
+  const t = $('#toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+/* ---------- helpers di formato ---------- */
+const nf = n => {
+  const r = Math.round(n * 10) / 10;
+  return String(r % 1 === 0 ? r : r.toFixed(1)).replace('.', ',');
+};
+const fmtG = g => g >= 1000 ? nf(Math.round(g/100)/10) + ' kg' : nf(Math.round(g)) + ' g';
+function fmtQ(i){
+  if (i.qb) return 'q.b.';
+  const v = i.q || 0;
+  if (!v) return '—';
+  if (i.b) return nf(v) + ' g';
+  const m = ING[i.n] || {u:'g'};
+  if (m.u === 'pz') return v === 0.5 ? '½' : nf(v);
+  if (m.comeSucco) return nf(v) + ' g succo';
+  return nf(v) + ' g';
+}
+function nomeIng(i){
+  if (i.b) return esc(BASE_BY_ID[i.b].nome) + '<em>base</em>';
+  let s = esc(i.n);
+  if (i.soloLei) s += '<em>solo lei</em>';
+  if (i.soloLui) s += '<em>solo lui</em>';
+  return s;
+}
+const nPorzioni = () => Object.values(stato.sel).reduce((a,n) => a + (n||0), 0);
+const nPasti    = () => Object.values(stato.sel).filter(n => (n||0) > 0).length;
+
+/* ---------- calcolo corrente ---------- */
+let CALC = null;
+function ricalcola(){
+  CALC = calcola(stato.sel, stato.modiBase, {ING, BASI, PASTI});
+  return CALC;
+}
+function vociSpesa(){                     // ingredienti ordinati per reparto
+  const out = [];
+  REPARTI.forEach(([k, label]) => {
+    const righe = Object.entries(CALC.ing)
+      .filter(([n]) => (ING[n]||{r:'dispensa'}).r === k)
+      .sort((a,b) => a[0].localeCompare(b[0], 'it'));
+    if (righe.length) out.push([k, label, righe]);
+  });
+  return out;
+}
+
+/* ==========================================================================
+   VISTA · CATALOGO
+   ========================================================================== */
+function schedaPasto(p){
+  const n = stato.sel[p.id] || 0;
+  const attivo = n > 0;
+  const aperto = !!stato.aperti[p.id];
+  const basi = [...new Set((p.ing||[]).filter(i => i.b).map(i => i.b))];
+
+  const stepper = () => `<div class="step${n?' on':''}">
+      <button data-step="${p.id}|-1" aria-label="Togli una porzione">−</button>
+      <span>${n}</span>
+      <button data-step="${p.id}|1" aria-label="Aggiungi una porzione">+</button>
+    </div>`;
+
+  const righe = (p.ing||[]).map(i => `<div class="riga">
+      <span class="ing">${nomeIng(i)}</span>
+      <span class="q${(i.q||i.qb)?'':' zero'}">${fmtQ(i)}</span>
+    </div>`).join('');
+
+  const vincolo = p.vincolo ? `<div class="vincolo">
+      <span class="eyebrow" style="color:var(--harissa)">Il vincolo · lei</span>
+      <p>${esc(p.vincolo.lei)}</p>
+      <span class="eyebrow" style="color:var(--harissa)">Lui</span>
+      <p>${esc(p.vincolo.lui)}</p>
+    </div>` : '';
+  const nota = p.nota ? `<div class="nota">${esc(p.nota)}</div>` : '';
+
+  return `<article class="pasto${attivo?' sel':''}${aperto?' aperto':''}" data-id="${p.id}">
+    <div class="p-h" data-apri="${p.id}">
+      <div class="p-top">
+        <div class="p-nome">${esc(p.nome)}</div>
+        <svg class="chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="p-meta">
+        ${p.tempo ? `<span class="tag tempo">${p.tempo} min</span>` : ''}
+        ${p.difficolta ? `<span class="tag diff-${p.difficolta}">${esc(p.difficolta)}</span>` : ''}
+        <span class="tag t-${p.tipo}">${TIPO_LABEL[p.tipo]}</span>
+        <span class="tag">${GIORNI[p.g]}</span>
+        ${p.nuovo ? '<span class="tag" style="background:rgba(232,163,61,.16);color:var(--curcuma)">nuovo</span>' : ''}
+        ${basi.map(b => `<span class="tag base">${esc(BASE_BY_ID[b].breve)}</span>`).join('')}
+      </div>
+      <div class="p-val">
+        <span class="pill"><b>${p.val[0]}</b> kcal · <b>${p.val[1]}</b> g P</span>
+      </div>
+      <div class="step-box">${stepper()}</div>
+    </div>
+    <div class="p-corpo">
+      ${p.desc ? `<p class="p-desc">${esc(p.desc)}</p>` : ''}
+      ${righe ? `<div class="gram">
+        <div class="intest"><span></span><span>Porzione</span></div>
+        ${righe}</div>` : ''}
+      ${p.proc ? `<div class="proc">${esc(p.proc)}</div>` : ''}
+      ${vincolo}${nota}
+    </div>
+  </article>`;
+}
+
+function renderCatalogo(){
+  const q = ($('#cerca').value || '').trim().toLowerCase();
+  let lista = PASTI.filter(p => {
+    if (stato.filtro !== 'tutti' && p.tipo !== stato.filtro) return false;
+    if (!q) return true;
+    const testo = [p.nome, p.desc||'', p.proc||'',
+      ...(p.ing||[]).map(i => i.b ? BASE_BY_ID[i.b].nome : i.n)].join(' ').toLowerCase();
+    return testo.includes(q);
+  });
+
+  let gruppi;
+  if (stato.grp === 'giorno'){
+    gruppi = GIORNI.map((g,i) => [g, lista.filter(p => p.g === i)]);
+  } else if (stato.grp === 'base'){
+    const m = new Map();
+    BASI.forEach(b => m.set(b.nome, []));
+    m.set('Senza basi', []);
+    lista.forEach(p => {
+      const basi = [...new Set((p.ing||[]).filter(i => i.b).map(i => BASE_BY_ID[i.b].nome))];
+      if (!basi.length) m.get('Senza basi').push(p);
+      else basi.forEach(b => m.get(b).push(p));
+    });
+    gruppi = [...m.entries()];
+  } else {
+    gruppi = TIPI.map(([k,label]) => [label, lista.filter(p => p.tipo === k)]);
+  }
+
+  const html = gruppi.filter(([,ps]) => ps.length).map(([label, ps]) => `
+    <div class="sez">
+      <div class="sez-h">
+        <h2 class="display">${esc(label)}</h2>
+        <span class="eyebrow">${ps.length} pasti</span>
+      </div>
+      ${ps.map(schedaPasto).join('')}
+    </div>`).join('');
+
+  $('#pasti-sub').textContent = (lista.length === PASTI.length
+      ? `${PASTI.length} pasti, nessun giorno obbligato`
+      : `${lista.length} pasti su ${PASTI.length}`)
+    + ': scegli quelli che vuoi cucinare e la lista fa il resto.';
+  $('#catalogo').innerHTML = html || `<div class="vuoto">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <p>Nessun pasto trovato.</p></div>`;
+}
+
+/* ==========================================================================
+   VISTA · LISTA
+   ========================================================================== */
+function renderLista(){
+  const c = $('#lista-corpo');
+  if (!nPasti()){
+    c.innerHTML = `<div class="vuoto">
+      <svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>
+      <p>La lista è vuota.<br>Vai su <b>Pasti</b> e aggiungi quello che vuoi cucinare.</p>
+      <div class="riga-btn" style="justify-content:center"><button class="btn" data-vai="pasti">SCEGLI I PASTI</button></div>
+    </div>`;
+    return;
+  }
+  const v = CALC.val;
+  const colazioni = PASTI.filter(p => p.tipo === 'colazione')
+    .reduce((a,p) => a + (stato.sel[p.id]||0), 0);
+
+  const mediaBlocco = () => {
+    const gg = colazioni;
+    if (!gg) return '';
+    const k = Math.round(v[0]/gg), p = Math.round(v[1]/gg);
+    const d = k - TARGET.kcal, dp = p - TARGET.p;
+    const col = x => x > 0 ? 'var(--harissa)' : 'var(--pistacchio)';
+    return `<div style="margin-top:9px">
+      <div class="eyebrow">Media su ${gg} giorn${gg===1?'o':'i'}</div>
+      <div class="mono" style="font-size:14px;margin-top:4px">
+        <b style="font-size:19px">${k}</b> kcal
+        <span style="color:${col(d)}">(${d>0?'+':''}${d} vs target)</span>
+        · <b style="font-size:19px">${p}</b> g P
+        <span style="color:${col(-dp)}">(${dp>0?'+':''}${dp})</span>
+      </div></div>`;
+  };
+
+  const gruppi = TIPI.map(([k,label]) => [label, PASTI.filter(p => {
+    return p.tipo === k && (stato.sel[p.id]||0) > 0;
+  })]).filter(([,ps]) => ps.length);
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Totale della lista</div>
+      <div class="mono" style="margin-top:7px;font-size:14px">
+        <span style="color:var(--curcuma)">${Math.round(v[0]).toLocaleString('it')} kcal · ${Math.round(v[1])} g P</span>
+      </div>
+      ${mediaBlocco()}
+      <p class="sub" style="font-size:12.5px;margin-top:11px">La media giornaliera conta una colazione = un giorno. Target: ${TARGET.kcal} kcal / ${TARGET.p} g P.</p>
+      <div class="riga-btn">
+        <button class="btn" data-vai="spesa">VAI ALLA DISPENSA</button>
+        <button class="btn ghost" id="svuota-sel-2">SVUOTA</button>
+      </div>
+    </div>
+    ${gruppi.map(([label, ps]) => `<div class="sez">
+      <div class="sez-h"><h2 class="display">${label}</h2><span class="eyebrow">${ps.length}</span></div>
+      ${ps.map(schedaPasto).join('')}
+    </div>`).join('')}`;
+}
+
+/* ==========================================================================
+   VISTA · DISPENSA / SPESA
+   ========================================================================== */
+function renderSpesa(){
+  const c = $('#spesa-corpo'), dispensa = stato.passo === 'dispensa';
+  $('#spesa-eyebrow').textContent = dispensa ? 'Passo 2' : 'Passo 3';
+  $('#spesa-titolo').textContent = dispensa ? 'Dispensa' : 'Spesa';
+  $('#spesa-sub').textContent = dispensa
+    ? 'Tutto quello che serve per i pasti scelti, basi comprese. Spunta quello che hai già in casa: il resto diventa la lista della spesa.'
+    : 'Quello che non hai spuntato nella dispensa. Spunta mano a mano che lo metti nel carrello.';
+
+  if (!nPasti()){
+    $('#spesa-azioni').hidden = true;
+    $('#barra').style.width = '0%';
+    c.innerHTML = `<div class="vuoto">
+      <svg viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/></svg>
+      <p>Prima scegli i pasti.</p>
+      <div class="riga-btn" style="justify-content:center"><button class="btn" data-vai="pasti">SCEGLI I PASTI</button></div>
+    </div>`;
+    return;
+  }
+  $('#spesa-azioni').hidden = false;
+
+  let tot = 0, fatti = 0;
+  const blocchi = vociSpesa().map(([k, label, righe]) => {
+    const vis = dispensa ? righe : righe.filter(([n]) => !stato.hoGia[n]);
+    if (!vis.length) return '';
+    const conta = k !== 'nc';
+    const voci = vis.map(([n, q]) => {
+      const spuntato = dispensa ? !!stato.hoGia[n] : !!stato.preso[n];
+      if (conta){ tot++; if (spuntato) fatti++; }
+      const m = ING[n] || {};
+      return `<label class="voce${spuntato?' fatta':''}">
+        <input type="checkbox" data-sp="${esc(n)}"${spuntato?' checked':''}>
+        <span class="n">${esc(n)}${m.nota ? `<small>${esc(m.nota)}</small>` : ''}</span>
+        <span class="q">${formatta(n, q, ING)}</span>
+      </label>`;
+    }).join('');
+    return `<div class="rep">
+      <div class="rep-h"><h2 class="display">${esc(label)}</h2><span class="eyebrow">${vis.length}</span></div>
+      ${voci}</div>`;
+  }).join('');
+
+  // voci fuori piano: solo nella lista della spesa
+  let extraHtml = '';
+  if (!dispensa){
+    const voci = stato.extra.map((x, i) => {
+      const k = '+' + x;
+      const spuntato = !!stato.preso[k];
+      tot++; if (spuntato) fatti++;
+      return `<label class="voce${spuntato?' fatta':''}">
+        <input type="checkbox" data-sp="${esc(k)}"${spuntato?' checked':''}>
+        <span class="n">${esc(x)}</span>
+        <button class="q" data-delx="${i}" style="background:none;border:0;cursor:pointer;font-size:17px;color:var(--fumo)" aria-label="Togli">×</button>
+      </label>`;
+    }).join('');
+    extraHtml = `<div class="rep">
+      <div class="rep-h"><h2 class="display">Fuori piano</h2><span class="eyebrow">${stato.extra.length}</span></div>
+      ${voci}
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <input type="search" id="extra-n" placeholder="Aggiungi (caffè, detersivo…)" aria-label="Voce fuori piano">
+        <button class="btn" id="extra-add" style="flex-shrink:0">AGGIUNGI</button>
+      </div></div>`;
+  }
+
+  c.innerHTML = (blocchi || `<div class="vuoto"><p>Niente da comprare: hai già tutto in dispensa.</p></div>`) + extraHtml;
+  const pct = tot ? Math.round(fatti / tot * 100) : 0;
+  $('#barra').style.width = pct + '%';
+  $('#b-spesa').textContent = dispensa ? '' : String(tot - fatti || '');
+}
+
+function testoLista(){
+  const d = new Date().toLocaleDateString('it-IT');
+  let out = (stato.passo === 'dispensa' ? 'DISPENSA' : 'LISTA DELLA SPESA') + ' — ' + d + '\n';
+  vociSpesa().forEach(([k, label, righe]) => {
+    const vis = stato.passo === 'dispensa' ? righe : righe.filter(([n]) => !stato.hoGia[n]);
+    if (!vis.length || k === 'nc') return;
+    out += '\n' + label.toUpperCase() + '\n';
+    vis.forEach(([n, q]) => {
+      const done = stato.passo === 'dispensa' ? stato.hoGia[n] : stato.preso[n];
+      out += (done ? '[x] ' : '[ ] ') + n + ' — ' + formatta(n, q, ING) + '\n';
+    });
+  });
+  if (stato.passo === 'spesa' && stato.extra.length){
+    out += '\nFUORI PIANO\n';
+    stato.extra.forEach(x => { out += (stato.preso['+'+x] ? '[x] ' : '[ ] ') + x + '\n'; });
+  }
+  return out;
+}
+
+/* ==========================================================================
+   VISTA · BASI
+   ========================================================================== */
+function renderBasi(){
+  const c = $('#basi-corpo');
+  const attive = BASI.filter(b => CALC.basi[b.id]).sort((a,b) => a.ordine - b.ordine);
+  if (!attive.length){
+    c.innerHTML = `<div class="vuoto">
+      <svg viewBox="0 0 24 24"><path d="M4 11h16v3a6 6 0 01-6 6h-4a6 6 0 01-6-6z"/><path d="M20 12h1.5a2 2 0 010 4H20"/></svg>
+      <p>Nessuna base da preparare: i pasti che hai scelto non ne usano.</p>
+      <div class="riga-btn" style="justify-content:center"><button class="btn" data-vai="pasti">SCEGLI I PASTI</button></div>
+    </div>`;
+    return;
+  }
+  const attMin = attive.reduce((a,b) => a + b.tempoAtt, 0);
+
+  c.innerHTML = `<div class="card">
+      <div class="eyebrow">Domenica</div>
+      <div class="mono" style="margin-top:6px;font-size:14px"><b style="font-size:22px">${attive.length}</b> preparazioni · <b style="font-size:22px">${attMin}</b> min di lavoro attivo</div>
+      <p class="sub" style="font-size:13px">Fai partire il sofrito per primo: è il collo di bottiglia. Legumi e pollo cuociono in parallelo mentre il sofrito riduce.</p>
+    </div>` +
+    attive.map(b => {
+      const v = CALC.basi[b.id];
+      const f = v.produci / b.resa;
+      const scarso = v.serve > b.resa;
+      return `<div class="card">
+        <div class="base-h">
+          <div style="flex:1;min-width:0">
+            <div class="eyebrow">${b.ordine} · ${b.tempoTot} min</div>
+            <div class="card-t" style="margin-top:4px">${esc(b.nome)}</div>
+            <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ~${Math.ceil(v.produci/(b.resa/b.pezzi))} pezzi` : ''}</div>
+          </div>
+        </div>
+        <div class="seg" style="margin-top:11px;max-width:300px">
+          <button data-modo="${b.id}|esatto" aria-pressed="${v.modo==='esatto'}">Quantità esatta</button>
+          <button data-modo="${b.id}|intero" aria-pressed="${v.modo==='intero'}">${v.ricette>1?v.ricette+' ricette':'Ricetta intera'}</button>
+        </div>
+        ${scarso && v.modo === 'esatto' ? `<div class="avviso">Ti serve più di una dose piena (la ricetta base rende ${b.resa} g). Le quantità qui sotto sono già riscalate: verifica che ti stiano in pentola.</div>` : ''}
+        <div class="gram" style="margin-top:12px">
+          ${b.ing.map(([n,q]) => {
+            const nome = n[0] === '@' ? BASE_BY_ID[n.slice(1)].nome + '<em>base</em>' : esc(n);
+            const m = n[0] === '@' ? {u:'g'} : (ING[n] || {u:'g'});
+            const qq = q * f;
+            const testo = m.u === 'pz' ? nf(Math.ceil(qq - 1e-9)) + ' pz' : formatta(n[0]==='@' ? 'x' : n, qq, ING).replace(/ \(.*\)/,'');
+            return `<div class="riga" style="grid-template-columns:1fr auto">
+              <span class="ing">${nome}</span><span class="q">${testo}</span></div>`;
+          }).join('')}
+        </div>
+        ${b.proc ? `<ol class="passi">${b.proc.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : ''}
+        ${(b.timer||[]).map(([nome,min]) => `<button class="timer" data-timer="${min}" data-nome="${esc(nome)}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+          ${esc(nome)} · ${min}′</button>`).join('')}
+        ${b.nota ? `<div class="nota">${esc(b.nota)}</div>` : ''}
+        <div class="qta-base" style="margin-top:11px">Frigo ${b.conserva[0]} · Freezer ${b.conserva[1]}</div>
+      </div>`;
+    }).join('');
+}
+
+let timerAttivo = null;
+function avviaTimer(btn){
+  if (timerAttivo){ clearInterval(timerAttivo.id); timerAttivo.btn.classList.remove('attivo'); timerAttivo.btn.innerHTML = timerAttivo.html; }
+  const min = +btn.dataset.timer, nome = btn.dataset.nome;
+  const html = btn.innerHTML;
+  let r = min * 60;
+  btn.classList.add('attivo');
+  const tick = () => {
+    const m = Math.floor(r/60), s = r % 60;
+    btn.textContent = nome + ' · ' + m + ':' + String(s).padStart(2,'0');
+    if (r-- <= 0){ clearInterval(id); btn.classList.remove('attivo'); btn.innerHTML = html; timerAttivo = null; toast('Tempo scaduto: ' + nome); }
+  };
+  tick();
+  const id = setInterval(tick, 1000);
+  timerAttivo = {id, btn, html};
+}
+
+/* ==========================================================================
+   VISTA · PESO
+   ========================================================================== */
+function renderPeso(){
+  const membri = {};
+  stato.pesi.forEach(x => { membri[x.uid] = x.nome || 'Utente'; });
+  membri[UID] = MIO_NOME || 'Tu';
+  if (!stato.pesoUid || !(stato.pesoUid in membri)) stato.pesoUid = UID;
+  const uid = stato.pesoUid;
+
+  $('#peso-chi').innerHTML = 'Nuova misura · ' + Object.keys(membri).map(u =>
+    `<button class="lnk-chi" data-pchi="${u}" style="background:none;border:0;cursor:pointer;font:inherit;letter-spacing:inherit;color:${u===uid?'var(--curcuma)':'var(--fumo)'}">${esc(membri[u].toUpperCase())}</button>`
+  ).join(' / ');
+
+  const p = stato.pesi.filter(x => x.uid === uid).sort((a,b) => a.data.localeCompare(b.data));
+  const c = $('#p-contenuto');
+  if (!p.length){ c.innerHTML = `<div class="vuoto"><p>Nessuna misura ancora.</p></div>`; return; }
+
+  c.innerHTML = `<div class="card">${grafico(p)}${verdetto(p)}</div>
+    <div class="card pesi-l">
+      <div class="eyebrow" style="border:0">Storico</div>
+      ${p.slice().reverse().map(x => `<div>
+        <span>${new Date(x.data).toLocaleDateString('it-IT',{day:'2-digit',month:'short'})}</span>
+        <span><b>${nf(x.kg)}</b> kg <button data-del-peso="${x.id}" aria-label="Elimina">×</button></span>
+      </div>`).join('')}
+    </div>`;
+}
+function grafico(p){
+  const W = 700, H = 190, m = {t:16, r:14, b:26, l:40};
+  const kg = p.map(x => x.kg);
+  let min = Math.min(...kg), max = Math.max(...kg);
+  if (max - min < 2){ const c = (max+min)/2; min = c-1; max = c+1; }
+  const X = i => m.l + (p.length < 2 ? (W-m.l-m.r)/2 : i*(W-m.l-m.r)/(p.length-1));
+  const Y = v => m.t + (max-v)/(max-min)*(H-m.t-m.b);
+  const linea = p.map((x,i) => `${i?'L':'M'}${X(i).toFixed(1)},${Y(x.kg).toFixed(1)}`).join('');
+  const area = p.length > 1 ? `${linea}L${X(p.length-1).toFixed(1)},${H-m.b}L${X(0).toFixed(1)},${H-m.b}Z` : '';
+  const col = 'var(--curcuma)';
+  const griglia = [0,.5,1].map(f => {
+    const v = min+(max-min)*f, y = Y(v);
+    return `<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" stroke="var(--bordo)" stroke-dasharray="3 4"/>
+      <text x="${m.l-7}" y="${y+4}" fill="var(--fumo)" font-size="11" text-anchor="end" font-family="monospace">${v.toFixed(1)}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">
+    <defs><linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${col}" stop-opacity=".26"/><stop offset="1" stop-color="${col}" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${griglia}
+    ${area ? `<path d="${area}" fill="url(#gr)"/>` : ''}
+    <path d="${linea}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round"/>
+    ${p.map((x,i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(x.kg).toFixed(1)}" r="3.4" fill="var(--pepe)" stroke="${col}" stroke-width="2"/>`).join('')}
+  </svg>`;
+}
+function verdetto(p){
+  if (p.length < 4) return `<p class="sub" style="margin-top:10px">Servono almeno 4 misure su due settimane prima che la media dica qualcosa.</p>`;
+  const meta = Math.ceil(p.length/2);
+  const a = p.slice(0, meta), b = p.slice(-meta);
+  const ma = a.reduce((s,x) => s+x.kg, 0)/a.length, mb = b.reduce((s,x) => s+x.kg, 0)/b.length;
+  const gg = (new Date(p.at(-1).data) - new Date(p[0].data))/86400000 || 7;
+  const sett = (mb-ma)/(gg/2/7 || 1);
+  let t;
+  if (sett > -0.1) t = 'La media non sta calando. Togli ~150 kcal al giorno: 40 g di riso o 20 g di pane.';
+  else if (sett < -1.2) t = 'Stai calando troppo in fretta. Aggiungi ~150 kcal: un calo rapido costa massa magra.';
+  else t = 'Sei nel range previsto. Non toccare niente.';
+  return `<div class="nota" style="margin-top:12px"><b class="mono">${sett > 0 ? '+' : ''}${sett.toFixed(2).replace('.', ',')} kg/settimana</b> — ${t}</div>`;
+}
+
+/* ==========================================================================
+   ORCHESTRAZIONE
+   ========================================================================== */
+function renderTutto(){
+  ricalcola();
+  renderCatalogo(); renderLista(); renderSpesa(); renderBasi(); renderPeso();
+  const n = nPorzioni();
+  $('#b-lista').textContent = n ? String(n) : '';
+}
+function vaiA(v){
+  $$('nav button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.v === v)));
+  $$('.vista').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ---------- eventi ---------- */
+document.addEventListener('click', e => {
+  const t = e.target;
+
+  const nav = t.closest('nav button');        if (nav){ vaiA(nav.dataset.v); return; }
+  const vai = t.closest('[data-vai]');        if (vai){ vaiA(vai.dataset.vai); return; }
+
+  const step = t.closest('[data-step]');
+  if (step){
+    e.preventDefault(); e.stopPropagation();
+    const [id, d] = step.dataset.step.split('|');
+    const n = Math.max(0, Math.min(28, (stato.sel[id]||0) + (+d)));
+    if (n) stato.sel[id] = n; else delete stato.sel[id];
+    renderTutto(); salvaCondiviso(); return;
+  }
+
+  const apri = t.closest('[data-apri]');
+  if (apri && !t.closest('.step-box')){
+    const id = apri.dataset.apri;
+    stato.aperti[id] = !stato.aperti[id];
+    $$(`.pasto[data-id="${id}"]`).forEach(el => el.classList.toggle('aperto', !!stato.aperti[id]));
+    salvaLocale(); return;
+  }
+
+  const ft = t.closest('#filtro-tipo button');
+  if (ft){ stato.filtro = ft.dataset.f;
+    $$('#filtro-tipo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === stato.filtro)));
+    renderCatalogo(); salvaLocale(); return; }
+
+  const fv = t.closest('#filtro-vista button');
+  if (fv){ stato.grp = fv.dataset.grp;
+    $$('#filtro-vista button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.grp === stato.grp)));
+    renderCatalogo(); salvaLocale(); return; }
+
+  const ps = t.closest('#passo button');
+  if (ps){ stato.passo = ps.dataset.passo;
+    $$('#passo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.passo === stato.passo)));
+    renderSpesa(); salvaLocale(); return; }
+
+  const modo = t.closest('[data-modo]');
+  if (modo){ const [id, m] = modo.dataset.modo.split('|'); stato.modiBase[id] = m; renderTutto(); salvaCondiviso(); return; }
+
+  const tim = t.closest('.timer'); if (tim){ avviaTimer(tim); return; }
+
+  const delPeso = t.closest('[data-del-peso]');
+  if (delPeso){ deleteDoc(doc(db, 'households', HOUSEHOLD_ID, 'pesi', delPeso.dataset.delPeso)); return; }
+
+  const pchi = t.closest('[data-pchi]'); if (pchi){ stato.pesoUid = pchi.dataset.pchi; renderPeso(); salvaLocale(); return; }
+
+  const migra = t.closest('[data-migra]');
+  if (migra){
+    if (migra.dataset.migra === 'si') importaDatiVecchi();
+    else $('#migra-banner').hidden = true;
+    return;
+  }
+
+  if (t.closest('#carica-settimana')){
+    PASTI.forEach(p => stato.sel[p.id] = 2);
+    renderTutto(); salvaCondiviso(); toast('Settimana intera caricata: 27 pasti'); vaiA('lista'); return;
+  }
+  if (t.closest('#svuota-sel') || t.closest('#svuota-sel-2')){
+    stato.sel = {}; stato.hoGia = {}; stato.preso = {}; renderTutto(); salvaCondiviso(); toast('Lista svuotata'); return;
+  }
+  if (t.closest('#extra-add')){
+    const v = ($('#extra-n').value || '').trim();
+    if (!v) return;
+    if (!stato.extra.includes(v)) stato.extra.push(v);
+    $('#extra-n').value = ''; renderSpesa(); salvaCondiviso(); return;
+  }
+  const dx = t.closest('[data-delx]');
+  if (dx){ const i = +dx.dataset.delx;
+    delete stato.preso['+' + stato.extra[i]];
+    stato.extra.splice(i,1); renderSpesa(); salvaCondiviso(); return; }
+
+  if (t.closest('#reset-spunte')){
+    if (stato.passo === 'dispensa') stato.hoGia = {}; else stato.preso = {};
+    renderSpesa(); salvaCondiviso(); toast('Spunte azzerate'); return;
+  }
+  if (t.closest('#copia')){
+    const testo = testoLista();
+    (navigator.clipboard ? navigator.clipboard.writeText(testo) : Promise.reject())
+      .then(() => toast('Lista copiata negli appunti'))
+      .catch(() => { const ta = document.createElement('textarea'); ta.value = testo;
+        document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); toast('Lista copiata'); }catch(_){ toast('Copia non riuscita'); }
+        ta.remove(); });
+    return;
+  }
+  if (t.closest('#stampa')){ window.print(); return; }
+
+  if (t.closest('#p-salva')){
+    const d = $('#p-data').value, kg = parseFloat($('#p-kg').value);
+    if (!d || !kg){ toast('Serve data e peso'); return; }
+    addDoc(collection(db, 'households', HOUSEHOLD_ID, 'pesi'), { uid: UID, nome: MIO_NOME, data: d, kg });
+    $('#p-kg').value = ''; toast('Misura salvata'); return;
+  }
+});
+
+document.addEventListener('change', e => {
+  const sp = e.target.closest('[data-sp]');
+  if (!sp) return;
+  const n = sp.dataset.sp;
+  const mappa = stato.passo === 'dispensa' ? stato.hoGia : stato.preso;
+  if (sp.checked) mappa[n] = true; else delete mappa[n];
+  if (stato.passo === 'dispensa' && sp.checked) delete stato.preso[n];
+  sp.closest('.voce').classList.toggle('fatta', sp.checked);
+  // ricalcola solo la barra, senza ridisegnare (per non perdere lo scroll)
+  let tot = 0, fatti = 0;
+  const mp = stato.passo === 'dispensa' ? stato.hoGia : stato.preso;
+  vociSpesa().forEach(([k, , righe]) => {
+    if (k === 'nc') return;
+    (stato.passo === 'dispensa' ? righe : righe.filter(([x]) => !stato.hoGia[x]))
+      .forEach(([x]) => { tot++; if (mp[x]) fatti++; });
+  });
+  if (stato.passo === 'spesa') stato.extra.forEach(x => { tot++; if (stato.preso['+'+x]) fatti++; });
+  $('#barra').style.width = (tot ? Math.round(fatti/tot*100) : 0) + '%';
+  $('#b-spesa').textContent = stato.passo === 'dispensa' ? '' : String(tot - fatti || '');
+  salvaCondiviso();
+});
+
+$('#cerca').addEventListener('input', () => renderCatalogo());
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'extra-n'){ e.preventDefault(); $('#extra-add').click(); }
+});
+
+/* ---------- avvio ---------- */
+if (window.self !== window.top) {
+  const a = document.createElement('a');
+  a.href = location.href;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.textContent = 'Apri a schermo intero ↗';
+  a.style.cssText = 'display:block;text-align:center;font-family:JetBrains Mono,monospace;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--curcuma);background:var(--pentola);border-bottom:1px solid var(--bordo);padding:8px;text-decoration:none';
+  document.body.insertBefore(a, document.body.firstChild);
+}
+quandoPronto(() => {
+  caricaLocale();
+  $('#filtro-tipo').innerHTML = [['tutti','Tutti'], ...TIPI]
+    .map(([k,l]) => `<button data-f="${k}" aria-pressed="${stato.filtro===k}">${l}</button>`).join('');
+  $$('#filtro-tipo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === stato.filtro)));
+  $$('#filtro-vista button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.grp === stato.grp)));
+  $$('#passo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.passo === stato.passo)));
+  $('#p-data').value = new Date().toISOString().slice(0,10);
+  osservaCondiviso();
+  osservaPesi();
+});

@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Cucina — pasti, dispensa, spesa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pepe:#1B1416; --pentola:#261D20; --bordo:#3A2C2F; --bordo2:#4A393D;
+  --curcuma:#E8A33D; --pistacchio:#8FB574; --harissa:#C9482F;
+  --panna:#F2E9DD; --fumo:#9C8880;
+  --accento:var(--curcuma); --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--pepe); color:var(--panna);
+  font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:16px; line-height:1.5;
+  padding-bottom:calc(80px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased;
+}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 60% at 50% 0%, rgba(232,163,61,.09), transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:780px;margin:0 auto;padding:0 18px}
+
+.display{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;letter-spacing:-.03em;line-height:1.04}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--fumo)}
+h1{font-size:clamp(27px,7vw,36px)}
+h2{font-size:19px;letter-spacing:-.02em}
+.sub{color:var(--fumo);font-size:14.5px;margin-top:7px;max-width:56ch}
+
+/* ---------- testata ---------- */
+header{position:sticky;top:0;z-index:30;background:rgba(27,20,22,.94);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--bordo);padding-top:env(safe-area-inset-top)}
+.hbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;max-width:780px;margin:0 auto}
+.logo{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:16px;letter-spacing:-.02em}
+.logo span{color:var(--accento);transition:color .3s}
+nav button:focus-visible{outline:2px solid var(--panna);outline-offset:2px}
+
+/* ---------- navigazione ---------- */
+nav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(27,20,22,.97);
+  backdrop-filter:blur(14px);border-top:1px solid var(--bordo);padding-bottom:env(safe-area-inset-bottom)}
+.nav-in{display:flex;max-width:780px;margin:0 auto}
+nav button{flex:1;background:none;border:0;cursor:pointer;padding:10px 2px 12px;position:relative;
+  display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--fumo);
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;border-top:2px solid transparent;margin-top:-1px;transition:.2s}
+nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-selected="true"]{color:var(--accento);border-top-color:var(--accento)}
+.badge{position:absolute;top:5px;right:calc(50% - 20px);min-width:17px;height:17px;padding:0 4px;
+  background:var(--accento);color:var(--pepe);border-radius:999px;font-size:9.5px;font-weight:700;
+  display:flex;align-items:center;justify-content:center}
+.badge:empty,.badge[hidden]{display:none}
+
+/* ---------- struttura ---------- */
+.vista{display:none;padding:22px 0 34px}
+.vista.on{display:block;animation:sali .28s ease}
+@keyframes sali{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.card{background:var(--pentola);border:1px solid var(--bordo);border-radius:var(--r);padding:16px;margin-top:12px}
+.card-t{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.02em}
+.sez{margin-top:26px}
+.sez-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px}
+
+/* ---------- controlli ---------- */
+.btn{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:.08em;
+  background:var(--accento);color:var(--pepe);border:0;border-radius:9px;padding:11px 15px;cursor:pointer;transition:.15s}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--fumo);border:1px solid var(--bordo2)}
+.btn.ghost:hover{color:var(--panna);border-color:var(--fumo)}
+.btn:disabled{opacity:.4;cursor:default}
+.riga-btn{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.seg{display:flex;background:var(--pentola);border:1px solid var(--bordo);border-radius:10px;padding:3px;gap:2px;overflow-x:auto}
+.seg button{flex:1;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;background:none;border:0;color:var(--fumo);
+  padding:8px 10px;border-radius:8px;cursor:pointer;transition:.18s}
+.seg button[aria-pressed="true"]{background:var(--bordo);color:var(--panna)}
+input[type=search],input[type=number],input[type=date]{
+  background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;
+  padding:10px 12px;font-family:inherit;font-size:15px;width:100%}
+input:focus{outline:2px solid var(--accento);outline-offset:-1px}
+
+/* ---------- scheda pasto ---------- */
+.pasto{background:var(--pentola);border:1px solid var(--bordo);border-radius:var(--r);margin-top:11px;overflow:hidden;transition:border-color .2s}
+.pasto.sel{border-color:var(--accento)}
+.p-h{display:block;padding:14px 15px;cursor:pointer}
+.p-h:hover{background:rgba(255,255,255,.02)}
+.p-top{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.p-nome{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:16.5px;letter-spacing:-.02em;line-height:1.2}
+.p-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;padding:3px 7px;border-radius:5px;background:var(--bordo);color:var(--fumo)}
+.tag.t-colazione{background:rgba(232,163,61,.16);color:var(--curcuma)}
+.tag.t-pranzo{background:rgba(143,181,116,.16);color:var(--pistacchio)}
+.tag.t-cena{background:rgba(201,72,47,.18);color:#E8785F}
+.tag.t-spuntino{background:rgba(242,233,221,.1);color:var(--panna)}
+.tag.base{background:transparent;border:1px solid var(--bordo2);color:var(--fumo);text-transform:none;letter-spacing:.03em}
+.tag.tempo{background:transparent;border:1px solid var(--bordo2);color:var(--fumo)}
+.tag.diff-facile{background:rgba(143,181,116,.14);color:var(--pistacchio)}
+.tag.diff-media{background:rgba(232,163,61,.14);color:var(--curcuma)}
+.tag.diff-difficile{background:rgba(201,72,47,.16);color:#E8785F}
+.p-val{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:11px}
+.pill{padding:3px 8px;border-radius:6px;background:rgba(232,163,61,.1);color:var(--curcuma);white-space:nowrap}
+.p-corpo{display:none;padding:0 15px 15px;border-top:1px solid var(--bordo)}
+.pasto.aperto .p-corpo{display:block;padding-top:14px}
+.p-desc{color:var(--fumo);font-size:14px;font-style:italic;margin-bottom:12px}
+.chev{transition:transform .2s;flex-shrink:0;color:var(--fumo)}
+.pasto.aperto .chev{transform:rotate(180deg)}
+
+/* stepper porzioni */
+.step-box{display:flex;gap:8px;align-items:center;margin-top:11px}
+.step{display:flex;align-items:center;background:var(--pepe);border:1px solid var(--bordo2);border-radius:8px;overflow:hidden}
+.step.on{border-color:var(--accento)}
+.step button{background:none;border:0;color:var(--fumo);width:26px;height:32px;font-size:16px;cursor:pointer;line-height:1}
+.step button:hover{color:var(--panna);background:rgba(255,255,255,.05)}
+.step span{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;min-width:16px;text-align:center;color:var(--panna)}
+
+/* tabella grammature */
+.gram{border:1px solid var(--bordo);border-radius:10px;overflow:hidden;margin:12px 0}
+.gram .intest,.gram .riga{display:grid;grid-template-columns:1fr 74px;align-items:center;gap:8px;padding:8px 11px}
+.gram .intest{background:rgba(255,255,255,.03);font-family:'JetBrains Mono',monospace;font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--fumo)}
+.gram .riga+.riga,.gram .riga{border-top:1px solid var(--bordo)}
+.gram .ing{font-size:14px}
+.gram .ing em{font-style:normal;color:var(--curcuma);font-size:11px;font-family:'JetBrains Mono',monospace;
+  letter-spacing:.05em;display:block;margin-top:1px}
+.gram .q{font-family:'JetBrains Mono',monospace;font-size:12.5px;text-align:right;color:var(--curcuma)}
+.gram .q.zero{opacity:.28}
+
+.proc{font-size:14.5px;line-height:1.62;color:#DCCFC4}
+.proc b{color:var(--panna)}
+.vincolo{border-left:2px solid var(--harissa);background:rgba(201,72,47,.08);border-radius:0 8px 8px 0;padding:10px 13px;margin-top:11px}
+.vincolo p{font-size:14px;margin-top:4px;color:#DCCFC4}
+.vincolo p+.eyebrow{margin-top:9px}
+.nota{border-left:2px solid var(--curcuma);background:rgba(232,163,61,.07);border-radius:0 8px 8px 0;
+  padding:10px 13px;margin-top:11px;font-size:14px;color:#DCCFC4}
+
+/* ---------- liste spuntabili ---------- */
+.rep{margin-top:20px}
+.rep-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:7px;border-bottom:1px solid var(--bordo)}
+.voce{display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid rgba(58,44,47,.55);cursor:pointer}
+.voce:last-child{border-bottom:0}
+.voce input{appearance:none;width:21px;height:21px;flex-shrink:0;border:1.6px solid var(--bordo2);
+  border-radius:6px;cursor:pointer;position:relative;transition:.15s;background:var(--pentola)}
+.voce input:checked{background:var(--pistacchio);border-color:var(--pistacchio)}
+.voce input:checked::after{content:'';position:absolute;left:6.5px;top:2.5px;width:5px;height:10px;
+  border:solid var(--pepe);border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
+.voce input:focus-visible{outline:2px solid var(--panna);outline-offset:2px}
+.voce .n{flex:1;font-size:15px;transition:.15s}
+.voce .n small{display:block;color:var(--fumo);font-size:12px;margin-top:1px}
+.voce .q{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--curcuma);white-space:nowrap}
+.voce.fatta .n{color:var(--fumo);text-decoration:line-through;text-decoration-color:var(--bordo2)}
+.voce.fatta .q{color:var(--fumo);opacity:.5}
+.progress{height:5px;background:var(--bordo);border-radius:99px;overflow:hidden;margin:14px 0 4px}
+.progress i{display:block;height:100%;background:var(--pistacchio);transition:width .3s}
+
+/* ---------- basi ---------- */
+.base-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.qta-base{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fumo);margin-top:5px}
+.qta-base b{color:var(--curcuma);font-size:15px}
+.timer{display:inline-flex;align-items:center;gap:7px;background:var(--pepe);border:1px solid var(--bordo2);
+  color:var(--fumo);border-radius:8px;padding:7px 11px;font-family:'JetBrains Mono',monospace;
+  font-size:11.5px;cursor:pointer;margin:5px 5px 0 0}
+.timer.attivo{border-color:var(--curcuma);color:var(--curcuma)}
+ol.passi{margin:11px 0 0 17px;font-size:14.5px;line-height:1.6;color:#DCCFC4}
+ol.passi li{margin-bottom:6px}
+
+/* ---------- vuoto / toast ---------- */
+.vuoto{text-align:center;padding:44px 20px;color:var(--fumo)}
+.vuoto svg{width:38px;height:38px;stroke:var(--bordo2);fill:none;stroke-width:1.4;margin-bottom:12px}
+#toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(94px + env(safe-area-inset-bottom));
+  background:var(--panna);color:var(--pepe);padding:10px 17px;border-radius:99px;font-size:13.5px;font-weight:600;
+  z-index:60;opacity:0;pointer-events:none;transition:.25s;max-width:88vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.avviso{border:1px solid rgba(201,72,47,.45);background:rgba(201,72,47,.09);border-radius:10px;
+  padding:11px 13px;margin-top:12px;font-size:13.5px;color:#EBC0B6}
+
+/* ---------- peso ---------- */
+.form-peso{display:grid;grid-template-columns:1fr 90px auto;gap:8px;margin-top:12px}
+.pesi-l{margin-top:14px}
+.pesi-l div{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(58,44,47,.55);font-family:'JetBrains Mono',monospace;font-size:13px}
+.pesi-l button{background:none;border:0;color:var(--fumo);cursor:pointer;font-size:17px;line-height:1;padding:0 4px}
+.pesi-l button:hover{color:var(--harissa)}
+
+@media (max-width:420px){
+  .gram .intest,.gram .riga{grid-template-columns:1fr 62px}
+  .p-h{padding:13px 12px}
+}
+
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  body::before,header,nav,.seg,.riga-btn,.btn,.vuoto svg,#toast,.progress,
+  #extra-n,#extra-add,[data-delx]{display:none!important}
+  .vista{display:none!important}.vista.on{display:block!important}
+  .card,.rep{border-color:#ccc;background:#fff}
+  .voce{border-bottom:1px solid #ddd}
+  .voce input{border:1.4px solid #888;background:#fff}
+  .voce .q{color:#000}
+  .eyebrow,.sub{color:#555}
+  a[href]:after{content:''}
+}
+
+/* ---------- gate (login/registrazione/famiglia) ---------- */
+#gate{position:fixed;inset:0;z-index:100;background:var(--pepe);display:flex;
+  align-items:center;justify-content:center;padding:20px}
+.gate-box{width:100%;max-width:360px}
+.gate-box input{background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);
+  border-radius:9px;padding:11px 13px;font-family:inherit;font-size:15px;width:100%;margin-top:10px}
+.gate-box input:focus{outline:2px solid var(--accento);outline-offset:-1px}
+.gate-errore{color:var(--harissa);font-size:13px;margin-top:10px}
+.gate-codice-box{font-family:'JetBrains Mono',monospace;font-size:13px;word-break:break-all;
+  background:var(--pentola);border:1px solid var(--bordo);border-radius:9px;padding:12px;margin-top:10px}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-box">
+    <div class="logo" style="margin-bottom:18px">Cucina<span>.</span></div>
+
+    <div id="gate-carica"><p class="sub">Un attimo…</p></div>
+
+    <form id="gate-login" hidden>
+      <h2 class="display" style="font-size:20px">Accedi</h2>
+      <input type="email" id="li-email" placeholder="Email" required autocomplete="email">
+      <input type="password" id="li-pw" placeholder="Password" required autocomplete="current-password">
+      <button class="btn" type="submit" style="width:100%;margin-top:8px">ACCEDI</button>
+      <div style="display:flex;align-items:center;gap:10px;margin:16px 0 4px">
+        <div style="flex:1;height:1px;background:var(--bordo)"></div>
+        <span class="sub" style="margin:0">oppure</span>
+        <div style="flex:1;height:1px;background:var(--bordo)"></div>
+      </div>
+      <button type="button" class="btn ghost" id="google-login" style="width:100%">CONTINUA CON GOOGLE</button>
+      <p class="sub" style="margin-top:12px">Non hai un account? <a href="#" id="vai-registrati">Registrati</a></p>
+      <p class="gate-errore" id="li-errore" hidden></p>
+    </form>
+
+    <form id="gate-registrati" hidden>
+      <h2 class="display" style="font-size:20px">Registrati</h2>
+      <input type="text" id="re-nome" placeholder="Il tuo nome" required autocomplete="name">
+      <input type="email" id="re-email" placeholder="Email" required autocomplete="email">
+      <input type="password" id="re-pw" placeholder="Password (almeno 6 caratteri)" required autocomplete="new-password" minlength="6">
+      <button class="btn" type="submit" style="width:100%;margin-top:8px">REGISTRATI</button>
+      <div style="display:flex;align-items:center;gap:10px;margin:16px 0 4px">
+        <div style="flex:1;height:1px;background:var(--bordo)"></div>
+        <span class="sub" style="margin:0">oppure</span>
+        <div style="flex:1;height:1px;background:var(--bordo)"></div>
+      </div>
+      <button type="button" class="btn ghost" id="google-registrati" style="width:100%">CONTINUA CON GOOGLE</button>
+      <p class="sub" style="margin-top:12px">Hai già un account? <a href="#" id="vai-login">Accedi</a></p>
+      <p class="gate-errore" id="re-errore" hidden></p>
+    </form>
+
+    <div id="gate-famiglia" hidden>
+      <h2 class="display" style="font-size:20px">Ultimo passo</h2>
+      <p class="sub">Sei la prima persona della coppia a usare l'app, o ti stai unendo a chi ha già iniziato?</p>
+      <button class="btn" id="crea-famiglia" style="width:100%;margin-top:14px">CREA UNA FAMIGLIA NUOVA</button>
+      <p class="sub" style="margin-top:18px">Oppure incolla il codice che ti ha mandato il tuo compagno/a:</p>
+      <input type="text" id="fa-codice" placeholder="Codice famiglia">
+      <button class="btn ghost" id="unisci-famiglia" style="width:100%;margin-top:8px">UNISCITI</button>
+      <p class="gate-errore" id="fa-errore" hidden></p>
+    </div>
+
+    <div id="gate-codice" hidden>
+      <h2 class="display" style="font-size:20px">Fatto!</h2>
+      <p class="sub">Manda questo codice al tuo compagno/a — lo incolla una volta sola per unirsi:</p>
+      <div class="gate-codice-box" id="codice-testo"></div>
+      <button class="btn" id="copia-codice" style="width:100%;margin-top:10px">COPIA CODICE</button>
+      <button class="btn ghost" id="continua-app" style="width:100%;margin-top:8px">CONTINUA</button>
+    </div>
+  </div>
+</div>
+
+<div id="app-shell" hidden>
+<header>
+  <div class="hbar">
+    <div class="logo">Cucina<span>.</span></div>
+    <button id="esci" class="btn ghost" style="padding:6px 11px;font-size:10.5px">ESCI</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ PASTI ============ -->
+  <section class="vista on" id="v-pasti">
+    <div class="card" id="migra-banner" hidden>
+      <div class="card-t">Hai dati salvati su questo telefono</div>
+      <p class="sub" style="margin-top:6px">Vuoi importarli nella famiglia condivisa? Si fa una volta sola.</p>
+      <div class="riga-btn">
+        <button class="btn" data-migra="si">IMPORTA</button>
+        <button class="btn ghost" data-migra="no">IGNORA</button>
+      </div>
+    </div>
+    <div class="eyebrow">Catalogo</div>
+    <h1 class="display">Tutti i pasti</h1>
+    <p class="sub" id="pasti-sub">Nessun giorno obbligato: scegli quelli che vuoi cucinare e la lista fa il resto.</p>
+
+    <div style="margin-top:18px"><input type="search" id="cerca" placeholder="Cerca un pasto o un ingrediente…" aria-label="Cerca"></div>
+    <div class="seg" style="margin-top:9px" id="filtro-tipo" role="group" aria-label="Filtra per tipo"></div>
+    <div class="seg" style="margin-top:8px" id="filtro-vista" role="group" aria-label="Raggruppa">
+      <button data-grp="tipo" aria-pressed="true">Per tipo</button>
+      <button data-grp="giorno" aria-pressed="false">Per giorno</button>
+      <button data-grp="base" aria-pressed="false">Per base</button>
+    </div>
+    <div class="riga-btn">
+      <button class="btn" id="carica-settimana">CARICA LA SETTIMANA INTERA</button>
+      <button class="btn ghost" id="svuota-sel">SVUOTA LA SELEZIONE</button>
+    </div>
+    <div id="catalogo"></div>
+  </section>
+
+  <!-- ============ LISTA ============ -->
+  <section class="vista" id="v-lista">
+    <div class="eyebrow">Passo 1</div>
+    <h1 class="display">La mia lista</h1>
+    <p class="sub">I pasti scelti e quante porzioni. Da qui esce tutto il resto.</p>
+    <div id="lista-corpo"></div>
+  </section>
+
+  <!-- ============ DISPENSA + SPESA ============ -->
+  <section class="vista" id="v-spesa">
+    <div class="eyebrow" id="spesa-eyebrow">Passo 2</div>
+    <h1 class="display" id="spesa-titolo">Dispensa</h1>
+    <p class="sub" id="spesa-sub"></p>
+    <div class="seg" style="margin-top:16px" id="passo" role="group" aria-label="Passo">
+      <button data-passo="dispensa" aria-pressed="true">1 · Dispensa</button>
+      <button data-passo="spesa" aria-pressed="false">2 · Spesa</button>
+    </div>
+    <div class="progress"><i id="barra" style="width:0%"></i></div>
+    <div id="spesa-corpo"></div>
+    <div class="riga-btn" id="spesa-azioni" hidden>
+      <button class="btn ghost" id="copia">COPIA LA LISTA</button>
+      <button class="btn ghost" id="stampa">STAMPA</button>
+      <button class="btn ghost" id="reset-spunte">SVUOTA LE SPUNTE</button>
+    </div>
+  </section>
+
+  <!-- ============ BASI ============ -->
+  <section class="vista" id="v-basi">
+    <div class="eyebrow">Domenica</div>
+    <h1 class="display">Le basi</h1>
+    <p class="sub">Calcolate sui pasti che hai scelto. "Esatto" scala la ricetta al fabbisogno, "ricetta intera" fa la dose piena e ti lascia scorte in freezer.</p>
+    <div id="basi-corpo"></div>
+  </section>
+
+  <!-- ============ PESO ============ -->
+  <section class="vista" id="v-peso">
+    <div class="eyebrow">Controllo</div>
+    <h1 class="display">Peso</h1>
+    <p class="sub">Pesati 3 volte a settimana a digiuno. Conta la media settimanale, non il singolo numero.</p>
+    <div class="card">
+      <div class="eyebrow" id="peso-chi">Nuova misura</div>
+      <div class="form-peso">
+        <input type="date" id="p-data" aria-label="Data">
+        <input type="number" id="p-kg" step="0.1" placeholder="kg" aria-label="Peso in kg">
+        <button class="btn" id="p-salva">SALVA</button>
+      </div>
+    </div>
+    <div id="p-contenuto"></div>
+  </section>
+
+</div>
+
+<nav role="tablist">
+  <div class="nav-in">
+    <button data-v="pasti" aria-selected="true" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M4 4v7a3 3 0 003 3h0a3 3 0 003-3V4"/><path d="M7 4v10"/><path d="M17 4c-1.5 2-2 4-2 6s.5 3 2 3v7"/></svg>Pasti</button>
+    <button data-v="lista" aria-selected="false" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>Lista<i class="badge" id="b-lista"></i></button>
+    <button data-v="spesa" aria-selected="false" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/><circle cx="9" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg>Spesa<i class="badge" id="b-spesa"></i></button>
+    <button data-v="basi" aria-selected="false" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M4 11h16v3a6 6 0 01-6 6h-4a6 6 0 01-6-6z"/><path d="M20 12h1.5a2 2 0 010 4H20"/><path d="M8 7c0-1 1-1.5 1-2.5S8 3 8 3"/><path d="M12 7c0-1 1-1.5 1-2.5S12 3 12 3"/></svg>Basi</button>
+    <button data-v="peso" aria-selected="false" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 20l2-11h8l2 11"/><path d="M12 9V6"/><circle cx="12" cy="5" r="1.6"/></svg>Peso</button>
+  </div>
+</nav>
+
+<div id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script type="module">
+/*__FIREBASE_CONFIG__*/
+/*__AUTH__*/
+/*__DATI__*/
+/*__MOTORE__*/
+/*__APP__*/
+</script>
+</body>
+</html>

@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Cucina — pasti, dispensa, spesa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pepe:#1B1416; --pentola:#261D20; --bordo:#3A2C2F; --bordo2:#4A393D;
+  --curcuma:#E8A33D; --pistacchio:#8FB574; --harissa:#C9482F;
+  --panna:#F2E9DD; --fumo:#9C8880;
+  --accento:var(--curcuma); --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--pepe); color:var(--panna);
+  font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  font-size:16px; line-height:1.5;
+  padding-bottom:calc(80px + env(safe-area-inset-bottom));
+  -webkit-font-smoothing:antialiased;
+}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(120% 60% at 50% 0%, rgba(232,163,61,.09), transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:780px;margin:0 auto;padding:0 18px}
+
+.display{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;letter-spacing:-.03em;line-height:1.04}
+.mono{font-family:'JetBrains Mono',ui-monospace,monospace}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--fumo)}
+h1{font-size:clamp(27px,7vw,36px)}
+h2{font-size:19px;letter-spacing:-.02em}
+.sub{color:var(--fumo);font-size:14.5px;margin-top:7px;max-width:56ch}
+
+/* ---------- testata ---------- */
+header{position:sticky;top:0;z-index:30;background:rgba(27,20,22,.94);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--bordo);padding-top:env(safe-area-inset-top)}
+.hbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;max-width:780px;margin:0 auto}
+.logo{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:16px;letter-spacing:-.02em}
+.logo span{color:var(--accento);transition:color .3s}
+nav button:focus-visible{outline:2px solid var(--panna);outline-offset:2px}
+
+/* ---------- navigazione ---------- */
+nav{position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(27,20,22,.97);
+  backdrop-filter:blur(14px);border-top:1px solid var(--bordo);padding-bottom:env(safe-area-inset-bottom)}
+.nav-in{display:flex;max-width:780px;margin:0 auto}
+nav button{flex:1;background:none;border:0;cursor:pointer;padding:10px 2px 12px;position:relative;
+  display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--fumo);
+  font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;border-top:2px solid transparent;margin-top:-1px;transition:.2s}
+nav button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav button[aria-selected="true"]{color:var(--accento);border-top-color:var(--accento)}
+.badge{position:absolute;top:5px;right:calc(50% - 20px);min-width:17px;height:17px;padding:0 4px;
+  background:var(--accento);color:var(--pepe);border-radius:999px;font-size:9.5px;font-weight:700;
+  display:flex;align-items:center;justify-content:center}
+.badge:empty,.badge[hidden]{display:none}
+
+/* ---------- struttura ---------- */
+.vista{display:none;padding:22px 0 34px}
+.vista.on{display:block;animation:sali .28s ease}
+@keyframes sali{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.card{background:var(--pentola);border:1px solid var(--bordo);border-radius:var(--r);padding:16px;margin-top:12px}
+.card-t{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.02em}
+.sez{margin-top:26px}
+.sez-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px}
+
+/* ---------- controlli ---------- */
+.btn{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;letter-spacing:.08em;
+  background:var(--accento);color:var(--pepe);border:0;border-radius:9px;padding:11px 15px;cursor:pointer;transition:.15s}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--fumo);border:1px solid var(--bordo2)}
+.btn.ghost:hover{color:var(--panna);border-color:var(--fumo)}
+.btn:disabled{opacity:.4;cursor:default}
+.riga-btn{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.seg{display:flex;background:var(--pentola);border:1px solid var(--bordo);border-radius:10px;padding:3px;gap:2px;overflow-x:auto}
+.seg button{flex:1;white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;background:none;border:0;color:var(--fumo);
+  padding:8px 10px;border-radius:8px;cursor:pointer;transition:.18s}
+.seg button[aria-pressed="true"]{background:var(--bordo);color:var(--panna)}
+input[type=search],input[type=number],input[type=date]{
+  background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;
+  padding:10px 12px;font-family:inherit;font-size:15px;width:100%}
+input:focus{outline:2px solid var(--accento);outline-offset:-1px}
+
+/* ---------- scheda pasto ---------- */
+.pasto{background:var(--pentola);border:1px solid var(--bordo);border-radius:var(--r);margin-top:11px;overflow:hidden;transition:border-color .2s}
+.pasto.sel{border-color:var(--accento)}
+.p-h{display:block;padding:14px 15px;cursor:pointer}
+.p-h:hover{background:rgba(255,255,255,.02)}
+.p-top{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.p-nome{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:16.5px;letter-spacing:-.02em;line-height:1.2}
+.p-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;padding:3px 7px;border-radius:5px;background:var(--bordo);color:var(--fumo)}
+.tag.t-colazione{background:rgba(232,163,61,.16);color:var(--curcuma)}
+.tag.t-pranzo{background:rgba(143,181,116,.16);color:var(--pistacchio)}
+.tag.t-cena{background:rgba(201,72,47,.18);color:#E8785F}
+.tag.t-spuntino{background:rgba(242,233,221,.1);color:var(--panna)}
+.tag.base{background:transparent;border:1px solid var(--bordo2);color:var(--fumo);text-transform:none;letter-spacing:.03em}
+.tag.tempo{background:transparent;border:1px solid var(--bordo2);color:var(--fumo)}
+.tag.diff-facile{background:rgba(143,181,116,.14);color:var(--pistacchio)}
+.tag.diff-media{background:rgba(232,163,61,.14);color:var(--curcuma)}
+.tag.diff-difficile{background:rgba(201,72,47,.16);color:#E8785F}
+.p-val{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:11px}
+.pill{padding:3px 8px;border-radius:6px;background:rgba(232,163,61,.1);color:var(--curcuma);white-space:nowrap}
+.p-corpo{display:none;padding:0 15px 15px;border-top:1px solid var(--bordo)}
+.pasto.aperto .p-corpo{display:block;padding-top:14px}
+.p-desc{color:var(--fumo);font-size:14px;font-style:italic;margin-bottom:12px}
+.chev{transition:transform .2s;flex-shrink:0;color:var(--fumo)}
+.pasto.aperto .chev{transform:rotate(180deg)}
+
+/* stepper porzioni */
+.step-box{display:flex;gap:8px;align-items:center;margin-top:11px}
+.step{display:flex;align-items:center;background:var(--pepe);border:1px solid var(--bordo2);border-radius:8px;overflow:hidden}
+.step.on{border-color:var(--accento)}
+.step button{background:none;border:0;color:var(--fumo);width:26px;height:32px;font-size:16px;cursor:pointer;line-height:1}
+.step button:hover{color:var(--panna);background:rgba(255,255,255,.05)}
+.step span{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;min-width:16px;text-align:center;color:var(--panna)}
+
+/* tabella grammature */
+.gram{border:1px solid var(--bordo);border-radius:10px;overflow:hidden;margin:12px 0}
+.gram .intest,.gram .riga{display:grid;grid-template-columns:1fr 74px;align-items:center;gap:8px;padding:8px 11px}
+.gram .intest{background:rgba(255,255,255,.03);font-family:'JetBrains Mono',monospace;font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--fumo)}
+.gram .riga+.riga,.gram .riga{border-top:1px solid var(--bordo)}
+.gram .ing{font-size:14px}
+.gram .ing em{font-style:normal;color:var(--curcuma);font-size:11px;font-family:'JetBrains Mono',monospace;
+  letter-spacing:.05em;display:block;margin-top:1px}
+.gram .q{font-family:'JetBrains Mono',monospace;font-size:12.5px;text-align:right;color:var(--curcuma)}
+.gram .q.zero{opacity:.28}
+
+.proc{font-size:14.5px;line-height:1.62;color:#DCCFC4}
+.proc b{color:var(--panna)}
+.vincolo{border-left:2px solid var(--harissa);background:rgba(201,72,47,.08);border-radius:0 8px 8px 0;padding:10px 13px;margin-top:11px}
+.vincolo p{font-size:14px;margin-top:4px;color:#DCCFC4}
+.vincolo p+.eyebrow{margin-top:9px}
+.nota{border-left:2px solid var(--curcuma);background:rgba(232,163,61,.07);border-radius:0 8px 8px 0;
+  padding:10px 13px;margin-top:11px;font-size:14px;color:#DCCFC4}
+
+/* ---------- liste spuntabili ---------- */
+.rep{margin-top:20px}
+.rep-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:7px;border-bottom:1px solid var(--bordo)}
+.voce{display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid rgba(58,44,47,.55);cursor:pointer}
+.voce:last-child{border-bottom:0}
+.voce input{appearance:none;width:21px;height:21px;flex-shrink:0;border:1.6px solid var(--bordo2);
+  border-radius:6px;cursor:pointer;position:relative;transition:.15s;background:var(--pentola)}
+.voce input:checked{background:var(--pistacchio);border-color:var(--pistacchio)}
+.voce input:checked::after{content:'';position:absolute;left:6.5px;top:2.5px;width:5px;height:10px;
+  border:solid var(--pepe);border-width:0 2.2px 2.2px 0;transform:rotate(45deg)}
+.voce input:focus-visible{outline:2px solid var(--panna);outline-offset:2px}
+.voce .n{flex:1;font-size:15px;transition:.15s}
+.voce .n small{display:block;color:var(--fumo);font-size:12px;margin-top:1px}
+.voce .q{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--curcuma);white-space:nowrap}
+.voce.fatta .n{color:var(--fumo);text-decoration:line-through;text-decoration-color:var(--bordo2)}
+.voce.fatta .q{color:var(--fumo);opacity:.5}
+.progress{height:5px;background:var(--bordo);border-radius:99px;overflow:hidden;margin:14px 0 4px}
+.progress i{display:block;height:100%;background:var(--pistacchio);transition:width .3s}
+
+/* ---------- basi ---------- */
+.base-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.qta-base{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fumo);margin-top:5px}
+.qta-base b{color:var(--curcuma);font-size:15px}
+.timer{display:inline-flex;align-items:center;gap:7px;background:var(--pepe);border:1px solid var(--bordo2);
+  color:var(--fumo);border-radius:8px;padding:7px 11px;font-family:'JetBrains Mono',monospace;
+  font-size:11.5px;cursor:pointer;margin:5px 5px 0 0}
+.timer.attivo{border-color:var(--curcuma);color:var(--curcuma)}
+ol.passi{margin:11px 0 0 17px;font-size:14.5px;line-height:1.6;color:#DCCFC4}
+ol.passi li{margin-bottom:6px}
+
+/* ---------- vuoto / toast ---------- */
+.vuoto{text-align:center;padding:44px 20px;color:var(--fumo)}
+.vuoto svg{width:38px;height:38px;stroke:var(--bordo2);fill:none;stroke-width:1.4;margin-bottom:12px}
+#toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(94px + env(safe-area-inset-bottom));
+  background:var(--panna);color:var(--pepe);padding:10px 17px;border-radius:99px;font-size:13.5px;font-weight:600;
+  z-index:60;opacity:0;pointer-events:none;transition:.25s;max-width:88vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.avviso{border:1px solid rgba(201,72,47,.45);background:rgba(201,72,47,.09);border-radius:10px;
+  padding:11px 13px;margin-top:12px;font-size:13.5px;color:#EBC0B6}
+
+/* ---------- peso ---------- */
+.form-peso{display:grid;grid-template-columns:1fr 90px auto;gap:8px;margin-top:12px}
+.pesi-l{margin-top:14px}
+.pesi-l div{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(58,44,47,.55);font-family:'JetBrains Mono',monospace;font-size:13px}
+.pesi-l button{background:none;border:0;color:var(--fumo);cursor:pointer;font-size:17px;line-height:1;padding:0 4px}
+.pesi-l button:hover{color:var(--harissa)}
+
+@media (max-width:420px){
+  .gram .intest,.gram .riga{grid-template-columns:1fr 62px}
+  .p-h{padding:13px 12px}
+}
+
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  body::before,header,nav,.seg,.riga-btn,.btn,.vuoto svg,#toast,.progress,
+  #extra-n,#extra-add,[data-delx]{display:none!important}
+  .vista{display:none!important}.vista.on{display:block!important}
+  .card,.rep{border-color:#ccc;background:#fff}
+  .voce{border-bottom:1px solid #ddd}
+  .voce input{border:1.4px solid #888;background:#fff}
+  .voce .q{color:#000}
+  .eyebrow,.sub{color:#555}
+  a[href]:after{content:''}
+}
+
+/* ---------- gate (login/registrazione/famiglia) ---------- */
+#gate{position:fixed;inset:0;z-index:100;background:var(--pepe);display:flex;
+  align-items:center;justify-content:center;padding:20px}
+.gate-box{width:100%;max-width:360px}
+.gate-box input{background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);
+  border-radius:9px;padding:11px 13px;font-family:inherit;font-size:15px;width:100%;margin-top:10px}
+.gate-box input:focus{outline:2px solid var(--accento);outline-offset:-1px}
+.gate-errore{color:var(--harissa);font-size:13px;margin-top:10px}
+.gate-codice-box{font-family:'JetBrains Mono',monospace;font-size:13px;word-break:break-all;
+  background:var(--pentola);border:1px solid var(--bordo);border-radius:9px;padding:12px;margin-top:10px}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-box">
+    <div class="logo" style="margin-bottom:18px">Cucina<span>.</span></div>
+
+    <div id="gate-carica"><p class="sub">Un attimo…</p></div>
+
+    <form id="gate-login" hidden>
+      <h2 class="display" style="font-size:20px">Accedi</h2>
+      <input type="email" id="li-email" placeholder="Email" required autocomplete="email">
+      <input type="password" id="li-pw" placeholder="Password" required autocomplete="current-password">
+      <button class="btn" type="submit" style="width:100%;margin-top:8px">ACCEDI</button>
+      <div style="display:flex;align-items:center;gap:10px;margin:16px 0 4px">
+        <div style="flex:1;height:1px;background:var(--bordo)"></div>
+        <span class="sub" style="margin:0">oppure</span>
+        <div style="flex:1;height:1px;background:var(--bordo)"></div>
+      </div>
+      <button type="button" class="btn ghost" id="google-login" style="width:100%">CONTINUA CON GOOGLE</button>
+      <p class="sub" style="margin-top:12px">Non hai un account? <a href="#" id="vai-registrati">Registrati</a></p>
+      <p class="gate-errore" id="li-errore" hidden></p>
+    </form>
+
+    <form id="gate-registrati" hidden>
+      <h2 class="display" style="font-size:20px">Registrati</h2>
+      <input type="text" id="re-nome" placeholder="Il tuo nome" required autocomplete="name">
+      <input type="email" id="re-email" placeholder="Email" required autocomplete="email">
+      <input type="password" id="re-pw" placeholder="Password (almeno 6 caratteri)" required autocomplete="new-password" minlength="6">
+      <button class="btn" type="submit" style="width:100%;margin-top:8px">REGISTRATI</button>
+      <div style="display:flex;align-items:center;gap:10px;margin:16px 0 4px">
+        <div style="flex:1;height:1px;background:var(--bordo)"></div>
+        <span class="sub" style="margin:0">oppure</span>
+        <div style="flex:1;height:1px;background:var(--bordo)"></div>
+      </div>
+      <button type="button" class="btn ghost" id="google-registrati" style="width:100%">CONTINUA CON GOOGLE</button>
+      <p class="sub" style="margin-top:12px">Hai già un account? <a href="#" id="vai-login">Accedi</a></p>
+      <p class="gate-errore" id="re-errore" hidden></p>
+    </form>
+
+    <div id="gate-famiglia" hidden>
+      <h2 class="display" style="font-size:20px">Ultimo passo</h2>
+      <p class="sub">Sei la prima persona della coppia a usare l'app, o ti stai unendo a chi ha già iniziato?</p>
+      <button class="btn" id="crea-famiglia" style="width:100%;margin-top:14px">CREA UNA FAMIGLIA NUOVA</button>
+      <p class="sub" style="margin-top:18px">Oppure incolla il codice che ti ha mandato il tuo compagno/a:</p>
+      <input type="text" id="fa-codice" placeholder="Codice famiglia">
+      <button class="btn ghost" id="unisci-famiglia" style="width:100%;margin-top:8px">UNISCITI</button>
+      <p class="gate-errore" id="fa-errore" hidden></p>
+    </div>
+
+    <div id="gate-codice" hidden>
+      <h2 class="display" style="font-size:20px">Fatto!</h2>
+      <p class="sub">Manda questo codice al tuo compagno/a — lo incolla una volta sola per unirsi:</p>
+      <div class="gate-codice-box" id="codice-testo"></div>
+      <button class="btn" id="copia-codice" style="width:100%;margin-top:10px">COPIA CODICE</button>
+      <button class="btn ghost" id="continua-app" style="width:100%;margin-top:8px">CONTINUA</button>
+    </div>
+  </div>
+</div>
+
+<div id="app-shell" hidden>
+<header>
+  <div class="hbar">
+    <div class="logo">Cucina<span>.</span></div>
+    <button id="esci" class="btn ghost" style="padding:6px 11px;font-size:10.5px">ESCI</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ PASTI ============ -->
+  <section class="vista on" id="v-pasti">
+    <div class="card" id="migra-banner" hidden>
+      <div class="card-t">Hai dati salvati su questo telefono</div>
+      <p class="sub" style="margin-top:6px">Vuoi importarli nella famiglia condivisa? Si fa una volta sola.</p>
+      <div class="riga-btn">
+        <button class="btn" data-migra="si">IMPORTA</button>
+        <button class="btn ghost" data-migra="no">IGNORA</button>
+      </div>
+    </div>
+    <div class="eyebrow">Catalogo</div>
+    <h1 class="display">Tutti i pasti</h1>
+    <p class="sub" id="pasti-sub">Nessun giorno obbligato: scegli quelli che vuoi cucinare e la lista fa il resto.</p>
+
+    <div style="margin-top:18px"><input type="search" id="cerca" placeholder="Cerca un pasto o un ingrediente…" aria-label="Cerca"></div>
+    <div class="seg" style="margin-top:9px" id="filtro-tipo" role="group" aria-label="Filtra per tipo"></div>
+    <div class="seg" style="margin-top:8px" id="filtro-vista" role="group" aria-label="Raggruppa">
+      <button data-grp="tipo" aria-pressed="true">Per tipo</button>
+      <button data-grp="giorno" aria-pressed="false">Per giorno</button>
+      <button data-grp="base" aria-pressed="false">Per base</button>
+    </div>
+    <div class="riga-btn">
+      <button class="btn" id="carica-settimana">CARICA LA SETTIMANA INTERA</button>
+      <button class="btn ghost" id="svuota-sel">SVUOTA LA SELEZIONE</button>
+    </div>
+    <div id="catalogo"></div>
+  </section>
+
+  <!-- ============ LISTA ============ -->
+  <section class="vista" id="v-lista">
+    <div class="eyebrow">Passo 1</div>
+    <h1 class="display">La mia lista</h1>
+    <p class="sub">I pasti scelti e quante porzioni. Da qui esce tutto il resto.</p>
+    <div id="lista-corpo"></div>
+  </section>
+
+  <!-- ============ DISPENSA + SPESA ============ -->
+  <section class="vista" id="v-spesa">
+    <div class="eyebrow" id="spesa-eyebrow">Passo 2</div>
+    <h1 class="display" id="spesa-titolo">Dispensa</h1>
+    <p class="sub" id="spesa-sub"></p>
+    <div class="seg" style="margin-top:16px" id="passo" role="group" aria-label="Passo">
+      <button data-passo="dispensa" aria-pressed="true">1 · Dispensa</button>
+      <button data-passo="spesa" aria-pressed="false">2 · Spesa</button>
+    </div>
+    <div class="progress"><i id="barra" style="width:0%"></i></div>
+    <div id="spesa-corpo"></div>
+    <div class="riga-btn" id="spesa-azioni" hidden>
+      <button class="btn ghost" id="copia">COPIA LA LISTA</button>
+      <button class="btn ghost" id="stampa">STAMPA</button>
+      <button class="btn ghost" id="reset-spunte">SVUOTA LE SPUNTE</button>
+    </div>
+  </section>
+
+  <!-- ============ BASI ============ -->
+  <section class="vista" id="v-basi">
+    <div class="eyebrow">Domenica</div>
+    <h1 class="display">Le basi</h1>
+    <p class="sub">Calcolate sui pasti che hai scelto. "Esatto" scala la ricetta al fabbisogno, "ricetta intera" fa la dose piena e ti lascia scorte in freezer.</p>
+    <div id="basi-corpo"></div>
+  </section>
+
+  <!-- ============ PESO ============ -->
+  <section class="vista" id="v-peso">
+    <div class="eyebrow">Controllo</div>
+    <h1 class="display">Peso</h1>
+    <p class="sub">Pesati 3 volte a settimana a digiuno. Conta la media settimanale, non il singolo numero.</p>
+    <div class="card">
+      <div class="eyebrow" id="peso-chi">Nuova misura</div>
+      <div class="form-peso">
+        <input type="date" id="p-data" aria-label="Data">
+        <input type="number" id="p-kg" step="0.1" placeholder="kg" aria-label="Peso in kg">
+        <button class="btn" id="p-salva">SALVA</button>
+      </div>
+    </div>
+    <div id="p-contenuto"></div>
+  </section>
+
+</div>
+
+<nav role="tablist">
+  <div class="nav-in">
+    <button data-v="pasti" aria-selected="true" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M4 4v7a3 3 0 003 3h0a3 3 0 003-3V4"/><path d="M7 4v10"/><path d="M17 4c-1.5 2-2 4-2 6s.5 3 2 3v7"/></svg>Pasti</button>
+    <button data-v="lista" aria-selected="false" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>Lista<i class="badge" id="b-lista"></i></button>
+    <button data-v="spesa" aria-selected="false" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/><circle cx="9" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/></svg>Spesa<i class="badge" id="b-spesa"></i></button>
+    <button data-v="basi" aria-selected="false" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M4 11h16v3a6 6 0 01-6 6h-4a6 6 0 01-6-6z"/><path d="M20 12h1.5a2 2 0 010 4H20"/><path d="M8 7c0-1 1-1.5 1-2.5S8 3 8 3"/><path d="M12 7c0-1 1-1.5 1-2.5S12 3 12 3"/></svg>Basi</button>
+    <button data-v="peso" aria-selected="false" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M4 20h16"/><path d="M6 20l2-11h8l2 11"/><path d="M12 9V6"/><circle cx="12" cy="5" r="1.6"/></svg>Peso</button>
+  </div>
+</nav>
+
+<div id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script type="module">
+/* Chiavi del progetto Firebase — pubbliche per design: la sicurezza vera è nelle
+   regole di Firestore (firestore.rules), non nel nasconderle. */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD-F0SxPfxUEjani2Ut6SVMWiQlFzingRw",
+  authDomain: "pianoalimentarecosi.firebaseapp.com",
+  projectId: "pianoalimentarecosi",
+  storageBucket: "pianoalimentarecosi.firebasestorage.app",
+  messagingSenderId: "329656659620",
+  appId: "1:329656659620:web:ed92e49adff650c3970031"
+};
+
+/* ==========================================================================
+   Autenticazione e household condiviso (Firebase)
+   ========================================================================== */
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup
+} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {
+  getFirestore, doc, getDoc, setDoc, deleteDoc, addDoc, collection,
+  onSnapshot, query, orderBy
+} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+
+const fbApp = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+let UID = null;
+let HOUSEHOLD_ID = null;
+let MIO_NOME = '';
+let _onPronto = null;
+let _pronto = false;
+function quandoPronto(cb){ _onPronto = cb; }
+function segnalaPronto(){
+  document.getElementById('gate').hidden = true;
+  document.getElementById('app-shell').hidden = false;
+  if (_pronto) return;
+  _pronto = true;
+  if (_onPronto) _onPronto();
+}
+
+function mostraGate(id){
+  ['gate-carica','gate-login','gate-registrati','gate-famiglia','gate-codice'].forEach(g => {
+    document.getElementById(g).hidden = (g !== id);
+  });
+  document.getElementById('gate').hidden = false;
+  document.getElementById('app-shell').hidden = true;
+}
+function mostraErrore(id, msg){
+  const el = document.getElementById(id);
+  el.textContent = msg; el.hidden = false;
+}
+function erroreLeggibile(err){
+  const c = (err && err.code) || '';
+  if (c === 'auth/invalid-email') return 'Email non valida.';
+  if (c === 'auth/email-already-in-use') return 'Questa email ha già un account: prova ad accedere.';
+  if (c === 'auth/weak-password') return 'La password deve avere almeno 6 caratteri.';
+  if (c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found') return 'Email o password sbagliate.';
+  if (c === 'auth/popup-blocked') return 'Il browser ha bloccato il popup: consenti i popup per questo sito e riprova.';
+  if (c === 'auth/unauthorized-domain') return 'Questo indirizzo non è autorizzato per il login Google (serve http/https, non un file aperto direttamente, e il dominio va aggiunto su Firebase se non è già tra quelli autorizzati).';
+  return 'Qualcosa non ha funzionato: ' + ((err && err.message) || err);
+}
+
+async function accediConGoogle(){
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch(err){
+    const c = err && err.code;
+    if (c === 'auth/popup-closed-by-user' || c === 'auth/cancelled-popup-request') return;
+    mostraErrore('li-errore', erroreLeggibile(err));
+  }
+}
+document.getElementById('google-login').addEventListener('click', accediConGoogle);
+document.getElementById('google-registrati').addEventListener('click', accediConGoogle);
+
+async function dopoLogin(user){
+  UID = user.uid;
+  let s = await getDoc(doc(db, 'users', UID));
+  if (!s.exists()){
+    await setDoc(doc(db, 'users', UID), { email: user.email || '', nome: user.displayName || '', householdId: null });
+    s = await getDoc(doc(db, 'users', UID));
+  }
+  const dati = s.data();
+  MIO_NOME = dati.nome || '';
+  if (dati.householdId){
+    HOUSEHOLD_ID = dati.householdId;
+    segnalaPronto();
+  } else {
+    mostraGate('gate-famiglia');
+  }
+}
+
+onAuthStateChanged(auth, user => { if (user) dopoLogin(user); else mostraGate('gate-login'); });
+
+document.getElementById('gate-login').addEventListener('submit', async e => {
+  e.preventDefault();
+  document.getElementById('li-errore').hidden = true;
+  try {
+    await signInWithEmailAndPassword(auth, document.getElementById('li-email').value.trim(), document.getElementById('li-pw').value);
+  } catch(err){ mostraErrore('li-errore', erroreLeggibile(err)); }
+});
+
+document.getElementById('gate-registrati').addEventListener('submit', async e => {
+  e.preventDefault();
+  document.getElementById('re-errore').hidden = true;
+  const nome = document.getElementById('re-nome').value.trim();
+  const email = document.getElementById('re-email').value.trim();
+  const pw = document.getElementById('re-pw').value;
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pw);
+    await setDoc(doc(db, 'users', cred.user.uid), { email, nome, householdId: null });
+  } catch(err){ mostraErrore('re-errore', erroreLeggibile(err)); }
+});
+
+document.getElementById('vai-registrati').addEventListener('click', e => { e.preventDefault(); mostraGate('gate-registrati'); });
+document.getElementById('vai-login').addEventListener('click', e => { e.preventDefault(); mostraGate('gate-login'); });
+
+document.getElementById('crea-famiglia').addEventListener('click', async () => {
+  const ref = doc(collection(db, 'households'));
+  await setDoc(ref, { creatoDa: UID, creatoIl: Date.now() });
+  await setDoc(doc(db, 'users', UID), { householdId: ref.id }, { merge: true });
+  HOUSEHOLD_ID = ref.id;
+  document.getElementById('codice-testo').textContent = ref.id;
+  mostraGate('gate-codice');
+});
+
+document.getElementById('unisci-famiglia').addEventListener('click', async () => {
+  document.getElementById('fa-errore').hidden = true;
+  const codice = document.getElementById('fa-codice').value.trim();
+  if (!codice) return;
+  try {
+    const s = await getDoc(doc(db, 'households', codice));
+    if (!s.exists()) throw new Error('Codice non valido: controlla di averlo copiato tutto.');
+    await setDoc(doc(db, 'users', UID), { householdId: codice }, { merge: true });
+    HOUSEHOLD_ID = codice;
+    segnalaPronto();
+  } catch(err){ mostraErrore('fa-errore', err.message || erroreLeggibile(err)); }
+});
+
+document.getElementById('copia-codice').addEventListener('click', () => {
+  const codice = document.getElementById('codice-testo').textContent;
+  (navigator.clipboard ? navigator.clipboard.writeText(codice) : Promise.reject()).catch(()=>{});
+});
+document.getElementById('continua-app').addEventListener('click', segnalaPronto);
+
+document.getElementById('esci').addEventListener('click', () => { signOut(auth); location.reload(); });
+
+/* ==========================================================================
+   DietaCosi — modello dati
+   Fonti: piano-pasti-definitivo.md  +  preparazione-domenicale.md
+   Nessun valore inventato: le grammature e le stime kcal/proteine sono
+   riportate dai documenti. Unica eccezione dichiarata: il pranzo di venerdì
+   (ex "Sbrodolino", segnaposto) sostituito con un pasto basico — vedi id
+   'ven-pra'.
+   ========================================================================== */
+
+/* ---------- 1. Registro ingredienti: reparto + unità + resa per pezzo ----- */
+// r = reparto · u = unità ('g' | 'pz') · pz = grammi per pezzo (per convertire)
+// nc = non si compra (acqua, brodo) · lei = finitura solo per lei
+const ING = {
+  // — Carne e pesce
+  'Sovracosce di pollo disossate senza pelle': {r:'carne', u:'g'},
+  'Petto di pollo':                            {r:'carne', u:'g'},
+  'Petto di tacchino':                         {r:'carne', u:'g'},
+  'Macinato di tacchino':                      {r:'carne', u:'g'},
+  'Manzo magro per ragù':                      {r:'carne', u:'g'},
+  'Salsiccia di pollo o tacchino':             {r:'carne', u:'g'},
+  'Gamberi sgusciati':                         {r:'carne', u:'g'},
+
+  // — Uova e latticini
+  'Uova':                       {r:'latticini', u:'pz', pz:55},
+  'Albumi':                     {r:'latticini', u:'pz', pz:33, nota:'ricavabili dalle uova, se non compri gli albumi liquidi'},
+  'Skyr 0%':                    {r:'latticini', u:'g'},
+  'Yogurt greco 0%':            {r:'latticini', u:'g'},
+  'Ricotta magra':              {r:'latticini', u:'g'},
+  'Feta':                       {r:'latticini', u:'g'},
+  'Formaggio magro grattugiato':{r:'latticini', u:'g'},
+  'Grana grattugiato':          {r:'latticini', u:'g'},
+
+  // — Legumi, cereali, farine
+  'Ceci secchi':                {r:'secchi', u:'g'},
+  'Fagioli neri secchi':        {r:'secchi', u:'g'},
+  'Lenticchie verdi secche':    {r:'secchi', u:'g'},
+  'Lenticchie rosse secche':    {r:'secchi', u:'g'},
+  'Riso basmati':               {r:'secchi', u:'g'},
+  'Riso jasmine':               {r:'secchi', u:'g'},
+  'Pasta secca integrale':      {r:'secchi', u:'g'},
+  'Bulgur':                     {r:'secchi', u:'g'},
+  'Farina per polenta integrale':{r:'secchi', u:'g'},
+  'Farina di ceci':             {r:'secchi', u:'g'},
+  'Pangrattato':                {r:'secchi', u:'g'},
+
+  // — Pane e tortillas
+  'Pane integrale':             {r:'pane', u:'g'},
+  'Tortilla integrale media':   {r:'pane', u:'pz', pz:50},
+  'Panino piccolo':             {r:'pane', u:'pz', pz:65},
+
+  // — Ortofrutta
+  'Cipolle dorate':             {r:'orto', u:'g'},
+  'Cipolla rossa':              {r:'orto', u:'g', lei:true},
+  'Cipollotto':                 {r:'orto', u:'g', lei:true},
+  'Carote':                     {r:'orto', u:'g'},
+  'Sedano':                     {r:'orto', u:'g'},
+  'Peperoni rossi':             {r:'orto', u:'g'},
+  'Aglio':                      {r:'orto', u:'g'},
+  'Zenzero fresco':             {r:'orto', u:'g'},
+  'Zucca':                      {r:'orto', u:'g'},
+  'Spinaci freschi':            {r:'orto', u:'g'},
+  'Limoni':                     {r:'orto', u:'g', pz:40, comeSucco:true},
+  'Lime':                       {r:'orto', u:'g', pz:30, comeSucco:true},
+  'Pomodoro fresco':            {r:'orto', u:'g', lei:true},
+  'Pomodorini':                 {r:'orto', u:'g', lei:true},
+  'Cetriolo':                   {r:'orto', u:'g', lei:true},
+  'Insalata mista':             {r:'orto', u:'g', lei:true},
+  'Coriandolo fresco':          {r:'orto', u:'g', lei:true},
+  'Prezzemolo fresco':          {r:'orto', u:'g'},
+  'Menta fresca':               {r:'orto', u:'g', lei:true},
+  'Basilico thai':              {r:'orto', u:'g'},
+  'Rosmarino':                  {r:'orto', u:'pz', pz:5},
+
+  // — Scatolame e conserve
+  'Pomodori pelati':            {r:'scatolame', u:'g'},
+  'Passata di pomodoro':        {r:'scatolame', u:'g'},
+  'Concentrato di pomodoro':    {r:'scatolame', u:'g'},
+  'Latte di cocco light':       {r:'scatolame', u:'g'},
+  'Kimchi':                     {r:'scatolame', u:'g', lei:true},
+
+  // — Dispensa
+  'Olio EVO':                   {r:'dispensa', u:'g'},
+  'Olio di sesamo':             {r:'dispensa', u:'g'},
+  'Tahina':                     {r:'dispensa', u:'g'},
+  'Salsa di soia':              {r:'dispensa', u:'g'},
+  'Gochujang':                  {r:'dispensa', u:'g'},
+  'Pasta di curry rosso thai':  {r:'dispensa', u:'g'},
+  'Harissa':                    {r:'dispensa', u:'g'},
+  'Senape':                     {r:'dispensa', u:'g'},
+  'Miele':                      {r:'dispensa', u:'g'},
+  'Aceto di riso':              {r:'dispensa', u:'g'},
+  'Vino rosso':                 {r:'dispensa', u:'g'},
+  'Cacao amaro':                {r:'dispensa', u:'g'},
+  'Burro d\'arachidi 100%':     {r:'dispensa', u:'g'},
+  'Mandorle':                   {r:'dispensa', u:'g'},
+  'Noci':                       {r:'dispensa', u:'g'},
+  'Semi di zucca':              {r:'dispensa', u:'g'},
+  'Semi di lino':               {r:'dispensa', u:'g'},
+  'Semi di sesamo':             {r:'dispensa', u:'g'},
+  'Bicarbonato':                {r:'dispensa', u:'g'},
+  'Sale':                       {r:'dispensa', u:'g'},
+
+  // — Spezie ed erbe secche
+  'Cumino':                     {r:'spezie', u:'g'},
+  'Cumino in semi':             {r:'spezie', u:'g'},
+  'Paprika affumicata':         {r:'spezie', u:'g'},
+  'Curcuma':                    {r:'spezie', u:'g'},
+  'Garam masala':               {r:'spezie', u:'g'},
+  'Coriandolo in polvere':      {r:'spezie', u:'g'},
+  'Cannella':                   {r:'spezie', u:'g'},
+  'Peperoncino':                {r:'spezie', u:'g'},
+  'Origano secco':              {r:'spezie', u:'g'},
+  'Menta secca':                {r:'spezie', u:'g'},
+  'Aglio in polvere':           {r:'spezie', u:'g'},
+  'Pepe nero':                  {r:'spezie', u:'g'},
+  'Alloro':                     {r:'spezie', u:'pz', pz:0.2},
+
+  // — Non si compra
+  'Acqua':                      {r:'nc', u:'g', nc:true},
+  'Brodo (o acqua)':            {r:'nc', u:'g', nc:true, nota:'acqua + dado se non hai brodo fatto'},
+};
+
+const REPARTI = [
+  ['carne',     'Banco carne e pesce'],
+  ['latticini', 'Uova e latticini'],
+  ['secchi',    'Legumi, cereali e farine'],
+  ['pane',      'Pane e tortillas'],
+  ['orto',      'Ortofrutta'],
+  ['scatolame', 'Scatolame e conserve'],
+  ['dispensa',  'Dispensa'],
+  ['spezie',    'Spezie ed erbe secche'],
+  ['nc',        'Non serve comprarlo'],
+];
+
+/* ---------- 2. Le basi domenicali ---------------------------------------
+   resa = grammi prodotti · ing = ingredienti per l'intera resa (LORDI dove
+   il documento fornisce il lordo da comprare). Le basi possono contenere
+   altre basi: l'esplosione è ricorsiva.
+   ------------------------------------------------------------------------ */
+const BASI = [
+{ id:'soffritto', nome:'soffritto lungo frullato', resa:3300, kcal100:87,
+  tempoAtt:25, tempoTot:95, ordine:1,
+  conserva:['5 giorni','3 mesi'],
+  nota:'La preparazione più importante del piano: 90 minuti di cottura rendono le verdure compatibili con il vincolo di lui. Frulla finché non è perfettamente liscia.',
+  proc:[
+    'Trita tutto grossolanamente col robot da cucina, a impulsi, non a purea.',
+    'Pentola larga, olio, tutte le verdure: coperchio, fuoco basso, 45 minuti. Mescola ogni 15. Devono collassare, non rosolare.',
+    'Scoperchia, unisci pelati e concentrato. Altri 45 minuti a fuoco basso, scoperto: è qui che perde acqua.',
+    'Frulla a immersione fino a crema perfettamente liscia.',
+    'Dividi subito: ~1.800 g in frigo, ~1.500 g in freezer in porzioni da 250 g.'],
+  timer:[['Verdure coperte',45],['Con i pelati',45]],
+  ing:[['Cipolle dorate',2500],['Carote',1400],['Sedano',700],['Peperoni rossi',1150],
+       ['Aglio',45],['Olio EVO',90],['Pomodori pelati',1200],['Concentrato di pomodoro',60],
+       ['Sale',26]] },
+
+{ id:'ceci', nome:'Ceci cotti', resa:1130, ordine:2, tempoAtt:5, tempoTot:40,
+  conserva:['4 giorni','3 mesi'],
+  nota:'Ammolla 600 g di ceci secchi in tutto: 450 g vanno cotti, 150 g restano crudi e ammollati per i falafel. Con i ceci cotti l\'impasto dei falafel non lega.',
+  proc:['Ammollo 12 ore con il bicarbonato.','Scola e separa: 450 g in pentola a pressione 40 minuti.','Sala a fine cottura.'],
+  timer:[['Pentola a pressione',40]],
+  ing:[['Ceci secchi',450],['Bicarbonato',3],['Alloro',2],['Sale',8]] },
+
+{ id:'fagioli', nome:'Fagioli neri cotti', resa:1000, ordine:3, tempoAtt:5, tempoTot:35,
+  conserva:['4 giorni','3 mesi'],
+  proc:['Ammollo 12 ore.','Pentola a pressione 35 minuti.','Sala a fine cottura.'],
+  timer:[['Pentola a pressione',35]],
+  ing:[['Fagioli neri secchi',400],['Alloro',2],['Sale',7]] },
+
+{ id:'lenticchie', nome:'Lenticchie verdi cotte', resa:400, ordine:4, tempoAtt:3, tempoTot:25,
+  conserva:['4 giorni','3 mesi'],
+  proc:['25 minuti in acqua non salata.'],
+  timer:[['Cottura',25]],
+  ing:[['Lenticchie verdi secche',160]] },
+
+{ id:'pulled', nome:'Pulled chicken', resa:890, ordine:5, tempoAtt:10, tempoTot:130,
+  conserva:['3 giorni','2 mesi'],
+  nota:'Non condirlo adesso. Va in tre direzioni diverse durante la settimana: se lo insaporisci ora, ti ritrovi lo stesso piatto tre volte. Resa dopo cottura ~68% del crudo.',
+  proc:['Massaggia le sovracosce con le spezie e il sale.','Forno 150 °C, 2 ore, teglia coperta con alluminio, con il brodo sul fondo.','Sfilaccia con due forchette.'],
+  timer:[['Forno 150 °C',120]],
+  ing:[['Sovracosce di pollo disossate senza pelle',1300],['Cumino',10],['Paprika affumicata',8],
+       ['Aglio in polvere',6],['Sale',14],['Pepe nero',3],['Brodo (o acqua)',150]] },
+
+{ id:'chili', nome:'Chili di ceci e fagioli neri', resa:1400, ordine:6, tempoAtt:8, tempoTot:20,
+  conserva:['4 giorni','3 mesi'],
+  nota:'Quello che avanza va in freezer: è il pasto di riserva per la sera in cui non avete voglia di niente.',
+  proc:['Tutto in pentola, 20 minuti a fuoco medio-basso.'],
+  timer:[['Cottura',20]],
+  ing:[['@soffritto',600],['@ceci',350],['@fagioli',350],['Passata di pomodoro',200],
+       ['Brodo (o acqua)',150],['Cumino',8],['Paprika affumicata',6],['Cacao amaro',5],
+       ['Cannella',1],['Peperoncino',2],['Sale',6]] },
+
+{ id:'ragu', nome:'Ragù al coltello', resa:800, ordine:7, tempoAtt:15, tempoTot:100,
+  conserva:['3 giorni','3 mesi'],
+  proc:['Rosola la carne a fuoco alto e in due riprese: tutta insieme bolle invece di rosolare.',
+        'Sfuma col vino rosso.','Unisci soffritto, passata e alloro. Fuoco bassissimo, 90 minuti.'],
+  timer:[['Fuoco bassissimo',90]],
+  ing:[['Manzo magro per ragù',500],['@soffritto',400],['Passata di pomodoro',200],
+       ['Vino rosso',150],['Olio EVO',10],['Alloro',2],['Sale',6]] },
+
+{ id:'vellutata', nome:'Vellutata di lenticchie rosse e zucca', resa:1500, ordine:8, tempoAtt:10, tempoTot:35,
+  conserva:['4 giorni','3 mesi'],
+  proc:['Tutto in pentola, 30 minuti.','Frulla.'],
+  timer:[['Cottura',30]],
+  ing:[['Lenticchie rosse secche',200],['Zucca',1100],['Cipolle dorate',100],['Zenzero fresco',15],
+       ['Brodo (o acqua)',1200],['Olio EVO',15],['Curcuma',3],['Sale',9]] },
+
+{ id:'salsayogurt', nome:'Salsa yogurt, aglio e menta secca', resa:560, ordine:9, tempoAtt:5, tempoTot:5,
+  conserva:['4 giorni','—'],
+  nota:'Menta secca, non fresca. Essiccata ha un profilo più resinoso ed è quella che si usa per questa salsa — e risolve il vincolo di lui, che con le foglie fresche non ci va.',
+  proc:['Mescola tutto. Riposo in frigo almeno un\'ora.'],
+  ing:[['Yogurt greco 0%',500],['Aglio',6],['Menta secca',4],['Limoni',15],['Sale',4],['Olio EVO',10]] },
+
+{ id:'cipolle', nome:'Cipolle caramellate frullate', resa:250, ordine:10, tempoAtt:8, tempoTot:45,
+  conserva:['5 giorni','2 mesi'],
+  nota:'È il condimento dell\'hot dog e il sostituto strutturale di qualsiasi cipolla cruda per lui.',
+  proc:['Fuoco basso 40 minuti finché non sono brune e dolci.','Frulla.'],
+  timer:[['Fuoco basso',40]],
+  ing:[['Cipolle dorate',500],['Olio EVO',15],['Aceto di riso',20],['Acqua',100],['Sale',4]] },
+
+{ id:'salsapeperoni', nome:'Salsa di peperoni arrostiti', resa:250, ordine:11, tempoAtt:10, tempoTot:40,
+  conserva:['5 giorni','2 mesi'],
+  proc:['Peperoni in forno 200 °C per 30 minuti.','Pelali.','Frulla con il resto.'],
+  timer:[['Forno 200 °C',30]],
+  ing:[['Peperoni rossi',400],['Aglio',5],['Olio EVO',15],['Aceto di riso',10],
+       ['Paprika affumicata',2],['Sale',3]] },
+
+{ id:'hummus', nome:'Hummus', resa:420, ordine:12, tempoAtt:10, tempoTot:10,
+  conserva:['5 giorni','2 mesi'],
+  proc:['Frulla tutto a lungo, aggiungendo l\'acqua di cottura dei ceci poco per volta.'],
+  ing:[['@ceci',250],['Tahina',50],['Limoni',35],['Acqua',60],['Olio EVO',15],
+       ['Aglio',5],['Cumino',3],['Sale',4]] },
+
+{ id:'falafel', nome:'Impasto falafel', resa:600, pezzi:10, ordine:13, tempoAtt:15, tempoTot:75,
+  conserva:['3 giorni (da crudo)','—'],
+  nota:'Ceci ammollati e crudi, mai cotti: con quelli cotti l\'impasto non lega e si disfa in forno. I falafel si infornano al momento, non la domenica.',
+  proc:['Frulla a impulsi fino a granuloso, non a crema.','Riposo in frigo 1 ora.','Forma le palline da 55-60 g.',
+        'Al momento: forno 200 °C per 20-25 minuti, girati a metà, spennellati d\'olio.'],
+  timer:[['Riposo in frigo',60],['Forno 200 °C',22]],
+  ing:[['Ceci secchi',150],['Cipolle dorate',50],['Aglio',8],['Prezzemolo fresco',20],
+       ['Farina di ceci',25],['Cumino',5],['Coriandolo in polvere',4],['Bicarbonato',2],
+       ['Sale',6],['Olio EVO',15]] },
+
+{ id:'riso', nome:'Riso basmati cotto', resa:690, ordine:14, tempoAtt:3, tempoTot:15,
+  conserva:['3 giorni','—'],
+  nota:'Solo 250 g di crudo, non di più: il riso cotto si conserva massimo 3 giorni e va raffreddato in fretta, allargato su un vassoio. Da giovedì in poi cuocilo fresco, sono 15 minuti.',
+  proc:['Riso, acqua e sale, coperchio, 12 minuti.','Raffredda in fretta allargandolo su un vassoio.'],
+  timer:[['Cottura',12]],
+  ing:[['Riso basmati',250],['Acqua',440],['Sale',4]] },
+];
+
+/* ---------- 3. I pasti ---------------------------------------------------
+   ing: {b:'idBase'|n:'Nome ingrediente', q, soloLei?, soloLui?, qb?}
+   q = quantità per persona (entrambi mangiano la stessa cosa).
+   soloLei = finitura a crudo che resta solo nel piatto di lei.
+   soloLui = equivalente cotto/frullato che resta solo nel piatto di lui.
+   qb: true = quanto basta (non pesa sulla lista)
+   ------------------------------------------------------------------------ */
+const PASTI = [
+/* ============================ LUNEDÌ ============================ */
+{ id:'lun-col', nome:'Uova alla pizzaiola', tipo:'colazione', g:0,
+  tempo:10, difficolta:'facile',
+  desc:'Le uova affogate nel soffritto ridotto, con origano e peperoncino. Il pane serve a raccogliere, non a riempire.',
+  val:[400,25],
+  ing:[{b:'soffritto',q:120},{n:'Uova',q:2},{n:'Albumi',q:2},
+       {n:'Pane integrale',q:20},{n:'Olio EVO',q:4},
+       {n:'Origano secco',q:1},{n:'Peperoncino',q:0,qb:true}],
+  proc:'Scalda il soffritto in padella con l\'olio e l\'origano, 3 minuti, finché non si asciuga e comincia a sfrigolare ai bordi. Sbatti gli albumi con le uova intere e versali sopra. Non mescolare: copri e lascia rapprendere 4-5 minuti a fuoco medio-basso. Peperoncino sopra, pane tostato a parte.' },
+
+{ id:'lun-pra', nome:'Chili di ceci e fagioli neri con riso', tipo:'pranzo', g:0,
+  tempo:8, difficolta:'facile',
+  desc:'Dalla base. Si scalda e si finisce, 6 minuti in tutto.',
+  val:[460,20],
+  ing:[{b:'chili',q:280},{b:'riso',q:100},
+       {n:'Yogurt greco 0%',q:40},{n:'Lime',q:10},
+       {n:'Cipolla rossa',q:20,soloLei:true},{n:'Coriandolo fresco',q:5,soloLei:true}],
+  proc:'Scalda il chili in padella, non nel microonde: ci vogliono 5 minuti ma si asciuga e si concentra invece di diventare acquoso. Riso a fianco, non sotto.',
+  vincolo:{lei:'Cipolla rossa cruda a fettine sottilissime, coriandolo spezzettato a mano, lime spremuto sopra alla fine.',
+           lui:'Niente cipolla e niente coriandolo. Il lime va spremuto dentro il chili durante gli ultimi 2 minuti di cottura — la nota acida arriva lo stesso, ma cotta. Yogurt e una spolverata di peperoncino sopra.'} },
+
+{ id:'lun-cen', nome:'Curry di sovracosce con spinaci, e vellutata a fianco', tipo:'cena', g:0,
+  tempo:45, difficolta:'media',
+  desc:'L\'unico pasto della settimana con le sovracosce crude. Brasate, non saltate.',
+  val:[515,43],
+  ing:[{b:'soffritto',q:100},{b:'vellutata',q:150},
+       {n:'Sovracosce di pollo disossate senza pelle',q:150},
+       {n:'Spinaci freschi',q:150},{n:'Latte di cocco light',q:50},
+       {n:'Olio EVO',q:4},{n:'Zenzero fresco',q:5},{n:'Aglio',q:5},
+       {n:'Garam masala',q:3},{n:'Curcuma',q:2}],
+  proc:'Taglia le sovracosce in pezzi da 4 cm. Rosolale nell\'olio a fuoco alto 4 minuti, tirale fuori. Nella stessa padella: zenzero, aglio, spezie, 40 secondi finché non profumano. Unisci soffritto e latte di cocco, rimetti il pollo, coperchio, fuoco basso, 35 minuti. Gli spinaci entrano negli ultimi minuti.',
+  vincolo:{lei:'I suoi 150 g di spinaci vanno appassiti 40 secondi a fine cottura, restano foglia.',
+           lui:'I suoi 150 g vanno cotti a parte 15 minuti e frullati dentro la salsa prima di rimettere il pollo. La salsa diventa verde scura e cremosa. Sono gli stessi spinaci, cambia solo quando entrano e in che forma.'} },
+
+{ id:'lun-spu', nome:'Skyr, cacao e mandorle', tipo:'spuntino', g:0,
+  tempo:2, difficolta:'facile',
+  val:[155,21],
+  ing:[{n:'Skyr 0%',q:170},{n:'Mandorle',q:10},
+       {n:'Cacao amaro',q:4},{n:'Cannella',q:1}] },
+
+/* ============================ MARTEDÌ =========================== */
+{ id:'mar-col', nome:'Breakfast burrito', tipo:'colazione', g:1,
+  tempo:12, difficolta:'media',
+  desc:'Si arrotolano stretti e si scaldano in padella asciutta finché non sigillano.',
+  val:[420,27],
+  ing:[{b:'fagioli',q:70},
+       {n:'Tortilla integrale media',q:1},
+       {n:'Uova',q:2},{n:'Albumi',q:1},
+       {n:'Formaggio magro grattugiato',q:20},{n:'Passata di pomodoro',q:40},
+       {n:'Cumino',q:2},{n:'Olio EVO',q:3},
+       {n:'Pomodoro fresco',q:40,soloLei:true},{n:'Coriandolo fresco',q:5,soloLei:true}],
+  proc:'Schiaccia i fagioli con la forchetta, cumino e sale, scaldali 2 minuti. Strapazza le uova morbide, toglile dal fuoco quando sono ancora lucide. Farcisci la tortilla: fagioli, uova, formaggio, salsa. Arrotola stretto e rimetti in padella asciutta 90 secondi per lato, la chiusura sotto.',
+  vincolo:{lei:'Salsa cruda — 40 g di passata con pomodoro fresco a dadini e coriandolo.',
+           lui:'Stessa passata cotta in padella 8 minuti con un pizzico di cumino, poi frullata liscia.'} },
+
+{ id:'mar-pra', nome:'Pasta al ragù fatto al coltello', tipo:'pranzo', g:1,
+  tempo:12, difficolta:'facile',
+  val:[465,32],
+  ing:[{b:'ragu',q:150},{n:'Pasta secca integrale',q:60},
+       {n:'Grana grattugiato',q:8}],
+  proc:'Scalda il ragù in padella larga. Scola la pasta 2 minuti prima del tempo e mantecala nel ragù con due cucchiai di acqua di cottura, 60 secondi a fuoco vivo. Grana fuori dal fuoco.' },
+
+{ id:'mar-cen', nome:'Harira e tacchino alla piastra', tipo:'cena', g:1,
+  tempo:40, difficolta:'media',
+  desc:'Zuppa marocchina. Già conforme al vincolo per costruzione: cuoce 40 minuti e si disfa tutto.',
+  val:[470,44],
+  ing:[{b:'soffritto',q:120},{b:'ceci',q:100},
+       {n:'Lenticchie rosse secche',q:40},{n:'Petto di tacchino',q:130},
+       {n:'Passata di pomodoro',q:80},{n:'Brodo (o acqua)',q:250},
+       {n:'Pane integrale',q:25},{n:'Zenzero fresco',q:4},
+       {n:'Curcuma',q:2},{n:'Cannella',q:1},
+       {n:'Limoni',q:10},{n:'Olio EVO',q:4}],
+  proc:'soffritto, spezie e olio in pentola, 2 minuti. Unisci lenticchie rosse, ceci, passata e brodo. 35 minuti a fuoco basso: le lenticchie rosse devono sparire e addensare la zuppa. Limone alla fine, a fuoco spento. Il tacchino a fette spesse, piastra rovente, 3 minuti per lato, tagliato a strisce sopra la zuppa.',
+  nota:'Già conforme al vincolo. Nessuna variante.' },
+
+{ id:'mar-spu', nome:'Ricotta, semi di zucca e miele', tipo:'spuntino', g:1,
+  tempo:2, difficolta:'facile',
+  val:[220,17],
+  ing:[{n:'Ricotta magra',q:130},{n:'Semi di zucca',q:8},{n:'Miele',q:5}] },
+
+/* =========================== MERCOLEDÌ ========================== */
+{ id:'mer-col', nome:'Anda bhurji', tipo:'colazione', g:2,
+  tempo:10, difficolta:'facile',
+  desc:'Uova strapazzate indiane. Il soffritto fa da base, le spezie tostate a secco fanno il resto.',
+  val:[395,25],
+  ing:[{b:'soffritto',q:100},{n:'Uova',q:2},{n:'Albumi',q:2},
+       {n:'Pane integrale',q:25},{n:'Olio EVO',q:4},
+       {n:'Cumino in semi',q:2},{n:'Curcuma',q:2},
+       {n:'Coriandolo in polvere',q:2},{n:'Zenzero fresco',q:4}],
+  proc:'Olio caldo, cumino in semi finché non scoppietta (30 secondi, è il passaggio che fa il piatto), poi zenzero, curcuma, coriandolo. Unisci il soffritto, 2 minuti. Versa le uova sbattute e mescola continuamente a fuoco basso finché non sono cremose — non asciutte.' },
+
+{ id:'mer-pra', nome:'Wrap di falafel', tipo:'pranzo', g:2,
+  tempo:25, difficolta:'media',
+  desc:'I falafel si infornano adesso: domenica hai preparato solo l\'impasto.',
+  val:[485,22],
+  ing:[{b:'falafel',q:230},{b:'hummus',q:40},
+       {b:'salsapeperoni',q:40,soloLui:true},
+       {n:'Tortilla integrale media',q:1},
+       {n:'Tahina',q:8},{n:'Limoni',q:10},
+       {n:'Pomodoro fresco',q:60,soloLei:true},{n:'Cetriolo',q:50,soloLei:true},{n:'Menta fresca',q:5,soloLei:true}],
+  proc:'Falafel in forno 200 °C per 22 minuti, girati a metà, su carta forno e spennellati d\'olio. Nel frattempo diluisci la tahina col limone e due cucchiai d\'acqua fredda: si stringe prima di ammorbidirsi, continua a mescolare. Scalda la tortilla 20 secondi per lato.',
+  vincolo:{lei:'Hummus, falafel (4 pezzi), pomodoro a dadini, cetriolo, menta, tahina.',
+           lui:'Hummus, falafel (4 pezzi), salsa di peperoni arrostiti al posto delle verdure crude, tahina.'} },
+
+{ id:'mer-cen', nome:'Riso e pulled chicken gochujang', tipo:'cena', g:2,
+  tempo:8, difficolta:'facile',
+  val:[490,44],
+  ing:[{b:'pulled',q:150},{b:'riso',q:130},
+       {n:'Gochujang',q:25},{n:'Salsa di soia',q:10},
+       {n:'Aceto di riso',q:8},{n:'Miele',q:5},{n:'Aglio',q:5},
+       {n:'Olio di sesamo',q:3},{n:'Semi di sesamo',q:3},
+       {n:'Cipollotto',q:15,soloLei:true},{n:'Kimchi',q:50,soloLei:true},
+       {n:'Cipolle dorate',q:40,soloLui:true}],
+  proc:'Mescola gochujang, soia, aceto, miele e aglio in una ciotola. Scalda il pulled chicken in padella rovente senza girarlo per 2 minuti, così alcune parti si abbrustoliscono. Versa la salsa, fai caramellare 90 secondi. Sesamo alla fine.',
+  vincolo:{lei:'Cipollotto crudo a rondelle e kimchi a parte.',
+           lui:'Niente kimchi — è fermentato ma crudo, fuori vincolo. Al suo posto 40 g di cipolla stufata 20 minuti con aceto di riso e peperoncino. Stessa funzione acida e piccante, consistenza morbida.'} },
+
+{ id:'mer-spu', nome:'Yogurt greco e burro d\'arachidi', tipo:'spuntino', g:2,
+  tempo:2, difficolta:'facile',
+  val:[145,19],
+  ing:[{n:'Yogurt greco 0%',q:170},{n:'Burro d\'arachidi 100%',q:8}] },
+
+/* ============================ GIOVEDÌ =========================== */
+{ id:'gio-col', nome:'Quesadilla di fagioli e pulled chicken', tipo:'colazione', g:3,
+  tempo:12, difficolta:'media',
+  val:[395,30],
+  ing:[{b:'fagioli',q:60},{b:'pulled',q:50},
+       {n:'Tortilla integrale media',q:1},
+       {n:'Formaggio magro grattugiato',q:25},
+       {n:'Cumino',q:2},{n:'Paprika affumicata',q:1}],
+  proc:'Schiaccia i fagioli con cumino e paprika. Spalma su metà tortilla, sopra il pulled chicken e il formaggio, piega a mezzaluna. Padella asciutta, fuoco medio, 3 minuti per lato con un peso sopra (un\'altra padella va bene): serve la pressione, altrimenti non sigilla e si sfalda al taglio. Aspetta 2 minuti prima di tagliarla.' },
+
+{ id:'gio-pra', nome:'Lenticchie e polenta', tipo:'pranzo', g:3,
+  tempo:40, difficolta:'media',
+  desc:'Già conforme al vincolo. Nessuna variante.',
+  val:[460,22],
+  ing:[{b:'soffritto',q:100},{b:'lenticchie',q:180},
+       {n:'Farina per polenta integrale',q:45},{n:'Acqua',q:200},
+       {n:'Olio EVO',q:6},{n:'Rosmarino',q:1},{n:'Alloro',q:1},
+       {n:'Passata di pomodoro',q:40}],
+  proc:'Polenta: acqua salata a bollore, farina a pioggia mescolando, poi 40 minuti a fuoco basso — quella istantanea è un\'altra cosa. Intanto scalda soffritto, olio, rosmarino e alloro, unisci lenticchie e passata, 12 minuti a fuoco basso perché si insaporiscano. Devono restare umide, non asciutte.',
+  nota:'Già conforme al vincolo. Nessuna variante.' },
+
+{ id:'gio-cen', nome:'Kofta di tacchino in salsa harissa, con bulgur', tipo:'cena', g:3,
+  tempo:40, difficolta:'media',
+  val:[500,44],
+  ing:[{b:'soffritto',q:120},{b:'salsayogurt',q:50},
+       {n:'Macinato di tacchino',q:150},{n:'Bulgur',q:45},
+       {n:'Harissa',q:10},{n:'Cumino',q:3},{n:'Menta secca',q:2},
+       {n:'Aglio',q:5},{n:'Pangrattato',q:10},{n:'Olio EVO',q:4},
+       {n:'Prezzemolo fresco',q:5,soloLei:true}],
+  proc:'Impasta il macinato con cumino, menta secca, aglio, pangrattato e sale. Lascia riposare 20 minuti in frigo o le polpette si sfaldano. Forma cilindri allungati, rosolali nell\'olio 5 minuti girandoli. Aggiungi soffritto e harissa, coperchio, 15 minuti a fuoco basso. Bulgur: coprilo con acqua bollente pari al doppio del peso, coperchio, 15 minuti fuori dal fuoco.',
+  vincolo:{lei:'Salsa yogurt con prezzemolo fresco tritato sopra.',
+           lui:'Salsa yogurt liscia — è già fatta con menta secca, quindi va bene com\'è dal contenitore.'} },
+
+{ id:'gio-spu', nome:'Skyr, cacao e noci', tipo:'spuntino', g:3,
+  tempo:2, difficolta:'facile',
+  val:[150,20],
+  ing:[{n:'Skyr 0%',q:170},{n:'Noci',q:8},{n:'Cacao amaro',q:4}] },
+
+/* ============================ VENERDÌ =========================== */
+{ id:'ven-col', nome:'Shakshuka', tipo:'colazione', g:4,
+  tempo:15, difficolta:'media',
+  val:[410,22],
+  ing:[{b:'soffritto',q:150},{n:'Passata di pomodoro',q:60},
+       {n:'Uova',q:2},{n:'Feta',q:20},{n:'Pane integrale',q:25},
+       {n:'Olio EVO',q:4},{n:'Cumino',q:2},{n:'Paprika affumicata',q:2}],
+  proc:'Olio, cumino e paprika 30 secondi. Unisci soffritto e passata, riduci 6-8 minuti finché non è densa: se è liquida le uova affondano. Scava gli incavi col dorso del cucchiaio, rompici dentro le uova, coperchio 5 minuti — l\'albume rappreso, il tuorlo ancora liquido. Feta sbriciolata sopra a fuoco spento.' },
+
+{ id:'ven-pra', nome:'Pasta al pomodoro con pollo sfilacciato', tipo:'pranzo', g:4, nuovo:true,
+  tempo:15, difficolta:'facile',
+  desc:'Sostituisce il segnaposto "Sbrodolino". Il pasto più basico della settimana: pasta, sugo, pollo. Conforme al vincolo per costruzione — è tutto cotto e frullato.',
+  val:[520,42],
+  ing:[{b:'soffritto',q:120},{b:'pulled',q:120},
+       {n:'Pasta secca integrale',q:50},{n:'Passata di pomodoro',q:50},
+       {n:'Grana grattugiato',q:8},{n:'Peperoncino',q:0,qb:true}],
+  proc:'Scalda soffritto e passata in padella larga, 8 minuti, finché non stringe. Unisci il pulled chicken e lascialo insaporire 5 minuti: si ammorbidisce e prende il sugo. Scola la pasta 2 minuti prima, mantecala nel sugo con un cucchiaio di acqua di cottura. Grana fuori dal fuoco.',
+  nota:'Attenzione: questi valori sono una mia stima, non presa dai documenti. Sono ~40 kcal sopra il segnaposto che sostituisce, quindi il pranzo resta leggermente sopra target — la leva più semplice è togliere 10 g di pasta.' },
+
+{ id:'ven-cen', nome:'Chana saag con petto di pollo', tipo:'cena', g:4,
+  tempo:35, difficolta:'media',
+  desc:'Curry di ceci e spinaci. Già conforme al vincolo: gli spinaci finiscono in crema per entrambi.',
+  val:[545,42],
+  ing:[{b:'soffritto',q:120},{b:'ceci',q:180},
+       {n:'Petto di pollo',q:100},{n:'Spinaci freschi',q:250},
+       {n:'Riso basmati',q:40},{n:'Latte di cocco light',q:50},
+       {n:'Yogurt greco 0%',q:50},{n:'Garam masala',q:3},
+       {n:'Cumino',q:2},{n:'Zenzero fresco',q:5},{n:'Aglio',q:5},
+       {n:'Olio EVO',q:4}],
+  proc:'Gli spinaci vanno cotti 15 minuti in pochissima acqua e frullati — 600 g freschi diventano circa 120 g di crema verde densa. Intanto rosola il pollo a cubi, mettilo da parte. Nella stessa pentola: spezie, soffritto, ceci, latte di cocco, 10 minuti. Unisci la crema di spinaci e il pollo, altri 5 minuti. Yogurt fuori dal fuoco.',
+  nota:'Il pollo non è opzionale. Senza, il piatto si ferma a 18 g di proteine per porzione — un terzo di quello che serve a cena.' },
+
+{ id:'ven-spu', nome:'Yogurt greco e semi di lino', tipo:'spuntino', g:4,
+  tempo:3, difficolta:'facile',
+  val:[150,19],
+  ing:[{n:'Yogurt greco 0%',q:170},{n:'Semi di lino',q:10},
+       {n:'Cannella',q:1}],
+  nota:'I semi di lino interi passano indigeriti. Vanno macinati al momento, o non servono a niente.' },
+
+/* ============================= SABATO =========================== */
+{ id:'sab-col', nome:'Uova e fagioli neri speziati', tipo:'colazione', g:5,
+  tempo:18, difficolta:'media',
+  val:[420,26],
+  ing:[{b:'fagioli',q:110},{n:'Uova',q:2},
+       {n:'Pane integrale',q:25},{n:'Cipolle dorate',q:30},
+       {n:'Passata di pomodoro',q:40},{n:'Cumino',q:2},
+       {n:'Paprika affumicata',q:2},{n:'Olio EVO',q:4}],
+  proc:'Cipolla tritata fine nell\'olio, 6 minuti a fuoco basso finché non è trasparente. Cumino e paprika 30 secondi, poi fagioli e passata, schiaccia un terzo dei fagioli con la forchetta perché il piatto leghi. 8 minuti. Uova all\'occhio di bue in una padella a parte, sopra.' },
+
+{ id:'sab-pra', nome:'Hot dog di pollo con cipolle caramellate', tipo:'pranzo', g:5,
+  tempo:12, difficolta:'facile',
+  val:[450,27],
+  ing:[{b:'cipolle',q:50},{b:'vellutata',q:250,soloLui:true},
+       {n:'Salsiccia di pollo o tacchino',q:100},
+       {n:'Panino piccolo',q:0.5},{n:'Senape',q:8},
+       {n:'Insalata mista',q:80,soloLei:true},{n:'Pomodorini',q:60,soloLei:true},
+       {n:'Olio EVO',q:5,soloLei:true},{n:'Aceto di riso',q:5,soloLei:true}],
+  proc:'Salsicce in padella senza olio, fuoco medio, 10 minuti girandole spesso: devono abbrustolirsi, non bollire nel loro liquido. Pane tostato dalla parte del taglio. Cipolle caramellate scaldate, senape, salsiccia.',
+  vincolo:{lei:'Insalata mista e pomodorini a parte, olio e aceto.',
+           lui:'250 g di vellutata come contorno caldo al posto dell\'insalata. È il pasto dove la differenza tra i due piatti è più visibile, ed è anche l\'unico in cui non ho trovato un modo di renderla invisibile.'},
+  nota:'Unico pasto dove il valore kcal/proteine indicato è quello di lei ma non è esattamente quello che mangia lui: la vellutata calda pesa un po\' di più della sua insalata. Non quantificato per non inventare un numero — resta comunque il pasto con la differenza più visibile tra i due piatti.' },
+
+{ id:'sab-cen', nome:'Curry thai rosso di gamberi', tipo:'cena', g:5,
+  tempo:15, difficolta:'media',
+  val:[505,40],
+  ing:[{b:'soffritto',q:80},{n:'Gamberi sgusciati',q:180},
+       {n:'Riso jasmine',q:50},{n:'Latte di cocco light',q:80},
+       {n:'Pasta di curry rosso thai',q:15},{n:'Salsa di soia',q:8},
+       {n:'Lime',q:12},{n:'Zenzero fresco',q:5},
+       {n:'Olio EVO',q:4},{n:'Basilico thai',q:5}],
+  proc:'Friggi la pasta di curry nell\'olio per 60 secondi prima di aggiungere qualsiasi liquido — è il passaggio che separa un curry thai da acqua rossa. Poi soffritto, latte di cocco, zenzero, 8 minuti. I gamberi entrano per ultimi, 3 minuti e basta: oltre diventano gomma. Lime a fuoco spento.',
+  vincolo:{lei:'Basilico thai fresco strappato sopra alla fine.',
+           lui:'Il basilico va dentro la salsa negli ultimi 2 minuti di cottura, così cede l\'aroma senza restare foglia.'} },
+
+{ id:'sab-spu', nome:'Skyr e cacao', tipo:'spuntino', g:5,
+  tempo:2, difficolta:'facile',
+  val:[110,20],
+  ing:[{n:'Skyr 0%',q:170},{n:'Cacao amaro',q:5},{n:'Cannella',q:1}] },
+
+/* ============================ DOMENICA ========================== */
+{ id:'dom-col', nome:'Uova strapazzate e skyr', tipo:'colazione', g:6,
+  tempo:8, difficolta:'facile',
+  desc:'Domenica non è una giornata di avanzi improvvisati: colazione e pranzo sono costruiti per arrivare sazi alla cena libera.',
+  val:[415,33],
+  ing:[{n:'Uova',q:2},{n:'Albumi',q:2},{b:'soffritto',q:80},
+       {n:'Skyr 0%',q:100},{n:'Pane integrale',q:25},
+       {n:'Olio EVO',q:4}] },
+
+{ id:'dom-pra', nome:'Chili dal freezer con riso', tipo:'pranzo', g:6,
+  tempo:8, difficolta:'facile',
+  desc:'I 700 g di chili avanzati dalla domenica precedente.',
+  val:[520,27],
+  ing:[{b:'chili',q:300},{n:'Riso basmati',q:45},
+       {n:'Yogurt greco 0%',q:60},{n:'Lime',q:10}],
+  nota:'Se lo selezioni qui, la spesa conta il chili come da preparare. Se invece lo prendi dal freezer della settimana scorsa, toglilo dalla lista.' },
+
+{ id:'dom-cen', nome:'Pasto libero', tipo:'cena', g:6, libero:true,
+  desc:'È qui che va la pizza, ogni 2-3 settimane. Budget indicativo: ~600 kcal. Non pesatelo, non contatelo.',
+  val:[600,10],
+  ing:[],
+  proc:'Tre regole, e sono le uniche che contano. 1) Non tagliate colazione e pranzo per far spazio: arrivare affamati a una cena libera è il modo più affidabile di raddoppiarla. 2) Una cena libera a settimana sposta la media settimanale di 60-90 kcal al giorno, cioè niente. Due o tre no. 3) Riprendete lunedì mattina, non "da lunedì prossimo".' },
+];
+
+// nomi corti per i tag nelle schede
+const BREVE = {soffritto:'soffritto', ceci:'ceci cotti', fagioli:'fagioli neri',
+  lenticchie:'lenticchie verdi', pulled:'pulled chicken', chili:'chili', ragu:'ragù',
+  vellutata:'vellutata', salsayogurt:'salsa yogurt', cipolle:'cipolle caram.',
+  salsapeperoni:'salsa peperoni', hummus:'hummus', falafel:'falafel', riso:'riso cotto'};
+BASI.forEach(b => b.breve = BREVE[b.id] || b.nome);
+
+const TARGET = {kcal:1450, p:115};
+
+const GIORNI = ['Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato','Domenica'];
+const TIPI   = [['colazione','Colazione'],['pranzo','Pranzo'],['cena','Cena'],['spuntino','Spuntino']];
+
+
+/* ==========================================================================
+   Motore: pasti scelti → basi da produrre → ingredienti crudi → dispensa/spesa
+   ========================================================================== */
+
+function costruisciIndici(BASI){
+  const perId = {};
+  BASI.forEach(b => perId[b.id] = b);
+  // profondità: una base che ne contiene altre va risolta PRIMA di quelle che contiene
+  const prof = {};
+  const calc = id => {
+    if (prof[id] != null) return prof[id];
+    const b = perId[id];
+    let d = 0;
+    (b.ing||[]).forEach(([n]) => { if (n[0] === '@') d = Math.max(d, 1 + calc(n.slice(1))); });
+    return prof[id] = d;
+  };
+  BASI.forEach(b => calc(b.id));
+  return {perId, prof};
+}
+
+/*  selezione: { pastoId: n }   n = numero di porzioni totali (entrambi insieme)
+    modiBase:  { idBase: 'esatto' | 'intero' }
+    ritorna: {ing:{nome:qta}, basi:{id:{serve,produci}}, val:[kcal,p]}  */
+function calcola(selezione, modiBase, DATI){
+  const {BASI, PASTI, ING} = DATI;
+  const {perId, prof} = costruisciIndici(BASI);
+
+  const ing  = {};                 // ingrediente crudo -> quantità
+  const need = {};                 // base -> grammi richiesti
+  const val  = [0, 0];
+  const usoPasti = {};             // base -> grammi richiesti dai soli pasti
+
+  const add = (nome, q) => { if (q) ing[nome] = (ing[nome]||0) + q; };
+
+  PASTI.forEach(p => {
+    const n = selezione[p.id] || 0;
+    if (!n) return;
+    val[0] += p.val[0] * n;
+    val[1] += p.val[1] * n;
+    (p.ing||[]).forEach(i => {
+      // le finiture non condivise valgono solo per metà delle porzioni:
+      // in ogni coppia di porzioni, una sola delle due persone la riceve.
+      const molt = (i.soloLei || i.soloLui) ? Math.round(n / 2) : n;
+      const q = (i.q || 0) * molt;
+      if (!q || i.qb) return;
+      if (i.b){ need[i.b] = (need[i.b]||0) + q; usoPasti[i.b] = (usoPasti[i.b]||0) + q; }
+      else     { add(i.n, q); }
+    });
+  });
+
+  // risolvi le basi dalla più "esterna" alla più "interna"
+  const ordine = BASI.slice().sort((a,b) => prof[b.id] - prof[a.id]);
+  const basi = {};
+  ordine.forEach(b => {
+    const serve = need[b.id] || 0;
+    if (!serve) return;
+    // default: dose piena solo quando la quantità esatta sarebbe troppo piccola
+    // da preparare davvero (es. 40 g di hummus), altrimenti si scala al fabbisogno
+    const modo = (modiBase && modiBase[b.id])
+      || ((serve < 200 && serve < b.resa * 0.5) ? 'intero' : 'esatto');
+    const ricette = Math.max(1, Math.ceil(serve / b.resa - 1e-9));
+    const produci = modo === 'intero' ? ricette * b.resa : serve;
+    basi[b.id] = {serve, produci, modo, ricette, avanzo: produci - serve};
+    const f = produci / b.resa;
+    b.ing.forEach(([n, q]) => {
+      if (n[0] === '@') need[n.slice(1)] = (need[n.slice(1)]||0) + q * f;
+      else add(n, q * f);
+    });
+  });
+
+  return {ing, basi, val, usoPasti};
+}
+
+/* --- formattazione quantità ------------------------------------------------ */
+function arrotonda(q, u){
+  if (u === 'pz') return Math.round(q * 100) / 100;
+  if (q >= 1000)  return Math.round(q / 10) * 10;
+  if (q >= 100)   return Math.round(q / 5) * 5;
+  if (q >= 20)    return Math.round(q);
+  if (q >= 2)     return Math.round(q * 2) / 2;
+  return Math.round(q * 10) / 10;
+}
+
+function formatta(nome, q, ING){
+  const m = ING[nome] || {u:'g'};
+  if (m.u === 'pz'){
+    const n = Math.ceil(q - 1e-9);
+    return n + (n === 1 ? ' pz' : ' pz');
+  }
+  const r = arrotonda(q, 'g');
+  if (m.comeSucco){
+    const n = Math.ceil(q / m.pz - 1e-9);
+    return n + (n === 1 ? ' frutto' : ' frutti') + ' (~' + r + ' g di succo)';
+  }
+  if (r >= 1000) return (r/1000).toFixed(r % 1000 === 0 ? 0 : 1).replace('.', ',') + ' kg';
+  return String(r).replace('.', ',') + ' g';
+}
+
+
+/* ==========================================================================
+   UI
+   ========================================================================== */
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const BASE_BY_ID = {}; BASI.forEach(b => BASE_BY_ID[b.id] = b);
+const PASTO_BY_ID = {}; PASTI.forEach(p => PASTO_BY_ID[p.id] = p);
+const TIPO_LABEL = Object.fromEntries(TIPI);
+
+/* ---------- stato + persistenza ---------- */
+const CHIAVE_UI = 'dietacosi.ui.v1';
+let stato = {
+  grp:'tipo', filtro:'tutti', passo:'dispensa',
+  sel:{}, modiBase:{}, hoGia:{}, preso:{}, pesi:[], pesoUid:null, aperti:{}, extra:[]
+};
+function salvaLocale(){
+  try {
+    const { grp, filtro, passo, aperti, pesoUid } = stato;
+    localStorage.setItem(CHIAVE_UI, JSON.stringify({ grp, filtro, passo, aperti, pesoUid }));
+  } catch(e){}
+}
+function caricaLocale(){
+  try {
+    const r = localStorage.getItem(CHIAVE_UI);
+    if (r) Object.assign(stato, JSON.parse(r));
+  } catch(e){}
+}
+
+let salvaCondivisoTimer = null;
+function salvaCondiviso(){
+  if (!HOUSEHOLD_ID) return;
+  clearTimeout(salvaCondivisoTimer);
+  salvaCondivisoTimer = setTimeout(() => {
+    const { sel, modiBase, hoGia, preso, extra } = stato;
+    setDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), { sel, modiBase, hoGia, preso, extra });
+  }, 400);
+}
+
+function osservaCondiviso(){
+  onSnapshot(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), snap => {
+    const r = snap.exists() ? snap.data() : {};
+    stato.sel = r.sel || {};
+    stato.modiBase = r.modiBase || {};
+    stato.hoGia = r.hoGia || {};
+    stato.preso = r.preso || {};
+    stato.extra = r.extra || [];
+    renderTutto();
+    controllaMigrazione();
+  });
+}
+
+function osservaPesi(){
+  const q = query(collection(db, 'households', HOUSEHOLD_ID, 'pesi'), orderBy('data'));
+  onSnapshot(q, snap => {
+    stato.pesi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderPeso();
+  });
+}
+
+let migrazioneControllata = false;
+function controllaMigrazione(){
+  if (migrazioneControllata) return;
+  migrazioneControllata = true;
+  let vecchio = null;
+  try { const r = localStorage.getItem('dietacosi.v1'); if (r) vecchio = JSON.parse(r); } catch(e){}
+  const vuoto = !Object.keys(stato.sel).length && !Object.keys(stato.hoGia).length && !Object.keys(stato.preso).length;
+  if (vecchio && vuoto) $('#migra-banner').hidden = false;
+}
+function importaDatiVecchi(){
+  let vecchio = null;
+  try { const r = localStorage.getItem('dietacosi.v1'); if (r) vecchio = JSON.parse(r); } catch(e){}
+  if (!vecchio) return;
+  let sel = vecchio.sel || {};
+  Object.keys(sel).forEach(id => { const s = sel[id]; if (s && typeof s === 'object') sel[id] = (s.lei||0)+(s.lui||0); });
+  stato.sel = sel; stato.modiBase = vecchio.modiBase||{}; stato.hoGia = vecchio.hoGia||{};
+  stato.preso = vecchio.preso||{}; stato.extra = vecchio.extra||[];
+  renderTutto(); salvaCondiviso();
+  $('#migra-banner').hidden = true;
+  toast('Dati importati');
+}
+function toast(m){
+  const t = $('#toast'); t.textContent = m; t.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2200);
+}
+
+/* ---------- helpers di formato ---------- */
+const nf = n => {
+  const r = Math.round(n * 10) / 10;
+  return String(r % 1 === 0 ? r : r.toFixed(1)).replace('.', ',');
+};
+const fmtG = g => g >= 1000 ? nf(Math.round(g/100)/10) + ' kg' : nf(Math.round(g)) + ' g';
+function fmtQ(i){
+  if (i.qb) return 'q.b.';
+  const v = i.q || 0;
+  if (!v) return '—';
+  if (i.b) return nf(v) + ' g';
+  const m = ING[i.n] || {u:'g'};
+  if (m.u === 'pz') return v === 0.5 ? '½' : nf(v);
+  if (m.comeSucco) return nf(v) + ' g succo';
+  return nf(v) + ' g';
+}
+function nomeIng(i){
+  if (i.b) return esc(BASE_BY_ID[i.b].nome) + '<em>base</em>';
+  let s = esc(i.n);
+  if (i.soloLei) s += '<em>solo lei</em>';
+  if (i.soloLui) s += '<em>solo lui</em>';
+  return s;
+}
+const nPorzioni = () => Object.values(stato.sel).reduce((a,n) => a + (n||0), 0);
+const nPasti    = () => Object.values(stato.sel).filter(n => (n||0) > 0).length;
+
+/* ---------- calcolo corrente ---------- */
+let CALC = null;
+function ricalcola(){
+  CALC = calcola(stato.sel, stato.modiBase, {ING, BASI, PASTI});
+  return CALC;
+}
+function vociSpesa(){                     // ingredienti ordinati per reparto
+  const out = [];
+  REPARTI.forEach(([k, label]) => {
+    const righe = Object.entries(CALC.ing)
+      .filter(([n]) => (ING[n]||{r:'dispensa'}).r === k)
+      .sort((a,b) => a[0].localeCompare(b[0], 'it'));
+    if (righe.length) out.push([k, label, righe]);
+  });
+  return out;
+}
+
+/* ==========================================================================
+   VISTA · CATALOGO
+   ========================================================================== */
+function schedaPasto(p){
+  const n = stato.sel[p.id] || 0;
+  const attivo = n > 0;
+  const aperto = !!stato.aperti[p.id];
+  const basi = [...new Set((p.ing||[]).filter(i => i.b).map(i => i.b))];
+
+  const stepper = () => `<div class="step${n?' on':''}">
+      <button data-step="${p.id}|-1" aria-label="Togli una porzione">−</button>
+      <span>${n}</span>
+      <button data-step="${p.id}|1" aria-label="Aggiungi una porzione">+</button>
+    </div>`;
+
+  const righe = (p.ing||[]).map(i => `<div class="riga">
+      <span class="ing">${nomeIng(i)}</span>
+      <span class="q${(i.q||i.qb)?'':' zero'}">${fmtQ(i)}</span>
+    </div>`).join('');
+
+  const vincolo = p.vincolo ? `<div class="vincolo">
+      <span class="eyebrow" style="color:var(--harissa)">Il vincolo · lei</span>
+      <p>${esc(p.vincolo.lei)}</p>
+      <span class="eyebrow" style="color:var(--harissa)">Lui</span>
+      <p>${esc(p.vincolo.lui)}</p>
+    </div>` : '';
+  const nota = p.nota ? `<div class="nota">${esc(p.nota)}</div>` : '';
+
+  return `<article class="pasto${attivo?' sel':''}${aperto?' aperto':''}" data-id="${p.id}">
+    <div class="p-h" data-apri="${p.id}">
+      <div class="p-top">
+        <div class="p-nome">${esc(p.nome)}</div>
+        <svg class="chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+      <div class="p-meta">
+        ${p.tempo ? `<span class="tag tempo">${p.tempo} min</span>` : ''}
+        ${p.difficolta ? `<span class="tag diff-${p.difficolta}">${esc(p.difficolta)}</span>` : ''}
+        <span class="tag t-${p.tipo}">${TIPO_LABEL[p.tipo]}</span>
+        <span class="tag">${GIORNI[p.g]}</span>
+        ${p.nuovo ? '<span class="tag" style="background:rgba(232,163,61,.16);color:var(--curcuma)">nuovo</span>' : ''}
+        ${basi.map(b => `<span class="tag base">${esc(BASE_BY_ID[b].breve)}</span>`).join('')}
+      </div>
+      <div class="p-val">
+        <span class="pill"><b>${p.val[0]}</b> kcal · <b>${p.val[1]}</b> g P</span>
+      </div>
+      <div class="step-box">${stepper()}</div>
+    </div>
+    <div class="p-corpo">
+      ${p.desc ? `<p class="p-desc">${esc(p.desc)}</p>` : ''}
+      ${righe ? `<div class="gram">
+        <div class="intest"><span></span><span>Porzione</span></div>
+        ${righe}</div>` : ''}
+      ${p.proc ? `<div class="proc">${esc(p.proc)}</div>` : ''}
+      ${vincolo}${nota}
+    </div>
+  </article>`;
+}
+
+function renderCatalogo(){
+  const q = ($('#cerca').value || '').trim().toLowerCase();
+  let lista = PASTI.filter(p => {
+    if (stato.filtro !== 'tutti' && p.tipo !== stato.filtro) return false;
+    if (!q) return true;
+    const testo = [p.nome, p.desc||'', p.proc||'',
+      ...(p.ing||[]).map(i => i.b ? BASE_BY_ID[i.b].nome : i.n)].join(' ').toLowerCase();
+    return testo.includes(q);
+  });
+
+  let gruppi;
+  if (stato.grp === 'giorno'){
+    gruppi = GIORNI.map((g,i) => [g, lista.filter(p => p.g === i)]);
+  } else if (stato.grp === 'base'){
+    const m = new Map();
+    BASI.forEach(b => m.set(b.nome, []));
+    m.set('Senza basi', []);
+    lista.forEach(p => {
+      const basi = [...new Set((p.ing||[]).filter(i => i.b).map(i => BASE_BY_ID[i.b].nome))];
+      if (!basi.length) m.get('Senza basi').push(p);
+      else basi.forEach(b => m.get(b).push(p));
+    });
+    gruppi = [...m.entries()];
+  } else {
+    gruppi = TIPI.map(([k,label]) => [label, lista.filter(p => p.tipo === k)]);
+  }
+
+  const html = gruppi.filter(([,ps]) => ps.length).map(([label, ps]) => `
+    <div class="sez">
+      <div class="sez-h">
+        <h2 class="display">${esc(label)}</h2>
+        <span class="eyebrow">${ps.length} pasti</span>
+      </div>
+      ${ps.map(schedaPasto).join('')}
+    </div>`).join('');
+
+  $('#pasti-sub').textContent = (lista.length === PASTI.length
+      ? `${PASTI.length} pasti, nessun giorno obbligato`
+      : `${lista.length} pasti su ${PASTI.length}`)
+    + ': scegli quelli che vuoi cucinare e la lista fa il resto.';
+  $('#catalogo').innerHTML = html || `<div class="vuoto">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <p>Nessun pasto trovato.</p></div>`;
+}
+
+/* ==========================================================================
+   VISTA · LISTA
+   ========================================================================== */
+function renderLista(){
+  const c = $('#lista-corpo');
+  if (!nPasti()){
+    c.innerHTML = `<div class="vuoto">
+      <svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>
+      <p>La lista è vuota.<br>Vai su <b>Pasti</b> e aggiungi quello che vuoi cucinare.</p>
+      <div class="riga-btn" style="justify-content:center"><button class="btn" data-vai="pasti">SCEGLI I PASTI</button></div>
+    </div>`;
+    return;
+  }
+  const v = CALC.val;
+  const colazioni = PASTI.filter(p => p.tipo === 'colazione')
+    .reduce((a,p) => a + (stato.sel[p.id]||0), 0);
+
+  const mediaBlocco = () => {
+    const gg = colazioni;
+    if (!gg) return '';
+    const k = Math.round(v[0]/gg), p = Math.round(v[1]/gg);
+    const d = k - TARGET.kcal, dp = p - TARGET.p;
+    const col = x => x > 0 ? 'var(--harissa)' : 'var(--pistacchio)';
+    return `<div style="margin-top:9px">
+      <div class="eyebrow">Media su ${gg} giorn${gg===1?'o':'i'}</div>
+      <div class="mono" style="font-size:14px;margin-top:4px">
+        <b style="font-size:19px">${k}</b> kcal
+        <span style="color:${col(d)}">(${d>0?'+':''}${d} vs target)</span>
+        · <b style="font-size:19px">${p}</b> g P
+        <span style="color:${col(-dp)}">(${dp>0?'+':''}${dp})</span>
+      </div></div>`;
+  };
+
+  const gruppi = TIPI.map(([k,label]) => [label, PASTI.filter(p => {
+    return p.tipo === k && (stato.sel[p.id]||0) > 0;
+  })]).filter(([,ps]) => ps.length);
+
+  c.innerHTML = `
+    <div class="card">
+      <div class="eyebrow">Totale della lista</div>
+      <div class="mono" style="margin-top:7px;font-size:14px">
+        <span style="color:var(--curcuma)">${Math.round(v[0]).toLocaleString('it')} kcal · ${Math.round(v[1])} g P</span>
+      </div>
+      ${mediaBlocco()}
+      <p class="sub" style="font-size:12.5px;margin-top:11px">La media giornaliera conta una colazione = un giorno. Target: ${TARGET.kcal} kcal / ${TARGET.p} g P.</p>
+      <div class="riga-btn">
+        <button class="btn" data-vai="spesa">VAI ALLA DISPENSA</button>
+        <button class="btn ghost" id="svuota-sel-2">SVUOTA</button>
+      </div>
+    </div>
+    ${gruppi.map(([label, ps]) => `<div class="sez">
+      <div class="sez-h"><h2 class="display">${label}</h2><span class="eyebrow">${ps.length}</span></div>
+      ${ps.map(schedaPasto).join('')}
+    </div>`).join('')}`;
+}
+
+/* ==========================================================================
+   VISTA · DISPENSA / SPESA
+   ========================================================================== */
+function renderSpesa(){
+  const c = $('#spesa-corpo'), dispensa = stato.passo === 'dispensa';
+  $('#spesa-eyebrow').textContent = dispensa ? 'Passo 2' : 'Passo 3';
+  $('#spesa-titolo').textContent = dispensa ? 'Dispensa' : 'Spesa';
+  $('#spesa-sub').textContent = dispensa
+    ? 'Tutto quello che serve per i pasti scelti, basi comprese. Spunta quello che hai già in casa: il resto diventa la lista della spesa.'
+    : 'Quello che non hai spuntato nella dispensa. Spunta mano a mano che lo metti nel carrello.';
+
+  if (!nPasti()){
+    $('#spesa-azioni').hidden = true;
+    $('#barra').style.width = '0%';
+    c.innerHTML = `<div class="vuoto">
+      <svg viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/></svg>
+      <p>Prima scegli i pasti.</p>
+      <div class="riga-btn" style="justify-content:center"><button class="btn" data-vai="pasti">SCEGLI I PASTI</button></div>
+    </div>`;
+    return;
+  }
+  $('#spesa-azioni').hidden = false;
+
+  let tot = 0, fatti = 0;
+  const blocchi = vociSpesa().map(([k, label, righe]) => {
+    const vis = dispensa ? righe : righe.filter(([n]) => !stato.hoGia[n]);
+    if (!vis.length) return '';
+    const conta = k !== 'nc';
+    const voci = vis.map(([n, q]) => {
+      const spuntato = dispensa ? !!stato.hoGia[n] : !!stato.preso[n];
+      if (conta){ tot++; if (spuntato) fatti++; }
+      const m = ING[n] || {};
+      return `<label class="voce${spuntato?' fatta':''}">
+        <input type="checkbox" data-sp="${esc(n)}"${spuntato?' checked':''}>
+        <span class="n">${esc(n)}${m.nota ? `<small>${esc(m.nota)}</small>` : ''}</span>
+        <span class="q">${formatta(n, q, ING)}</span>
+      </label>`;
+    }).join('');
+    return `<div class="rep">
+      <div class="rep-h"><h2 class="display">${esc(label)}</h2><span class="eyebrow">${vis.length}</span></div>
+      ${voci}</div>`;
+  }).join('');
+
+  // voci fuori piano: solo nella lista della spesa
+  let extraHtml = '';
+  if (!dispensa){
+    const voci = stato.extra.map((x, i) => {
+      const k = '+' + x;
+      const spuntato = !!stato.preso[k];
+      tot++; if (spuntato) fatti++;
+      return `<label class="voce${spuntato?' fatta':''}">
+        <input type="checkbox" data-sp="${esc(k)}"${spuntato?' checked':''}>
+        <span class="n">${esc(x)}</span>
+        <button class="q" data-delx="${i}" style="background:none;border:0;cursor:pointer;font-size:17px;color:var(--fumo)" aria-label="Togli">×</button>
+      </label>`;
+    }).join('');
+    extraHtml = `<div class="rep">
+      <div class="rep-h"><h2 class="display">Fuori piano</h2><span class="eyebrow">${stato.extra.length}</span></div>
+      ${voci}
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <input type="search" id="extra-n" placeholder="Aggiungi (caffè, detersivo…)" aria-label="Voce fuori piano">
+        <button class="btn" id="extra-add" style="flex-shrink:0">AGGIUNGI</button>
+      </div></div>`;
+  }
+
+  c.innerHTML = (blocchi || `<div class="vuoto"><p>Niente da comprare: hai già tutto in dispensa.</p></div>`) + extraHtml;
+  const pct = tot ? Math.round(fatti / tot * 100) : 0;
+  $('#barra').style.width = pct + '%';
+  $('#b-spesa').textContent = dispensa ? '' : String(tot - fatti || '');
+}
+
+function testoLista(){
+  const d = new Date().toLocaleDateString('it-IT');
+  let out = (stato.passo === 'dispensa' ? 'DISPENSA' : 'LISTA DELLA SPESA') + ' — ' + d + '\n';
+  vociSpesa().forEach(([k, label, righe]) => {
+    const vis = stato.passo === 'dispensa' ? righe : righe.filter(([n]) => !stato.hoGia[n]);
+    if (!vis.length || k === 'nc') return;
+    out += '\n' + label.toUpperCase() + '\n';
+    vis.forEach(([n, q]) => {
+      const done = stato.passo === 'dispensa' ? stato.hoGia[n] : stato.preso[n];
+      out += (done ? '[x] ' : '[ ] ') + n + ' — ' + formatta(n, q, ING) + '\n';
+    });
+  });
+  if (stato.passo === 'spesa' && stato.extra.length){
+    out += '\nFUORI PIANO\n';
+    stato.extra.forEach(x => { out += (stato.preso['+'+x] ? '[x] ' : '[ ] ') + x + '\n'; });
+  }
+  return out;
+}
+
+/* ==========================================================================
+   VISTA · BASI
+   ========================================================================== */
+function renderBasi(){
+  const c = $('#basi-corpo');
+  const attive = BASI.filter(b => CALC.basi[b.id]).sort((a,b) => a.ordine - b.ordine);
+  if (!attive.length){
+    c.innerHTML = `<div class="vuoto">
+      <svg viewBox="0 0 24 24"><path d="M4 11h16v3a6 6 0 01-6 6h-4a6 6 0 01-6-6z"/><path d="M20 12h1.5a2 2 0 010 4H20"/></svg>
+      <p>Nessuna base da preparare: i pasti che hai scelto non ne usano.</p>
+      <div class="riga-btn" style="justify-content:center"><button class="btn" data-vai="pasti">SCEGLI I PASTI</button></div>
+    </div>`;
+    return;
+  }
+  const attMin = attive.reduce((a,b) => a + b.tempoAtt, 0);
+
+  c.innerHTML = `<div class="card">
+      <div class="eyebrow">Domenica</div>
+      <div class="mono" style="margin-top:6px;font-size:14px"><b style="font-size:22px">${attive.length}</b> preparazioni · <b style="font-size:22px">${attMin}</b> min di lavoro attivo</div>
+      <p class="sub" style="font-size:13px">Fai partire il sofrito per primo: è il collo di bottiglia. Legumi e pollo cuociono in parallelo mentre il sofrito riduce.</p>
+    </div>` +
+    attive.map(b => {
+      const v = CALC.basi[b.id];
+      const f = v.produci / b.resa;
+      const scarso = v.serve > b.resa;
+      return `<div class="card">
+        <div class="base-h">
+          <div style="flex:1;min-width:0">
+            <div class="eyebrow">${b.ordine} · ${b.tempoTot} min</div>
+            <div class="card-t" style="margin-top:4px">${esc(b.nome)}</div>
+            <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ~${Math.ceil(v.produci/(b.resa/b.pezzi))} pezzi` : ''}</div>
+          </div>
+        </div>
+        <div class="seg" style="margin-top:11px;max-width:300px">
+          <button data-modo="${b.id}|esatto" aria-pressed="${v.modo==='esatto'}">Quantità esatta</button>
+          <button data-modo="${b.id}|intero" aria-pressed="${v.modo==='intero'}">${v.ricette>1?v.ricette+' ricette':'Ricetta intera'}</button>
+        </div>
+        ${scarso && v.modo === 'esatto' ? `<div class="avviso">Ti serve più di una dose piena (la ricetta base rende ${b.resa} g). Le quantità qui sotto sono già riscalate: verifica che ti stiano in pentola.</div>` : ''}
+        <div class="gram" style="margin-top:12px">
+          ${b.ing.map(([n,q]) => {
+            const nome = n[0] === '@' ? BASE_BY_ID[n.slice(1)].nome + '<em>base</em>' : esc(n);
+            const m = n[0] === '@' ? {u:'g'} : (ING[n] || {u:'g'});
+            const qq = q * f;
+            const testo = m.u === 'pz' ? nf(Math.ceil(qq - 1e-9)) + ' pz' : formatta(n[0]==='@' ? 'x' : n, qq, ING).replace(/ \(.*\)/,'');
+            return `<div class="riga" style="grid-template-columns:1fr auto">
+              <span class="ing">${nome}</span><span class="q">${testo}</span></div>`;
+          }).join('')}
+        </div>
+        ${b.proc ? `<ol class="passi">${b.proc.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : ''}
+        ${(b.timer||[]).map(([nome,min]) => `<button class="timer" data-timer="${min}" data-nome="${esc(nome)}">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+          ${esc(nome)} · ${min}′</button>`).join('')}
+        ${b.nota ? `<div class="nota">${esc(b.nota)}</div>` : ''}
+        <div class="qta-base" style="margin-top:11px">Frigo ${b.conserva[0]} · Freezer ${b.conserva[1]}</div>
+      </div>`;
+    }).join('');
+}
+
+let timerAttivo = null;
+function avviaTimer(btn){
+  if (timerAttivo){ clearInterval(timerAttivo.id); timerAttivo.btn.classList.remove('attivo'); timerAttivo.btn.innerHTML = timerAttivo.html; }
+  const min = +btn.dataset.timer, nome = btn.dataset.nome;
+  const html = btn.innerHTML;
+  let r = min * 60;
+  btn.classList.add('attivo');
+  const tick = () => {
+    const m = Math.floor(r/60), s = r % 60;
+    btn.textContent = nome + ' · ' + m + ':' + String(s).padStart(2,'0');
+    if (r-- <= 0){ clearInterval(id); btn.classList.remove('attivo'); btn.innerHTML = html; timerAttivo = null; toast('Tempo scaduto: ' + nome); }
+  };
+  tick();
+  const id = setInterval(tick, 1000);
+  timerAttivo = {id, btn, html};
+}
+
+/* ==========================================================================
+   VISTA · PESO
+   ========================================================================== */
+function renderPeso(){
+  const membri = {};
+  stato.pesi.forEach(x => { membri[x.uid] = x.nome || 'Utente'; });
+  membri[UID] = MIO_NOME || 'Tu';
+  if (!stato.pesoUid || !(stato.pesoUid in membri)) stato.pesoUid = UID;
+  const uid = stato.pesoUid;
+
+  $('#peso-chi').innerHTML = 'Nuova misura · ' + Object.keys(membri).map(u =>
+    `<button class="lnk-chi" data-pchi="${u}" style="background:none;border:0;cursor:pointer;font:inherit;letter-spacing:inherit;color:${u===uid?'var(--curcuma)':'var(--fumo)'}">${esc(membri[u].toUpperCase())}</button>`
+  ).join(' / ');
+
+  const p = stato.pesi.filter(x => x.uid === uid).sort((a,b) => a.data.localeCompare(b.data));
+  const c = $('#p-contenuto');
+  if (!p.length){ c.innerHTML = `<div class="vuoto"><p>Nessuna misura ancora.</p></div>`; return; }
+
+  c.innerHTML = `<div class="card">${grafico(p)}${verdetto(p)}</div>
+    <div class="card pesi-l">
+      <div class="eyebrow" style="border:0">Storico</div>
+      ${p.slice().reverse().map(x => `<div>
+        <span>${new Date(x.data).toLocaleDateString('it-IT',{day:'2-digit',month:'short'})}</span>
+        <span><b>${nf(x.kg)}</b> kg <button data-del-peso="${x.id}" aria-label="Elimina">×</button></span>
+      </div>`).join('')}
+    </div>`;
+}
+function grafico(p){
+  const W = 700, H = 190, m = {t:16, r:14, b:26, l:40};
+  const kg = p.map(x => x.kg);
+  let min = Math.min(...kg), max = Math.max(...kg);
+  if (max - min < 2){ const c = (max+min)/2; min = c-1; max = c+1; }
+  const X = i => m.l + (p.length < 2 ? (W-m.l-m.r)/2 : i*(W-m.l-m.r)/(p.length-1));
+  const Y = v => m.t + (max-v)/(max-min)*(H-m.t-m.b);
+  const linea = p.map((x,i) => `${i?'L':'M'}${X(i).toFixed(1)},${Y(x.kg).toFixed(1)}`).join('');
+  const area = p.length > 1 ? `${linea}L${X(p.length-1).toFixed(1)},${H-m.b}L${X(0).toFixed(1)},${H-m.b}Z` : '';
+  const col = 'var(--curcuma)';
+  const griglia = [0,.5,1].map(f => {
+    const v = min+(max-min)*f, y = Y(v);
+    return `<line x1="${m.l}" y1="${y}" x2="${W-m.r}" y2="${y}" stroke="var(--bordo)" stroke-dasharray="3 4"/>
+      <text x="${m.l-7}" y="${y+4}" fill="var(--fumo)" font-size="11" text-anchor="end" font-family="monospace">${v.toFixed(1)}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto">
+    <defs><linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${col}" stop-opacity=".26"/><stop offset="1" stop-color="${col}" stop-opacity="0"/>
+    </linearGradient></defs>
+    ${griglia}
+    ${area ? `<path d="${area}" fill="url(#gr)"/>` : ''}
+    <path d="${linea}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round"/>
+    ${p.map((x,i) => `<circle cx="${X(i).toFixed(1)}" cy="${Y(x.kg).toFixed(1)}" r="3.4" fill="var(--pepe)" stroke="${col}" stroke-width="2"/>`).join('')}
+  </svg>`;
+}
+function verdetto(p){
+  if (p.length < 4) return `<p class="sub" style="margin-top:10px">Servono almeno 4 misure su due settimane prima che la media dica qualcosa.</p>`;
+  const meta = Math.ceil(p.length/2);
+  const a = p.slice(0, meta), b = p.slice(-meta);
+  const ma = a.reduce((s,x) => s+x.kg, 0)/a.length, mb = b.reduce((s,x) => s+x.kg, 0)/b.length;
+  const gg = (new Date(p.at(-1).data) - new Date(p[0].data))/86400000 || 7;
+  const sett = (mb-ma)/(gg/2/7 || 1);
+  let t;
+  if (sett > -0.1) t = 'La media non sta calando. Togli ~150 kcal al giorno: 40 g di riso o 20 g di pane.';
+  else if (sett < -1.2) t = 'Stai calando troppo in fretta. Aggiungi ~150 kcal: un calo rapido costa massa magra.';
+  else t = 'Sei nel range previsto. Non toccare niente.';
+  return `<div class="nota" style="margin-top:12px"><b class="mono">${sett > 0 ? '+' : ''}${sett.toFixed(2).replace('.', ',')} kg/settimana</b> — ${t}</div>`;
+}
+
+/* ==========================================================================
+   ORCHESTRAZIONE
+   ========================================================================== */
+function renderTutto(){
+  ricalcola();
+  renderCatalogo(); renderLista(); renderSpesa(); renderBasi(); renderPeso();
+  const n = nPorzioni();
+  $('#b-lista').textContent = n ? String(n) : '';
+}
+function vaiA(v){
+  $$('nav button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.v === v)));
+  $$('.vista').forEach(x => x.classList.toggle('on', x.id === 'v-' + v));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ---------- eventi ---------- */
+document.addEventListener('click', e => {
+  const t = e.target;
+
+  const nav = t.closest('nav button');        if (nav){ vaiA(nav.dataset.v); return; }
+  const vai = t.closest('[data-vai]');        if (vai){ vaiA(vai.dataset.vai); return; }
+
+  const step = t.closest('[data-step]');
+  if (step){
+    e.preventDefault(); e.stopPropagation();
+    const [id, d] = step.dataset.step.split('|');
+    const n = Math.max(0, Math.min(28, (stato.sel[id]||0) + (+d)));
+    if (n) stato.sel[id] = n; else delete stato.sel[id];
+    renderTutto(); salvaCondiviso(); return;
+  }
+
+  const apri = t.closest('[data-apri]');
+  if (apri && !t.closest('.step-box')){
+    const id = apri.dataset.apri;
+    stato.aperti[id] = !stato.aperti[id];
+    $$(`.pasto[data-id="${id}"]`).forEach(el => el.classList.toggle('aperto', !!stato.aperti[id]));
+    salvaLocale(); return;
+  }
+
+  const ft = t.closest('#filtro-tipo button');
+  if (ft){ stato.filtro = ft.dataset.f;
+    $$('#filtro-tipo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === stato.filtro)));
+    renderCatalogo(); salvaLocale(); return; }
+
+  const fv = t.closest('#filtro-vista button');
+  if (fv){ stato.grp = fv.dataset.grp;
+    $$('#filtro-vista button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.grp === stato.grp)));
+    renderCatalogo(); salvaLocale(); return; }
+
+  const ps = t.closest('#passo button');
+  if (ps){ stato.passo = ps.dataset.passo;
+    $$('#passo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.passo === stato.passo)));
+    renderSpesa(); salvaLocale(); return; }
+
+  const modo = t.closest('[data-modo]');
+  if (modo){ const [id, m] = modo.dataset.modo.split('|'); stato.modiBase[id] = m; renderTutto(); salvaCondiviso(); return; }
+
+  const tim = t.closest('.timer'); if (tim){ avviaTimer(tim); return; }
+
+  const delPeso = t.closest('[data-del-peso]');
+  if (delPeso){ deleteDoc(doc(db, 'households', HOUSEHOLD_ID, 'pesi', delPeso.dataset.delPeso)); return; }
+
+  const pchi = t.closest('[data-pchi]'); if (pchi){ stato.pesoUid = pchi.dataset.pchi; renderPeso(); salvaLocale(); return; }
+
+  const migra = t.closest('[data-migra]');
+  if (migra){
+    if (migra.dataset.migra === 'si') importaDatiVecchi();
+    else $('#migra-banner').hidden = true;
+    return;
+  }
+
+  if (t.closest('#carica-settimana')){
+    PASTI.forEach(p => stato.sel[p.id] = 2);
+    renderTutto(); salvaCondiviso(); toast('Settimana intera caricata: 27 pasti'); vaiA('lista'); return;
+  }
+  if (t.closest('#svuota-sel') || t.closest('#svuota-sel-2')){
+    stato.sel = {}; stato.hoGia = {}; stato.preso = {}; renderTutto(); salvaCondiviso(); toast('Lista svuotata'); return;
+  }
+  if (t.closest('#extra-add')){
+    const v = ($('#extra-n').value || '').trim();
+    if (!v) return;
+    if (!stato.extra.includes(v)) stato.extra.push(v);
+    $('#extra-n').value = ''; renderSpesa(); salvaCondiviso(); return;
+  }
+  const dx = t.closest('[data-delx]');
+  if (dx){ const i = +dx.dataset.delx;
+    delete stato.preso['+' + stato.extra[i]];
+    stato.extra.splice(i,1); renderSpesa(); salvaCondiviso(); return; }
+
+  if (t.closest('#reset-spunte')){
+    if (stato.passo === 'dispensa') stato.hoGia = {}; else stato.preso = {};
+    renderSpesa(); salvaCondiviso(); toast('Spunte azzerate'); return;
+  }
+  if (t.closest('#copia')){
+    const testo = testoLista();
+    (navigator.clipboard ? navigator.clipboard.writeText(testo) : Promise.reject())
+      .then(() => toast('Lista copiata negli appunti'))
+      .catch(() => { const ta = document.createElement('textarea'); ta.value = testo;
+        document.body.appendChild(ta); ta.select();
+        try{ document.execCommand('copy'); toast('Lista copiata'); }catch(_){ toast('Copia non riuscita'); }
+        ta.remove(); });
+    return;
+  }
+  if (t.closest('#stampa')){ window.print(); return; }
+
+  if (t.closest('#p-salva')){
+    const d = $('#p-data').value, kg = parseFloat($('#p-kg').value);
+    if (!d || !kg){ toast('Serve data e peso'); return; }
+    addDoc(collection(db, 'households', HOUSEHOLD_ID, 'pesi'), { uid: UID, nome: MIO_NOME, data: d, kg });
+    $('#p-kg').value = ''; toast('Misura salvata'); return;
+  }
+});
+
+document.addEventListener('change', e => {
+  const sp = e.target.closest('[data-sp]');
+  if (!sp) return;
+  const n = sp.dataset.sp;
+  const mappa = stato.passo === 'dispensa' ? stato.hoGia : stato.preso;
+  if (sp.checked) mappa[n] = true; else delete mappa[n];
+  if (stato.passo === 'dispensa' && sp.checked) delete stato.preso[n];
+  sp.closest('.voce').classList.toggle('fatta', sp.checked);
+  // ricalcola solo la barra, senza ridisegnare (per non perdere lo scroll)
+  let tot = 0, fatti = 0;
+  const mp = stato.passo === 'dispensa' ? stato.hoGia : stato.preso;
+  vociSpesa().forEach(([k, , righe]) => {
+    if (k === 'nc') return;
+    (stato.passo === 'dispensa' ? righe : righe.filter(([x]) => !stato.hoGia[x]))
+      .forEach(([x]) => { tot++; if (mp[x]) fatti++; });
+  });
+  if (stato.passo === 'spesa') stato.extra.forEach(x => { tot++; if (stato.preso['+'+x]) fatti++; });
+  $('#barra').style.width = (tot ? Math.round(fatti/tot*100) : 0) + '%';
+  $('#b-spesa').textContent = stato.passo === 'dispensa' ? '' : String(tot - fatti || '');
+  salvaCondiviso();
+});
+
+$('#cerca').addEventListener('input', () => renderCatalogo());
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'extra-n'){ e.preventDefault(); $('#extra-add').click(); }
+});
+
+/* ---------- avvio ---------- */
+if (window.self !== window.top) {
+  const a = document.createElement('a');
+  a.href = location.href;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.textContent = 'Apri a schermo intero ↗';
+  a.style.cssText = 'display:block;text-align:center;font-family:JetBrains Mono,monospace;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--curcuma);background:var(--pentola);border-bottom:1px solid var(--bordo);padding:8px;text-decoration:none';
+  document.body.insertBefore(a, document.body.firstChild);
+}
+quandoPronto(() => {
+  caricaLocale();
+  $('#filtro-tipo').innerHTML = [['tutti','Tutti'], ...TIPI]
+    .map(([k,l]) => `<button data-f="${k}" aria-pressed="${stato.filtro===k}">${l}</button>`).join('');
+  $$('#filtro-tipo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === stato.filtro)));
+  $$('#filtro-vista button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.grp === stato.grp)));
+  $$('#passo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.passo === stato.passo)));
+  $('#p-data').value = new Date().toISOString().slice(0,10);
+  osservaCondiviso();
+  osservaPesi();
+});
+
+</script>
+</body>
+</html>

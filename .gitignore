@@ -1,0 +1,13 @@
+# Segreti — non committare mai chiavi di servizio, credenziali, certificati.
+# La config Firebase in sorgenti/firebase-config.js è pubblica per design e NON
+# rientra in questa regola (vedi CLAUDE.md).
+*serviceAccount*.json
+*firebase-adminsdk*.json
+*.pem
+*.key
+.env
+.env.*
+
+# Sistema
+.DS_Store
+Thumbs.db

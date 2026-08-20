@@ -12,8 +12,11 @@ const TIPO_LABEL = Object.fromEntries(TIPI);
 const CHIAVE_UI = 'dietacosi.ui.v1';
 let stato = {
   grp:'tipo', filtro:'tutti', passo:'dispensa',
-  sel:{}, modiBase:{}, hoGia:{}, preso:{}, pesi:[], pesoUid:null, aperti:{}, extra:[]
+  sel:{}, modiBase:{}, hoGia:{}, preso:{}, pesi:[], pesoUid:null, aperti:{}, extra:[],
+  scorte:{ingredienti:{}, basi:{}}, importanza:{ingredienti:{}, basi:{}}, pastiExtra:{},
+  mostraArchiviati:false
 };
+let modificaAperta = null; // id del pasto in modifica, solo locale, non sincronizzato
 function salvaLocale(){
   try {
     const { grp, filtro, passo, aperti, pesoUid } = stato;
@@ -61,6 +64,121 @@ function osservaPesi(){
     stato.pesi = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderPeso();
   }, err => erroreSync('pesi', err));
+}
+
+let salvaScorteTimer = null;
+function salvaScorte(){
+  if (!HOUSEHOLD_ID) return;
+  clearTimeout(salvaScorteTimer);
+  salvaScorteTimer = setTimeout(() => {
+    setDoc(doc(db, 'households', HOUSEHOLD_ID, 'scorte', 'corrente'), stato.scorte);
+  }, 400);
+}
+function osservaScorte(){
+  onSnapshot(doc(db, 'households', HOUSEHOLD_ID, 'scorte', 'corrente'), snap => {
+    const r = snap.exists() ? snap.data() : {};
+    stato.scorte.ingredienti = r.ingredienti || {};
+    stato.scorte.basi = r.basi || {};
+    renderTutto();
+  }, err => erroreSync('scorte', err));
+}
+
+let salvaImportanzaTimer = null;
+function salvaImportanza(){
+  if (!HOUSEHOLD_ID) return;
+  clearTimeout(salvaImportanzaTimer);
+  salvaImportanzaTimer = setTimeout(() => {
+    setDoc(doc(db, 'households', HOUSEHOLD_ID, 'importanza', 'corrente'), stato.importanza);
+  }, 400);
+}
+function osservaImportanza(){
+  onSnapshot(doc(db, 'households', HOUSEHOLD_ID, 'importanza', 'corrente'), snap => {
+    const r = snap.exists() ? snap.data() : {};
+    stato.importanza.ingredienti = r.ingredienti || {};
+    stato.importanza.basi = r.basi || {};
+    renderTutto();
+  }, err => erroreSync('importanza', err));
+}
+
+function impostaPastoExtra(pastoId, campi){
+  setDoc(doc(db, 'households', HOUSEHOLD_ID, 'pastiExtra', pastoId), campi, { merge: true });
+}
+function osservaPastiExtra(){
+  onSnapshot(collection(db, 'households', HOUSEHOLD_ID, 'pastiExtra'), snap => {
+    const out = {};
+    snap.forEach(d => { out[d.id] = d.data(); });
+    stato.pastiExtra = out;
+    renderTutto();
+  }, err => erroreSync('pasti extra', err));
+}
+
+/* ---------- pasto effettivo (dati.js + eventuali override) ---------- */
+function pastoEffettivo(p){
+  const ex = stato.pastiExtra[p.id] || {};
+  return Object.assign({}, p, {
+    nome: ex.nome || p.nome,
+    tempo: ex.tempo != null ? ex.tempo : p.tempo,
+    difficolta: ex.difficolta || p.difficolta,
+    notaMia: ex.nota || '',
+    archiviato: !!ex.archiviato
+  });
+}
+
+/* ---------- scorte: importanza, presenza, fattibilità ---------- */
+function importanzaDefault(nome, isBase){
+  if (isBase) return 'fondamentale';
+  const m = ING[nome] || {};
+  return (m.r === 'spezie' || m.r === 'dispensa') ? 'opzionale' : 'fondamentale';
+}
+function importanzaDi(nome, isBase){
+  const over = isBase ? stato.importanza.basi[nome] : stato.importanza.ingredienti[nome];
+  return over || importanzaDefault(nome, isBase);
+}
+function ceLho(nome, isBase){
+  return isBase ? !!stato.scorte.basi[nome] : !!stato.scorte.ingredienti[nome];
+}
+function impostaScorta(nome, isBase, val){
+  const cat = isBase ? stato.scorte.basi : stato.scorte.ingredienti;
+  if (val) cat[nome] = true; else delete cat[nome];
+}
+// null = non fattibile (manca qualcosa di fondamentale); altrimenti array di nomi "medio" mancanti
+function pastoFattibile(p){
+  const mancano = [];
+  for (const i of (p.ing||[])){
+    const isBase = !!i.b, nome = isBase ? i.b : i.n;
+    if (!nome || i.qb) continue;
+    const imp = importanzaDi(nome, isBase);
+    if (imp === 'opzionale') continue;
+    if (!ceLho(nome, isBase)){
+      if (imp === 'fondamentale') return null;
+      mancano.push(isBase ? BASE_BY_ID[nome].breve : nome);
+    }
+  }
+  return mancano;
+}
+function segnaCucinato(pastoId){
+  const p = PASTO_BY_ID[pastoId];
+  if (!p) return;
+  (p.ing||[]).forEach(i => {
+    const isBase = !!i.b, nome = isBase ? i.b : i.n;
+    if (!nome || i.qb) return;
+    if (importanzaDi(nome, isBase) === 'opzionale') return;
+    impostaScorta(nome, isBase, false);
+  });
+  salvaScorte(); renderTutto();
+  toast('Scorte aggiornate');
+}
+function segnaBasePreparata(baseId){
+  const b = BASE_BY_ID[baseId];
+  if (!b) return;
+  impostaScorta(baseId, true, true);
+  b.ing.forEach(([n]) => {
+    if (n[0] === '@') return;
+    if (importanzaDi(n, false) === 'opzionale') return;
+    impostaScorta(n, false, false);
+  });
+  salvaScorte(); renderTutto();
+  toast('Scorte aggiornate');
 }
 
 let migrazioneControllata = false;
@@ -136,10 +254,12 @@ function vociSpesa(){                     // ingredienti ordinati per reparto
    VISTA · CATALOGO
    ========================================================================== */
 function schedaPasto(p){
+  const pe = pastoEffettivo(p);
   const n = stato.sel[p.id] || 0;
   const attivo = n > 0;
   const aperto = !!stato.aperti[p.id];
   const basi = [...new Set((p.ing||[]).filter(i => i.b).map(i => i.b))];
+  const inModifica = modificaAperta === p.id;
 
   const stepper = () => `<div class="step${n?' on':''}">
       <button data-step="${p.id}|-1" aria-label="Togli una porzione">−</button>
@@ -159,16 +279,35 @@ function schedaPasto(p){
       <p>${esc(p.vincolo.lui)}</p>
     </div>` : '';
   const nota = p.nota ? `<div class="nota">${esc(p.nota)}</div>` : '';
+  const notaMia = pe.notaMia ? `<div class="nota">📌 ${esc(pe.notaMia)}</div>` : '';
+
+  const modificaForm = !inModifica ? '' : `<div class="modifica-form">
+      <input type="text" id="mo-nome" placeholder="Nome" value="${esc(pe.nome)}">
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input type="number" id="mo-tempo" placeholder="Minuti" value="${pe.tempo||''}" style="flex:1">
+        <select id="mo-difficolta" style="flex:1;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;padding:10px;font-family:inherit;font-size:15px">
+          <option value="">Difficoltà…</option>
+          <option value="facile"${pe.difficolta==='facile'?' selected':''}>Facile</option>
+          <option value="media"${pe.difficolta==='media'?' selected':''}>Media</option>
+          <option value="difficile"${pe.difficolta==='difficile'?' selected':''}>Difficile</option>
+        </select>
+      </div>
+      <textarea id="mo-nota" placeholder="Nota tua (es. senza piccante)" style="margin-top:8px;width:100%;min-height:60px;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;padding:10px;font-family:inherit;font-size:15px">${esc(pe.notaMia)}</textarea>
+      <div class="riga-btn">
+        <button class="btn" data-salva-modifica="${p.id}">SALVA</button>
+        <button class="btn ghost" data-annulla-modifica>ANNULLA</button>
+      </div>
+    </div>`;
 
   return `<article class="pasto${attivo?' sel':''}${aperto?' aperto':''}" data-id="${p.id}">
     <div class="p-h" data-apri="${p.id}">
       <div class="p-top">
-        <div class="p-nome">${esc(p.nome)}</div>
+        <div class="p-nome">${esc(pe.nome)}</div>
         <svg class="chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="p-meta">
-        ${p.tempo ? `<span class="tag tempo">${p.tempo} min</span>` : ''}
-        ${p.difficolta ? `<span class="tag diff-${p.difficolta}">${esc(p.difficolta)}</span>` : ''}
+        ${pe.tempo ? `<span class="tag tempo">${pe.tempo} min</span>` : ''}
+        ${pe.difficolta ? `<span class="tag diff-${pe.difficolta}">${esc(pe.difficolta)}</span>` : ''}
         <span class="tag t-${p.tipo}">${TIPO_LABEL[p.tipo]}</span>
         <span class="tag">${GIORNI[p.g]}</span>
         ${p.nuovo ? '<span class="tag" style="background:rgba(232,163,61,.16);color:var(--curcuma)">nuovo</span>' : ''}
@@ -185,7 +324,13 @@ function schedaPasto(p){
         <div class="intest"><span></span><span>Porzione</span></div>
         ${righe}</div>` : ''}
       ${p.proc ? `<div class="proc">${esc(p.proc)}</div>` : ''}
-      ${vincolo}${nota}
+      ${vincolo}${nota}${notaMia}
+      ${modificaForm}
+      <div class="riga-btn">
+        <button class="btn ghost" data-cucinato="${p.id}">L'HO CUCINATO</button>
+        <button class="btn ghost" data-archivia="${p.id}">${pe.archiviato ? 'DISARCHIVIA' : 'ARCHIVIA'}</button>
+        <button class="btn ghost" data-modifica="${p.id}">${inModifica ? 'CHIUDI' : 'MODIFICA'}</button>
+      </div>
     </div>
   </article>`;
 }
@@ -193,9 +338,11 @@ function schedaPasto(p){
 function renderCatalogo(){
   const q = ($('#cerca').value || '').trim().toLowerCase();
   let lista = PASTI.filter(p => {
+    const pe = pastoEffettivo(p);
+    if (!!pe.archiviato !== !!stato.mostraArchiviati) return false;
     if (stato.filtro !== 'tutti' && p.tipo !== stato.filtro) return false;
     if (!q) return true;
-    const testo = [p.nome, p.desc||'', p.proc||'',
+    const testo = [pe.nome, p.desc||'', p.proc||'',
       ...(p.ing||[]).map(i => i.b ? BASE_BY_ID[i.b].nome : i.n)].join(' ').toLowerCase();
     return testo.includes(q);
   });
@@ -226,10 +373,13 @@ function renderCatalogo(){
       ${ps.map(schedaPasto).join('')}
     </div>`).join('');
 
-  $('#pasti-sub').textContent = (lista.length === PASTI.length
+  $('#pasti-sub').textContent = stato.mostraArchiviati
+    ? `${lista.length} pasti archiviati: disarchivia quello che vuoi rifare.`
+    : (lista.length === PASTI.length
       ? `${PASTI.length} pasti, nessun giorno obbligato`
       : `${lista.length} pasti su ${PASTI.length}`)
-    + ': scegli quelli che vuoi cucinare e la lista fa il resto.';
+      + ': scegli quelli che vuoi cucinare e la lista fa il resto.';
+  $('#vedi-archiviati').textContent = stato.mostraArchiviati ? 'Torna al catalogo' : 'Vedi archiviati';
   $('#catalogo').innerHTML = html || `<div class="vuoto">
     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
     <p>Nessun pasto trovato.</p></div>`;
@@ -269,7 +419,7 @@ function renderLista(){
   };
 
   const gruppi = TIPI.map(([k,label]) => [label, PASTI.filter(p => {
-    return p.tipo === k && (stato.sel[p.id]||0) > 0;
+    return !pastoEffettivo(p).archiviato && p.tipo === k && (stato.sel[p.id]||0) > 0;
   })]).filter(([,ps]) => ps.length);
 
   c.innerHTML = `
@@ -435,6 +585,7 @@ function renderBasi(){
           ${esc(nome)} · ${min}′</button>`).join('')}
         ${b.nota ? `<div class="nota">${esc(b.nota)}</div>` : ''}
         <div class="qta-base" style="margin-top:11px">Frigo ${b.conserva[0]} · Freezer ${b.conserva[1]}</div>
+        <div class="riga-btn"><button class="btn ghost" data-base-fatta="${b.id}">HO PREPARATO QUESTA BASE</button></div>
       </div>`;
     }).join('');
 }
@@ -454,6 +605,60 @@ function avviaTimer(btn){
   tick();
   const id = setInterval(tick, 1000);
   timerAttivo = {id, btn, html};
+}
+
+/* ==========================================================================
+   VISTA · SCORTE
+   ========================================================================== */
+function rigaScorta(nome, isBase){
+  const acceso = ceLho(nome, isBase);
+  const imp = importanzaDi(nome, isBase);
+  const label = isBase ? BASE_BY_ID[nome].nome : nome;
+  const chiave = (isBase?'b':'i') + '|' + nome;
+  return `<label class="voce${acceso?' fatta':''}">
+      <input type="checkbox" data-scorta="${esc(chiave)}"${acceso?' checked':''}>
+      <span class="n">${esc(label)}</span>
+      <span class="imp-pills">
+        <button data-imp="${esc(chiave)}|fondamentale" aria-pressed="${imp==='fondamentale'}" title="Fondamentale">F</button>
+        <button data-imp="${esc(chiave)}|medio" aria-pressed="${imp==='medio'}" title="Se manca poco male">M</button>
+        <button data-imp="${esc(chiave)}|opzionale" aria-pressed="${imp==='opzionale'}" title="Opzionale">O</button>
+      </span>
+    </label>`;
+}
+
+function renderScorte(){
+  const c = $('#scorte-corpo');
+  if (!c) return;
+  const puoi = [], quasi = [];
+  PASTI.forEach(p => {
+    if (pastoEffettivo(p).archiviato) return;
+    const mancano = pastoFattibile(p);
+    if (mancano === null) return;
+    (mancano.length ? quasi : puoi).push([p, mancano]);
+  });
+
+  const riga = ([p, mancano]) => `<div class="voce" style="cursor:default">
+      <span class="n">${esc(pastoEffettivo(p).nome)}${mancano.length ? `<small>ti manca: ${mancano.map(esc).join(', ')}</small>` : ''}</span>
+    </div>`;
+
+  let html = `<div class="card">
+    <div class="card-t">Puoi cucinare adesso</div>
+    ${(puoi.length || quasi.length) ? '' : '<p class="sub" style="margin-top:6px">Accendi qualche voce qui sotto per vedere cosa ti viene suggerito.</p>'}
+    ${puoi.length ? `<div class="rep" style="margin-top:10px">${puoi.map(riga).join('')}</div>` : ''}
+    ${quasi.length ? `<div class="rep" style="margin-top:10px"><div class="eyebrow">Quasi — manca poco</div>${quasi.map(riga).join('')}</div>` : ''}
+  </div>`;
+
+  REPARTI.forEach(([k,label]) => {
+    if (k === 'nc') return;
+    const nomi = Object.keys(ING).filter(n => ING[n].r === k).sort((a,b)=>a.localeCompare(b,'it'));
+    if (!nomi.length) return;
+    html += `<div class="rep"><div class="rep-h"><h2 class="display">${esc(label)}</h2></div>
+      ${nomi.map(n => rigaScorta(n, false)).join('')}</div>`;
+  });
+  html += `<div class="rep"><div class="rep-h"><h2 class="display">Basi</h2></div>
+    ${BASI.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'it')).map(b => rigaScorta(b.id, true)).join('')}</div>`;
+
+  c.innerHTML = html;
 }
 
 /* ==========================================================================
@@ -527,7 +732,7 @@ function verdetto(p){
    ========================================================================== */
 function renderTutto(){
   ricalcola();
-  renderCatalogo(); renderLista(); renderSpesa(); renderBasi(); renderPeso();
+  renderCatalogo(); renderLista(); renderSpesa(); renderBasi(); renderPeso(); renderScorte();
   const n = nPorzioni();
   $('#b-lista').textContent = n ? String(n) : '';
 }
@@ -593,6 +798,59 @@ document.addEventListener('click', e => {
     return;
   }
 
+  const cucinato = t.closest('[data-cucinato]');
+  if (cucinato){ segnaCucinato(cucinato.dataset.cucinato); return; }
+
+  const baseFatta = t.closest('[data-base-fatta]');
+  if (baseFatta){ segnaBasePreparata(baseFatta.dataset.baseFatta); return; }
+
+  const archivia = t.closest('[data-archivia]');
+  if (archivia){
+    const id = archivia.dataset.archivia;
+    const attuale = pastoEffettivo(PASTO_BY_ID[id]).archiviato;
+    impostaPastoExtra(id, { archiviato: !attuale });
+    toast(attuale ? 'Pasto disarchiviato' : 'Pasto archiviato');
+    return;
+  }
+
+  const modifica = t.closest('[data-modifica]');
+  if (modifica){
+    modificaAperta = modificaAperta === modifica.dataset.modifica ? null : modifica.dataset.modifica;
+    renderTutto(); return;
+  }
+  if (t.closest('[data-annulla-modifica]')){ modificaAperta = null; renderTutto(); return; }
+  const salvaModifica = t.closest('[data-salva-modifica]');
+  if (salvaModifica){
+    const id = salvaModifica.dataset.salvaModifica;
+    const nome = ($('#mo-nome').value || '').trim();
+    const tempo = parseInt($('#mo-tempo').value, 10);
+    const difficolta = $('#mo-difficolta').value;
+    const nota = ($('#mo-nota').value || '').trim();
+    const campi = {};
+    if (nome) campi.nome = nome;
+    if (!isNaN(tempo)) campi.tempo = tempo;
+    if (difficolta) campi.difficolta = difficolta;
+    if (nota) campi.nota = nota;
+    impostaPastoExtra(id, campi);
+    modificaAperta = null;
+    toast('Modifiche salvate');
+    return;
+  }
+
+  const imp = t.closest('[data-imp]');
+  if (imp){
+    const [tipo, nome, livello] = imp.dataset.imp.split('|');
+    const isBase = tipo === 'b';
+    const cat = isBase ? stato.importanza.basi : stato.importanza.ingredienti;
+    if (livello === importanzaDefault(nome, isBase)) delete cat[nome]; else cat[nome] = livello;
+    salvaImportanza(); renderScorte(); return;
+  }
+
+  if (t.closest('#vedi-archiviati')){
+    stato.mostraArchiviati = !stato.mostraArchiviati;
+    renderCatalogo(); salvaLocale(); return;
+  }
+
   if (t.closest('#carica-settimana')){
     PASTI.forEach(p => stato.sel[p.id] = 2);
     renderTutto(); salvaCondiviso(); toast('Settimana intera caricata: 27 pasti'); vaiA('lista'); return;
@@ -636,12 +894,22 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('change', e => {
+  const scorta = e.target.closest('[data-scorta]');
+  if (scorta){
+    const [tipo, nome] = scorta.dataset.scorta.split('|');
+    impostaScorta(nome, tipo === 'b', scorta.checked);
+    scorta.closest('.voce').classList.toggle('fatta', scorta.checked);
+    salvaScorte();
+    return;
+  }
+
   const sp = e.target.closest('[data-sp]');
   if (!sp) return;
   const n = sp.dataset.sp;
   const mappa = stato.passo === 'dispensa' ? stato.hoGia : stato.preso;
   if (sp.checked) mappa[n] = true; else delete mappa[n];
   if (stato.passo === 'dispensa' && sp.checked) delete stato.preso[n];
+  if (stato.passo === 'spesa' && sp.checked && n[0] !== '+') impostaScorta(n, false, true);
   sp.closest('.voce').classList.toggle('fatta', sp.checked);
   // ricalcola solo la barra, senza ridisegnare (per non perdere lo scroll)
   let tot = 0, fatti = 0;
@@ -655,6 +923,7 @@ document.addEventListener('change', e => {
   $('#barra').style.width = (tot ? Math.round(fatti/tot*100) : 0) + '%';
   $('#b-spesa').textContent = stato.passo === 'dispensa' ? '' : String(tot - fatti || '');
   salvaCondiviso();
+  if (stato.passo === 'spesa' && sp.checked && n[0] !== '+') salvaScorte();
 });
 
 $('#cerca').addEventListener('input', () => renderCatalogo());
@@ -682,4 +951,7 @@ quandoPronto(() => {
   $('#p-data').value = new Date().toISOString().slice(0,10);
   osservaCondiviso();
   osservaPesi();
+  osservaScorte();
+  osservaImportanza();
+  osservaPastiExtra();
 });

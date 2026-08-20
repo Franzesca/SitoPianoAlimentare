@@ -167,6 +167,14 @@ input:focus{outline:2px solid var(--accento);outline-offset:-1px}
 .progress{height:5px;background:var(--bordo);border-radius:99px;overflow:hidden;margin:14px 0 4px}
 .progress i{display:block;height:100%;background:var(--pistacchio);transition:width .3s}
 
+/* ---------- scorte: pillole importanza + form di modifica ---------- */
+.imp-pills{display:flex;gap:3px;flex-shrink:0}
+.imp-pills button{width:22px;height:22px;border-radius:6px;border:1px solid var(--bordo2);background:var(--pepe);
+  color:var(--fumo);font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;cursor:pointer;transition:.15s}
+.imp-pills button[aria-pressed="true"]{background:var(--accento);color:var(--pepe);border-color:var(--accento)}
+.modifica-form{margin-top:12px;padding-top:12px;border-top:1px solid var(--bordo)}
+.modifica-form input[type=text],.modifica-form input[type=number]{width:100%}
+
 /* ---------- basi ---------- */
 .base-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .qta-base{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--fumo);margin-top:5px}
@@ -308,6 +316,7 @@ ol.passi li{margin-bottom:6px}
     <div class="eyebrow">Catalogo</div>
     <h1 class="display">Tutti i pasti</h1>
     <p class="sub" id="pasti-sub">Nessun giorno obbligato: scegli quelli che vuoi cucinare e la lista fa il resto.</p>
+    <p class="sub" style="margin-top:4px"><a href="#" id="vedi-archiviati">Vedi archiviati</a></p>
 
     <div style="margin-top:18px"><input type="search" id="cerca" placeholder="Cerca un pasto o un ingrediente…" aria-label="Cerca"></div>
     <div class="seg" style="margin-top:9px" id="filtro-tipo" role="group" aria-label="Filtra per tipo"></div>
@@ -321,6 +330,14 @@ ol.passi li{margin-bottom:6px}
       <button class="btn ghost" id="svuota-sel">SVUOTA LA SELEZIONE</button>
     </div>
     <div id="catalogo"></div>
+  </section>
+
+  <!-- ============ SCORTE ============ -->
+  <section class="vista" id="v-scorte">
+    <div class="eyebrow">Dispensa virtuale</div>
+    <h1 class="display">Scorte</h1>
+    <p class="sub">Accendi quello che hai in casa. Le tre lettere accanto a ogni voce dicono quanto conta: <b>F</b>ondamentale blocca il consiglio se manca, <b>M</b> lo segnala soltanto, <b>O</b>pzionale non conta mai.</p>
+    <div id="scorte-corpo"></div>
   </section>
 
   <!-- ============ LISTA ============ -->
@@ -379,6 +396,8 @@ ol.passi li{margin-bottom:6px}
   <div class="nav-in">
     <button data-v="pasti" aria-selected="true" role="tab">
       <svg viewBox="0 0 24 24"><path d="M4 4v7a3 3 0 003 3h0a3 3 0 003-3V4"/><path d="M7 4v10"/><path d="M17 4c-1.5 2-2 4-2 6s.5 3 2 3v7"/></svg>Pasti</button>
+    <button data-v="scorte" aria-selected="false" role="tab">
+      <svg viewBox="0 0 24 24"><path d="M9 8V5a1 1 0 011-1h4a1 1 0 011 1v3"/><path d="M6 8h12"/><path d="M7 8h10v11a2 2 0 01-2 2H9a2 2 0 01-2-2V8z"/></svg>Scorte</button>
     <button data-v="lista" aria-selected="false" role="tab">
       <svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>Lista<i class="badge" id="b-lista"></i></button>
     <button data-v="spesa" aria-selected="false" role="tab">

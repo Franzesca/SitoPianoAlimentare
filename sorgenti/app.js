@@ -33,6 +33,27 @@ function caricaLocale(){
     const r = localStorage.getItem(CHIAVE_UI);
     if (r) Object.assign(stato, JSON.parse(r));
   } catch(e){}
+  if (stato.grp === 'giorno') stato.grp = 'tipo';
+}
+
+/* ---------- tema chiaro/scuro ---------- */
+const CHIAVE_TEMA = 'dietacosi.tema';
+const ICONA_SOLE = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const ICONA_LUNA = '<svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>';
+function temaCorrente(){ return document.documentElement.dataset.tema === 'chiaro' ? 'chiaro' : 'scuro'; }
+function impostaTema(t){
+  document.documentElement.setAttribute('data-tema', t);
+  try { localStorage.setItem(CHIAVE_TEMA, t); } catch(e){}
+  const mc = document.querySelector('meta[name=theme-color]');
+  if (mc) mc.setAttribute('content', t === 'chiaro' ? '#FAF5EC' : '#1B1416');
+  aggiornaBottoneTema();
+}
+function aggiornaBottoneTema(){
+  const b = $('#tema-switch');
+  if (!b) return;
+  const chiaro = temaCorrente() === 'chiaro';
+  b.innerHTML = chiaro ? ICONA_LUNA : ICONA_SOLE;
+  b.setAttribute('aria-label', chiaro ? 'Passa al tema scuro' : 'Passa al tema chiaro');
 }
 
 let salvaCondivisoTimer = null;
@@ -338,19 +359,18 @@ function schedaPasto(p){
         <div class="p-nome">${esc(pe.nome)}</div>
         <svg class="chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
+      <div class="p-info">
+        <span class="pill"><b>${p.val[0]}</b> kcal · <b>${p.val[1]}</b> g P</span>
+        ${stepper()}
+      </div>
       <div class="p-meta">
         ${pe.tempo ? `<span class="tag tempo">${pe.tempo} min</span>` : ''}
         ${pe.difficolta ? `<span class="tag diff-${pe.difficolta}">${esc(pe.difficolta)}</span>` : ''}
         <span class="tag t-${p.tipo}">${TIPO_LABEL[p.tipo]}</span>
-        ${p.g != null ? `<span class="tag">${GIORNI[p.g]}</span>` : ''}
-        ${p.mia ? '<span class="tag" style="background:rgba(143,181,116,.16);color:var(--pistacchio)">tua</span>' : ''}
-        ${p.nuovo ? '<span class="tag" style="background:rgba(232,163,61,.16);color:var(--curcuma)">nuovo</span>' : ''}
+        ${p.mia ? '<span class="tag" style="background:rgba(var(--pistacchio-rgb),.16);color:var(--pistacchio)">tua</span>' : ''}
+        ${p.nuovo ? '<span class="tag" style="background:rgba(var(--curcuma-rgb),.16);color:var(--curcuma)">nuovo</span>' : ''}
         ${basi.map(b => `<span class="tag base">${esc(BASE_BY_ID[b].breve)}</span>`).join('')}
       </div>
-      <div class="p-val">
-        <span class="pill"><b>${p.val[0]}</b> kcal · <b>${p.val[1]}</b> g P</span>
-      </div>
-      <div class="step-box">${stepper()}</div>
     </div>
     <div class="p-corpo">
       ${p.desc ? `<p class="p-desc">${esc(p.desc)}</p>` : ''}
@@ -385,10 +405,7 @@ function renderCatalogo(){
   });
 
   let gruppi;
-  if (stato.grp === 'giorno'){
-    gruppi = GIORNI.map((g,i) => [g, lista.filter(p => p.g === i)]);
-    gruppi.push(['Senza giorno', lista.filter(p => p.g == null)]);
-  } else if (stato.grp === 'base'){
+  if (stato.grp === 'base'){
     const m = new Map();
     BASI.forEach(b => m.set(b.nome, []));
     m.set('Senza basi', []);
@@ -828,6 +845,7 @@ document.addEventListener('click', e => {
 
   const nav = t.closest('nav button');        if (nav){ vaiA(nav.dataset.v); return; }
   const vai = t.closest('[data-vai]');        if (vai){ vaiA(vai.dataset.vai); return; }
+  if (t.closest('#tema-switch')){ impostaTema(temaCorrente() === 'chiaro' ? 'scuro' : 'chiaro'); return; }
 
   const step = t.closest('[data-step]');
   if (step){
@@ -1095,6 +1113,7 @@ if (window.self !== window.top) {
 }
 quandoPronto(() => {
   caricaLocale();
+  aggiornaBottoneTema();
   $('#filtro-tipo').innerHTML = [['tutti','Tutti'], ...TIPI]
     .map(([k,l]) => `<button data-f="${k}" aria-pressed="${stato.filtro===k}">${l}</button>`).join('');
   $$('#filtro-tipo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === stato.filtro)));

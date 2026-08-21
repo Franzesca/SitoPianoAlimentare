@@ -85,16 +85,31 @@ dati statici solo a runtime in `sorgenti/app.js`:
   booleano acceso/spento). `households/{id}/importanza/corrente` — override
   per-ingrediente del livello (`fondamentale`/`medio`/`opzionale`); default
   calcolato dal reparto se non sovrascritto (`importanzaDefault()` in app.js).
-- `households/{id}/pastiExtra/{pastoId}` — override leggeri su un pasto
-  esistente (`nome`, `tempo`, `difficolta`, `nota`, `archiviato`), letti da
-  `pastoEffettivo(p)`. Un pasto senza documento qui usa `dati.js` così com'è.
+- `households/{id}/pastiExtra/{pastoId}` — override su un pasto esistente
+  (`nome`, `tempo`, `difficolta`, `nota`, `archiviato`, e ora anche `ing` —
+  lista ingredienti completa, sostituisce quella di `dati.js` — e `proc` —
+  procedura/modalità di cottura). Si applicano sia ai 27 pasti di `dati.js`
+  sia alle ricette proprie sotto, quindi anche una ricetta "mia" può avere un
+  override sopra. Un pasto senza documento qui usa `dati.js`/la ricetta
+  originale così com'è. **`ing`/`proc` non toccano `val` (kcal/proteine)**:
+  se cambi ingredienti in modo sostanziale, il kcal/proteine mostrato resta
+  quello dichiarato originariamente e può non essere più accurato — l'app non
+  lo ricalcola da sola (vedi "Non inventare valori nutrizionali" sotto).
 - `households/{id}/ricetteExtra/{autoId}` — ricette create da zero dal form
   "+ Nuova ricetta" in Pasti. Stessa forma di un pasto di `dati.js` (`ing`,
-  `val`, ecc.) più `mia:true`. `tuttiIPasti()` = `PASTI` + queste, usato
-  ovunque al posto di `PASTI` diretto (catalogo, lista, calcolo, Scorte) —
-  eccetto "Carica la settimana intera", che resta scoped ai soli 27 originali.
-  Non hanno un giorno fisso (`g` assente); in "raggruppa per giorno" finiscono
-  in "Senza giorno".
+  `val`, ecc.) più `mia:true`. kcal è obbligatorio in quel form (proteine no)
+  per evitare che una ricetta senza dati nutrizionali sommi silenziosamente
+  zero nei totali della settimana.
+- `PASTO_BY_ID`/`tuttiIPasti()` in `app.js` contengono sempre i pasti (i 27 +
+  le ricette proprie) già fusi con `pastoEffettivo()` — ricostruiti da
+  `ricostruisciPastoById()` a ogni cambiamento di `pastiExtra`/`ricetteExtra`.
+  Così `calcola()`, la ricerca nel catalogo, `pastoFattibile()` ecc. vedono
+  automaticamente ingredienti/procedura modificati senza dover richiamare
+  `pastoEffettivo()` in ogni punto — se aggiungi un nuovo posto che legge un
+  pasto, prendilo da `tuttiIPasti()`/`PASTO_BY_ID`, non da `PASTI` diretto.
+  Usato ovunque al posto di `PASTI` diretto (catalogo, lista, calcolo,
+  Scorte) — eccetto "Carica la settimana intera", che resta scoped ai soli
+  27 originali.
 - `households/{id}/wishlist/{autoId}` — semplici promemoria (`nome`, `link`,
   `nota`), non sono pasti veri: niente ingredienti, non entrano nel calcolo.
 

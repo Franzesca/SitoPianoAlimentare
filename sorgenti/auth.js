@@ -65,18 +65,23 @@ document.getElementById('google-registrati').addEventListener('click', accediCon
 
 async function dopoLogin(user){
   UID = user.uid;
-  let s = await getDoc(doc(db, 'users', UID));
-  if (!s.exists()){
-    await setDoc(doc(db, 'users', UID), { email: user.email || '', nome: user.displayName || '', householdId: null });
-    s = await getDoc(doc(db, 'users', UID));
-  }
-  const dati = s.data();
-  MIO_NOME = dati.nome || '';
-  if (dati.householdId){
-    HOUSEHOLD_ID = dati.householdId;
-    segnalaPronto();
-  } else {
-    mostraGate('gate-famiglia');
+  try {
+    let s = await getDoc(doc(db, 'users', UID));
+    if (!s.exists()){
+      await setDoc(doc(db, 'users', UID), { email: user.email || '', nome: user.displayName || '', householdId: null });
+      s = await getDoc(doc(db, 'users', UID));
+    }
+    const dati = s.data();
+    MIO_NOME = dati.nome || '';
+    if (dati.householdId){
+      HOUSEHOLD_ID = dati.householdId;
+      segnalaPronto();
+    } else {
+      mostraGate('gate-famiglia');
+    }
+  } catch(err){
+    mostraGate('gate-login');
+    mostraErrore('li-errore', erroreLeggibile(err));
   }
 }
 

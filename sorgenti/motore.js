@@ -7,11 +7,15 @@ function costruisciIndici(BASI){
   BASI.forEach(b => perId[b.id] = b);
   // profondità: una base che ne contiene altre va risolta PRIMA di quelle che contiene
   const prof = {};
+  const inCorso = new Set(); // id in fase di risoluzione sul ramo corrente: se ricompare, è un ciclo
   const calc = id => {
     if (prof[id] != null) return prof[id];
+    if (inCorso.has(id)) throw new Error('Basi in ciclo: ' + [...inCorso, id].join(' -> '));
+    inCorso.add(id);
     const b = perId[id];
     let d = 0;
     (b.ing||[]).forEach(([n]) => { if (n[0] === '@') d = Math.max(d, 1 + calc(n.slice(1))); });
+    inCorso.delete(id);
     return prof[id] = d;
   };
   BASI.forEach(b => calc(b.id));
@@ -72,8 +76,9 @@ function calcola(selezione, modiBase, DATI){
 }
 
 /* --- formattazione quantità ------------------------------------------------ */
-function arrotonda(q, u){
-  if (u === 'pz') return Math.round(q * 100) / 100;
+// sempre grammi: i pezzi (u==='pz') si arrotondano per eccesso in formatta(),
+// non passano mai da qui
+function arrotonda(q){
   if (q >= 1000)  return Math.round(q / 10) * 10;
   if (q >= 100)   return Math.round(q / 5) * 5;
   if (q >= 20)    return Math.round(q);
@@ -85,9 +90,9 @@ function formatta(nome, q, ING){
   const m = ING[nome] || {u:'g'};
   if (m.u === 'pz'){
     const n = Math.ceil(q - 1e-9);
-    return n + (n === 1 ? ' pz' : ' pz');
+    return n + ' pz';
   }
-  const r = arrotonda(q, 'g');
+  const r = arrotonda(q);
   if (m.comeSucco){
     const n = Math.ceil(q / m.pz - 1e-9);
     return n + (n === 1 ? ' frutto' : ' frutti') + ' (~' + r + ' g di succo)';

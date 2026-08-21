@@ -5,12 +5,18 @@ const $  = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const BASE_BY_ID = {}; BASI.forEach(b => BASE_BY_ID[b.id] = b);
-const PASTO_BY_ID = {}; PASTI.forEach(p => PASTO_BY_ID[p.id] = p);
+let PASTO_BY_ID = {};
 const TIPO_LABEL = Object.fromEntries(TIPI);
-const tuttiIPasti = () => PASTI.concat(stato.ricetteExtra);
-function aggiornaPastoById(){
-  Object.keys(PASTO_BY_ID).forEach(k => { if (PASTO_BY_ID[k].mia) delete PASTO_BY_ID[k]; });
-  stato.ricetteExtra.forEach(p => PASTO_BY_ID[p.id] = p);
+// PASTO_BY_ID/tuttiIPasti() contengono sempre i pasti già fusi con le loro
+// eventuali modifiche (pastoEffettivo) — così calcola(), la ricerca nel
+// catalogo, pastoFattibile() ecc. vedono automaticamente ingredienti e
+// procedura modificati, invece di dover richiamare pastoEffettivo() ovunque
+const tuttiIPasti = () => Object.values(PASTO_BY_ID);
+function ricostruisciPastoById(){
+  const out = {};
+  PASTI.forEach(p => { out[p.id] = pastoEffettivo(p); });
+  stato.ricetteExtra.forEach(p => { out[p.id] = pastoEffettivo(p); });
+  PASTO_BY_ID = out;
 }
 
 /* ---------- stato + persistenza ---------- */
@@ -21,6 +27,7 @@ let stato = {
   scorte:{ingredienti:{}, basi:{}}, importanza:{ingredienti:{}, basi:{}}, pastiExtra:{},
   mostraArchiviati:false, wishlist:[], ricetteExtra:[]
 };
+ricostruisciPastoById();
 let modificaAperta = null; // id del pasto in modifica, solo locale, non sincronizzato
 function salvaLocale(){
   try {
@@ -124,7 +131,7 @@ function osservaImportanza(){
 function osservaRicetteExtra(){
   onSnapshot(collection(db, 'households', HOUSEHOLD_ID, 'ricetteExtra'), snap => {
     stato.ricetteExtra = snap.docs.map(d => Object.assign({ id: d.id, mia: true }, d.data()));
-    aggiornaPastoById();
+    ricostruisciPastoById();
     renderTutto();
   }, err => erroreSync('ricette extra', err));
 }
@@ -157,6 +164,7 @@ function osservaPastiExtra(){
     const out = {};
     snap.forEach(d => { out[d.id] = d.data(); });
     stato.pastiExtra = out;
+    ricostruisciPastoById();
     renderTutto();
   }, err => erroreSync('pasti extra', err));
 }
@@ -168,6 +176,8 @@ function pastoEffettivo(p){
     nome: ex.nome || p.nome,
     tempo: ex.tempo != null ? ex.tempo : p.tempo,
     difficolta: ex.difficolta || p.difficolta,
+    ing: ex.ing || p.ing,
+    proc: ex.proc != null ? ex.proc : p.proc,
     notaMia: ex.nota || '',
     archiviato: !!ex.archiviato
   });
@@ -306,7 +316,6 @@ function vociSpesa(){                     // ingredienti ordinati per reparto
    VISTA · CATALOGO
    ========================================================================== */
 function schedaPasto(p){
-  const pe = pastoEffettivo(p);
   const n = stato.sel[p.id] || 0;
   const attivo = n > 0;
   const aperto = !!stato.aperti[p.id];
@@ -331,20 +340,28 @@ function schedaPasto(p){
       <p>${esc(p.vincolo.lui)}</p>
     </div>` : '';
   const nota = p.nota ? `<div class="nota">${esc(p.nota)}</div>` : '';
-  const notaMia = pe.notaMia ? `<div class="nota">📌 ${esc(pe.notaMia)}</div>` : '';
+  const notaMia = p.notaMia ? `<div class="nota">📌 ${esc(p.notaMia)}</div>` : '';
 
   const modificaForm = !inModifica ? '' : `<div class="modifica-form">
-      <input type="text" id="mo-nome" placeholder="Nome" value="${esc(pe.nome)}">
+      <input type="text" id="mo-nome" placeholder="Nome" value="${esc(p.nome)}">
       <div style="display:flex;gap:8px;margin-top:8px">
-        <input type="number" id="mo-tempo" placeholder="Minuti" value="${pe.tempo||''}" style="flex:1">
+        <input type="number" id="mo-tempo" placeholder="Minuti" value="${p.tempo||''}" style="flex:1">
         <select id="mo-difficolta" style="flex:1;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;padding:10px;font-family:inherit;font-size:15px">
           <option value="">Difficoltà…</option>
-          <option value="facile"${pe.difficolta==='facile'?' selected':''}>Facile</option>
-          <option value="media"${pe.difficolta==='media'?' selected':''}>Media</option>
-          <option value="difficile"${pe.difficolta==='difficile'?' selected':''}>Difficile</option>
+          <option value="facile"${p.difficolta==='facile'?' selected':''}>Facile</option>
+          <option value="media"${p.difficolta==='media'?' selected':''}>Media</option>
+          <option value="difficile"${p.difficolta==='difficile'?' selected':''}>Difficile</option>
         </select>
       </div>
-      <textarea id="mo-nota" placeholder="Nota tua (es. senza piccante)" style="margin-top:8px;width:100%;min-height:60px;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;padding:10px;font-family:inherit;font-size:15px">${esc(pe.notaMia)}</textarea>
+      <textarea id="mo-nota" placeholder="Nota tua (es. senza piccante)" style="margin-top:8px;width:100%;min-height:60px;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;padding:10px;font-family:inherit;font-size:15px">${esc(p.notaMia)}</textarea>
+
+      <div class="eyebrow" style="margin-top:14px">Modalità di cottura</div>
+      <textarea id="mo-proc" placeholder="Procedura" style="margin-top:8px;width:100%;min-height:80px;background:var(--pentola);border:1px solid var(--bordo);color:var(--panna);border-radius:9px;padding:10px;font-family:inherit;font-size:15px">${esc(p.proc||'')}</textarea>
+
+      <div class="eyebrow" style="margin-top:14px">Ingredienti</div>
+      <div id="mo-ingredienti" style="margin-top:8px">${(p.ing||[]).map(htmlRigaIngrediente).join('')}</div>
+      <button type="button" class="btn ghost" id="mo-add-riga" style="margin-top:8px">+ INGREDIENTE</button>
+
       <div class="riga-btn">
         <button class="btn" data-salva-modifica="${p.id}">SALVA</button>
         <button class="btn ghost" data-annulla-modifica>ANNULLA</button>
@@ -354,7 +371,7 @@ function schedaPasto(p){
   return `<article class="pasto${attivo?' sel':''}${aperto?' aperto':''}" data-id="${p.id}">
     <div class="p-h" data-apri="${p.id}">
       <div class="p-top">
-        <div class="p-nome">${esc(pe.nome)}</div>
+        <div class="p-nome">${esc(p.nome)}</div>
         <svg class="chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="p-info">
@@ -362,8 +379,8 @@ function schedaPasto(p){
         ${stepper()}
       </div>
       <div class="p-meta">
-        ${pe.tempo ? `<span class="tag tempo">${pe.tempo} min</span>` : ''}
-        ${pe.difficolta ? `<span class="tag diff-${pe.difficolta}">${esc(pe.difficolta)}</span>` : ''}
+        ${p.tempo ? `<span class="tag tempo">${p.tempo} min</span>` : ''}
+        ${p.difficolta ? `<span class="tag diff-${p.difficolta}">${esc(p.difficolta)}</span>` : ''}
         <span class="tag t-${p.tipo}">${TIPO_LABEL[p.tipo]}</span>
         ${p.mia ? '<span class="tag" style="background:rgba(var(--pistacchio-rgb),.16);color:var(--pistacchio)">tua</span>' : ''}
         ${p.nuovo ? '<span class="tag" style="background:rgba(var(--curcuma-rgb),.16);color:var(--curcuma)">nuovo</span>' : ''}
@@ -382,7 +399,7 @@ function schedaPasto(p){
         <button class="btn ghost" data-cucinato="${p.id}">L'HO CUCINATO</button>
         ${p.mia
           ? `<button class="btn ghost" data-elimina-ricetta="${p.id}">ELIMINA</button>`
-          : `<button class="btn ghost" data-archivia="${p.id}">${pe.archiviato ? 'DISARCHIVIA' : 'ARCHIVIA'}</button>`}
+          : `<button class="btn ghost" data-archivia="${p.id}">${p.archiviato ? 'DISARCHIVIA' : 'ARCHIVIA'}</button>`}
         <button class="btn ghost" data-modifica="${p.id}">${inModifica ? 'CHIUDI' : 'MODIFICA'}</button>
       </div>
     </div>
@@ -393,11 +410,10 @@ function renderCatalogo(){
   const q = ($('#cerca').value || '').trim().toLowerCase();
   const tutti = tuttiIPasti();
   let lista = tutti.filter(p => {
-    const pe = pastoEffettivo(p);
-    if (!!pe.archiviato !== !!stato.mostraArchiviati) return false;
+    if (!!p.archiviato !== !!stato.mostraArchiviati) return false;
     if (stato.filtro !== 'tutti' && p.tipo !== stato.filtro) return false;
     if (!q) return true;
-    const testo = [pe.nome, p.desc||'', p.proc||'',
+    const testo = [p.nome, p.desc||'', p.proc||'',
       ...(p.ing||[]).map(i => i.b ? BASE_BY_ID[i.b].nome : i.n)].join(' ').toLowerCase();
     return testo.includes(q);
   });
@@ -472,7 +488,7 @@ function renderLista(){
   };
 
   const gruppi = TIPI.map(([k,label]) => [label, tuttiIPasti().filter(p => {
-    return !pastoEffettivo(p).archiviato && p.tipo === k && (stato.sel[p.id]||0) > 0;
+    return !p.archiviato && p.tipo === k && (stato.sel[p.id]||0) > 0;
   })]).filter(([,ps]) => ps.length);
 
   c.innerHTML = `
@@ -633,9 +649,15 @@ function renderBasi(){
           }).join('')}
         </div>
         ${b.proc ? `<ol class="passi">${b.proc.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : ''}
-        ${(b.timer||[]).map(([nome,min]) => `<button class="timer" data-timer="${min}" data-nome="${esc(nome)}">
+        ${(b.timer||[]).map(([nome,min], i) => {
+          const chiave = b.id + '|' + i;
+          const att = timersAttivi[chiave];
+          const rimasti = att ? Math.max(0, Math.round((att.fine - Date.now())/1000)) : null;
+          const testo = att ? esc(nome) + ' · ' + fmtMinSec(rimasti) : esc(nome) + ' · ' + min + '′';
+          return `<button class="timer${att?' attivo':''}" data-timer-key="${chiave}" data-timer="${min}" data-nome="${esc(nome)}">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
-          ${esc(nome)} · ${min}′</button>`).join('')}
+          <span class="timer-testo">${testo}</span></button>`;
+        }).join('')}
         ${b.nota ? `<div class="nota">${esc(b.nota)}</div>` : ''}
         <div class="qta-base" style="margin-top:11px">Frigo ${b.conserva[0]} · Freezer ${b.conserva[1]}</div>
         <div class="riga-btn"><button class="btn ghost" data-base-fatta="${b.id}">HO PREPARATO QUESTA BASE</button></div>
@@ -643,21 +665,40 @@ function renderBasi(){
     }).join('');
 }
 
-let timerAttivo = null;
+/* più timer possono girare insieme (es. sofritto + pollo + legumi in parallelo);
+   sono tenuti per scadenza assoluta (non per un conto alla rovescia su un nodo DOM
+   preciso) così sopravvivono a un renderBasi() che ridisegna i pulsanti da zero */
+const timersAttivi = {};   // chiave (baseId|indice) -> {nome, min, fine: epoch ms}
+let timerInterval = null;
+const fmtMinSec = sec => Math.floor(sec/60) + ':' + String(sec % 60).padStart(2,'0');
+function trovaBottoneTimer(chiave){
+  return $$('.timer[data-timer-key]').find(b => b.dataset.timerKey === chiave);
+}
+function aggiornaTimerDOM(){
+  let ancoraAttivi = false;
+  Object.keys(timersAttivi).forEach(chiave => {
+    const att = timersAttivi[chiave];
+    const rimasti = Math.round((att.fine - Date.now())/1000);
+    const btn = trovaBottoneTimer(chiave);
+    if (rimasti <= 0){
+      delete timersAttivi[chiave];
+      toast('Tempo scaduto: ' + att.nome);
+      if (btn){ btn.classList.remove('attivo'); const t = btn.querySelector('.timer-testo'); if (t) t.textContent = att.nome + ' · ' + att.min + '′'; }
+      return;
+    }
+    ancoraAttivi = true;
+    if (btn){ const t = btn.querySelector('.timer-testo'); if (t) t.textContent = att.nome + ' · ' + fmtMinSec(rimasti); }
+  });
+  if (!ancoraAttivi && timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+}
 function avviaTimer(btn){
-  if (timerAttivo){ clearInterval(timerAttivo.id); timerAttivo.btn.classList.remove('attivo'); timerAttivo.btn.innerHTML = timerAttivo.html; }
+  const chiave = btn.dataset.timerKey;
+  if (timersAttivi[chiave]){ delete timersAttivi[chiave]; aggiornaTimerDOM(); return; }
   const min = +btn.dataset.timer, nome = btn.dataset.nome;
-  const html = btn.innerHTML;
-  let r = min * 60;
+  timersAttivi[chiave] = {nome, min, fine: Date.now() + min * 60000};
   btn.classList.add('attivo');
-  const tick = () => {
-    const m = Math.floor(r/60), s = r % 60;
-    btn.textContent = nome + ' · ' + m + ':' + String(s).padStart(2,'0');
-    if (r-- <= 0){ clearInterval(id); btn.classList.remove('attivo'); btn.innerHTML = html; timerAttivo = null; toast('Tempo scaduto: ' + nome); }
-  };
-  tick();
-  const id = setInterval(tick, 1000);
-  timerAttivo = {id, btn, html};
+  if (!timerInterval) timerInterval = setInterval(aggiornaTimerDOM, 1000);
+  aggiornaTimerDOM();
 }
 
 /* ==========================================================================
@@ -684,14 +725,14 @@ function renderScorte(){
   if (!c) return;
   const puoi = [], quasi = [];
   tuttiIPasti().forEach(p => {
-    if (pastoEffettivo(p).archiviato) return;
+    if (p.archiviato) return;
     const mancano = pastoFattibile(p);
     if (mancano === null) return;
     (mancano.length ? quasi : puoi).push([p, mancano]);
   });
 
   const riga = ([p, mancano]) => `<div class="voce" style="cursor:default">
-      <span class="n">${esc(pastoEffettivo(p).nome)}${mancano.length ? `<small>ti manca: ${mancano.map(esc).join(', ')}</small>` : ''}</span>
+      <span class="n">${esc(p.nome)}${mancano.length ? `<small>ti manca: ${mancano.map(esc).join(', ')}</small>` : ''}</span>
     </div>`;
 
   let html = `<div class="card">
@@ -717,14 +758,18 @@ function renderScorte(){
 /* ==========================================================================
    FORM · NUOVA RICETTA
    ========================================================================== */
-function htmlRigaIngrediente(){
+function htmlRigaIngrediente(ing){
+  const isBase = !!(ing && ing.b);
+  const campo = isBase
+    ? `<select class="ing-base">${BASI.map(b => `<option value="${esc(b.id)}"${b.id===ing.b?' selected':''}>${esc(b.nome)}</option>`).join('')}</select>`
+    : `<input type="text" class="ing-nome" list="lista-ingredienti" placeholder="Nome" value="${ing&&ing.n?esc(ing.n):''}">`;
   return `<div class="ing-riga">
     <select class="ing-tipo">
-      <option value="n">Ingrediente</option>
-      <option value="b">Base</option>
+      <option value="n"${isBase?'':' selected'}>Ingrediente</option>
+      <option value="b"${isBase?' selected':''}>Base</option>
     </select>
-    <span class="ing-campo"><input type="text" class="ing-nome" list="lista-ingredienti" placeholder="Nome"></span>
-    <input type="number" class="ing-q" placeholder="g">
+    <span class="ing-campo">${campo}</span>
+    <input type="number" class="ing-q" placeholder="g" value="${ing&&ing.q?ing.q:''}">
     <button type="button" class="ing-rimuovi" aria-label="Rimuovi">×</button>
   </div>`;
 }
@@ -810,11 +855,19 @@ function grafico(p){
 }
 function verdetto(p){
   if (p.length < 4) return `<p class="sub" style="margin-top:10px">Servono almeno 4 misure su due settimane prima che la media dica qualcosa.</p>`;
-  const meta = Math.ceil(p.length/2);
-  const a = p.slice(0, meta), b = p.slice(-meta);
-  const ma = a.reduce((s,x) => s+x.kg, 0)/a.length, mb = b.reduce((s,x) => s+x.kg, 0)/b.length;
-  const gg = (new Date(p.at(-1).data) - new Date(p[0].data))/86400000 || 7;
-  const sett = (mb-ma)/(gg/2/7 || 1);
+  // regressione lineare (minimi quadrati) su (giorni trascorsi, kg): una media
+  // "prima metà / seconda metà" per numero di misure si disallinea dalla vera
+  // finestra temporale se le pesate non sono equispaziate (es. un buco di
+  // qualche settimana), producendo un kg/settimana impreciso proprio nel
+  // momento in cui guida il consiglio "togli/aggiungi 150 kcal"
+  const t0 = new Date(p[0].data).getTime();
+  const xs = p.map(x => (new Date(x.data).getTime() - t0) / 86400000);
+  const ys = p.map(x => x.kg);
+  const n = p.length;
+  const mx = xs.reduce((s,x) => s+x, 0)/n, my = ys.reduce((s,y) => s+y, 0)/n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++){ num += (xs[i]-mx)*(ys[i]-my); den += (xs[i]-mx)**2; }
+  const sett = (den ? num/den : 0) * 7;
   let t;
   if (sett > -0.1) t = 'La media non sta calando. Togli ~150 kcal al giorno: 40 g di riso o 20 g di pane.';
   else if (sett < -1.2) t = 'Stai calando troppo in fretta. Aggiungi ~150 kcal: un calo rapido costa massa magra.';
@@ -903,7 +956,7 @@ document.addEventListener('click', e => {
   const archivia = t.closest('[data-archivia]');
   if (archivia){
     const id = archivia.dataset.archivia;
-    const attuale = pastoEffettivo(PASTO_BY_ID[id]).archiviato;
+    const attuale = PASTO_BY_ID[id].archiviato;
     impostaPastoExtra(id, { archiviato: !attuale });
     toast(attuale ? 'Pasto disarchiviato' : 'Pasto archiviato');
     return;
@@ -922,11 +975,28 @@ document.addEventListener('click', e => {
     const tempo = parseInt($('#mo-tempo').value, 10);
     const difficolta = $('#mo-difficolta').value;
     const nota = ($('#mo-nota').value || '').trim();
-    const campi = {};
+    const proc = ($('#mo-proc').value || '').trim();
+    const ing = [];
+    $$('#mo-ingredienti .ing-riga').forEach(riga => {
+      const tipoRiga = riga.querySelector('.ing-tipo').value;
+      const q = parseFloat(riga.querySelector('.ing-q').value) || 0;
+      if (!q) return;
+      if (tipoRiga === 'b'){
+        const bSel = riga.querySelector('.ing-base');
+        if (bSel) ing.push({ b: bSel.value, q });
+      } else {
+        const nSel = riga.querySelector('.ing-nome');
+        const nomeIngRiga = nSel ? nSel.value.trim() : '';
+        if (nomeIngRiga) ing.push({ n: nomeIngRiga, q });
+      }
+    });
+    if (!ing.length){ toast('Serve almeno un ingrediente con quantità'); return; }
+    const campi = { ing };
     if (nome) campi.nome = nome;
     if (!isNaN(tempo)) campi.tempo = tempo;
     if (difficolta) campi.difficolta = difficolta;
     if (nota) campi.nota = nota;
+    if (proc) campi.proc = proc;
     impostaPastoExtra(id, campi);
     modificaAperta = null;
     toast('Modifiche salvate');
@@ -960,6 +1030,10 @@ document.addEventListener('click', e => {
     $('#nr-ingredienti').insertAdjacentHTML('beforeend', htmlRigaIngrediente());
     return;
   }
+  if (t.closest('#mo-add-riga')){
+    $('#mo-ingredienti').insertAdjacentHTML('beforeend', htmlRigaIngrediente());
+    return;
+  }
   const rimuoviRiga = t.closest('.ing-rimuovi');
   if (rimuoviRiga){ rimuoviRiga.closest('.ing-riga').remove(); return; }
   if (t.closest('#nr-salva')){
@@ -969,6 +1043,7 @@ document.addEventListener('click', e => {
     const tempo = parseInt($('#nr-tempo').value, 10);
     const difficolta = $('#nr-difficolta').value;
     const kcal = parseFloat($('#nr-kcal').value) || 0;
+    if (!kcal){ toast('Serve una stima delle kcal'); return; }
     const prot = parseFloat($('#nr-prot').value) || 0;
     const proc = ($('#nr-proc').value || '').trim();
     const nota = ($('#nr-nota').value || '').trim();
@@ -1003,7 +1078,8 @@ document.addEventListener('click', e => {
   if (t.closest('#wish-add')){
     const nome = ($('#wish-nome').value || '').trim();
     if (!nome) { toast('Serve almeno un nome'); return; }
-    const link = ($('#wish-link').value || '').trim();
+    let link = ($('#wish-link').value || '').trim();
+    if (link && !/^https?:\/\//i.test(link)) link = 'https://' + link;
     const nota = ($('#wish-nota').value || '').trim();
     aggiungiWishlist(nome, link, nota);
     $('#wish-nome').value = ''; $('#wish-link').value = ''; $('#wish-nota').value = '';

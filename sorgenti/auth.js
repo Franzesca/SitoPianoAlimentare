@@ -7,8 +7,8 @@ import {
   onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import {
-  getFirestore, doc, getDoc, setDoc, deleteDoc, addDoc, collection,
-  onSnapshot, query, orderBy
+  getFirestore, doc, getDoc, setDoc, updateDoc, deleteField, deleteDoc, addDoc, collection,
+  onSnapshot, query, orderBy, arrayUnion, arrayRemove, FieldPath
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 const fbApp = initializeApp(FIREBASE_CONFIG);
@@ -108,6 +108,11 @@ document.getElementById('vai-login').addEventListener('click', e => { e.preventD
 document.getElementById('crea-famiglia').addEventListener('click', async () => {
   const ref = doc(collection(db, 'households'));
   await setDoc(ref, { creatoDa: UID, creatoIl: Date.now() });
+  // pre-crea i documenti condivisi vuoti: così le scritture successive possono usare
+  // updateDoc (che richiede che il documento esista già) fin dal primo utilizzo
+  await setDoc(doc(db, 'households', ref.id, 'stato', 'corrente'), { sel:{}, modiBase:{}, hoGia:{}, preso:{}, extra:[] });
+  await setDoc(doc(db, 'households', ref.id, 'scorte', 'corrente'), { ingredienti:{}, basi:{} });
+  await setDoc(doc(db, 'households', ref.id, 'importanza', 'corrente'), { ingredienti:{}, basi:{} });
   await setDoc(doc(db, 'users', UID), { householdId: ref.id }, { merge: true });
   HOUSEHOLD_ID = ref.id;
   document.getElementById('codice-testo').textContent = ref.id;

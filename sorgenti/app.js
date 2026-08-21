@@ -56,20 +56,31 @@ function aggiornaBottoneTema(){
   b.setAttribute('aria-label', chiaro ? 'Passa al tema scuro' : 'Passa al tema chiaro');
 }
 
-let salvaCondivisoTimer = null;
-function salvaCondiviso(){
-  if (!HOUSEHOLD_ID) return;
-  clearTimeout(salvaCondivisoTimer);
-  salvaCondivisoTimer = setTimeout(() => {
-    const { sel, modiBase, hoGia, preso, extra } = stato;
-    setDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), { sel, modiBase, hoGia, preso, extra });
-  }, 400);
-}
-
 function erroreSync(dove, err){
   console.error('Errore di sincronizzazione:', dove, err);
   toast('Errore di sincronizzazione (' + dove + '): ' + ((err && err.code) || err));
 }
+
+/* ---------- sincronizzazione granulare: scrive solo i campi cambiati (mai l'intero
+   documento), altrimenti un salvataggio in corso da un telefono può sovrascrivere
+   una modifica appena fatta dall'altra persona sullo stesso household ---------- */
+function creaSincronizzatore(collezione, dove, ritardo){
+  let sporchi = {};
+  let timer = null;
+  return function(campo, valore){
+    if (!HOUSEHOLD_ID) return;
+    sporchi[campo] = valore;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const payload = sporchi; sporchi = {};
+      updateDoc(doc(db, 'households', HOUSEHOLD_ID, collezione, 'corrente'), payload)
+        .catch(err => erroreSync(dove, err));
+    }, ritardo);
+  };
+}
+const syncStato = creaSincronizzatore('stato', 'stato condiviso', 400);
+const syncScorte = creaSincronizzatore('scorte', 'scorte', 400);
+const syncImportanza = creaSincronizzatore('importanza', 'importanza', 400);
 
 function osservaCondiviso(){
   onSnapshot(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), snap => {
@@ -92,14 +103,6 @@ function osservaPesi(){
   }, err => erroreSync('pesi', err));
 }
 
-let salvaScorteTimer = null;
-function salvaScorte(){
-  if (!HOUSEHOLD_ID) return;
-  clearTimeout(salvaScorteTimer);
-  salvaScorteTimer = setTimeout(() => {
-    setDoc(doc(db, 'households', HOUSEHOLD_ID, 'scorte', 'corrente'), stato.scorte);
-  }, 400);
-}
 function osservaScorte(){
   onSnapshot(doc(db, 'households', HOUSEHOLD_ID, 'scorte', 'corrente'), snap => {
     const r = snap.exists() ? snap.data() : {};
@@ -109,14 +112,6 @@ function osservaScorte(){
   }, err => erroreSync('scorte', err));
 }
 
-let salvaImportanzaTimer = null;
-function salvaImportanza(){
-  if (!HOUSEHOLD_ID) return;
-  clearTimeout(salvaImportanzaTimer);
-  salvaImportanzaTimer = setTimeout(() => {
-    setDoc(doc(db, 'households', HOUSEHOLD_ID, 'importanza', 'corrente'), stato.importanza);
-  }, 400);
-}
 function osservaImportanza(){
   onSnapshot(doc(db, 'households', HOUSEHOLD_ID, 'importanza', 'corrente'), snap => {
     const r = snap.exists() ? snap.data() : {};
@@ -194,6 +189,7 @@ function ceLho(nome, isBase){
 function impostaScorta(nome, isBase, val){
   const cat = isBase ? stato.scorte.basi : stato.scorte.ingredienti;
   if (val) cat[nome] = true; else delete cat[nome];
+  syncScorte((isBase ? 'basi.' : 'ingredienti.') + nome, val ? true : deleteField());
 }
 // null = non fattibile (manca qualcosa di fondamentale); altrimenti array di nomi "medio" mancanti
 function pastoFattibile(p){
@@ -219,7 +215,7 @@ function segnaCucinato(pastoId){
     if (importanzaDi(nome, isBase) === 'opzionale') return;
     impostaScorta(nome, isBase, false);
   });
-  salvaScorte(); renderTutto();
+  renderTutto();
   toast('Scorte aggiornate');
 }
 function segnaBasePreparata(baseId){
@@ -231,7 +227,7 @@ function segnaBasePreparata(baseId){
     if (importanzaDi(n, false) === 'opzionale') return;
     impostaScorta(n, false, false);
   });
-  salvaScorte(); renderTutto();
+  renderTutto();
   toast('Scorte aggiornate');
 }
 
@@ -252,7 +248,9 @@ function importaDatiVecchi(){
   Object.keys(sel).forEach(id => { const s = sel[id]; if (s && typeof s === 'object') sel[id] = (s.lei||0)+(s.lui||0); });
   stato.sel = sel; stato.modiBase = vecchio.modiBase||{}; stato.hoGia = vecchio.hoGia||{};
   stato.preso = vecchio.preso||{}; stato.extra = vecchio.extra||[];
-  renderTutto(); salvaCondiviso();
+  renderTutto();
+  syncStato('sel', stato.sel); syncStato('modiBase', stato.modiBase);
+  syncStato('hoGia', stato.hoGia); syncStato('preso', stato.preso); syncStato('extra', stato.extra);
   $('#migra-banner').hidden = true;
   toast('Dati importati');
 }
@@ -853,7 +851,7 @@ document.addEventListener('click', e => {
     const [id, d] = step.dataset.step.split('|');
     const n = Math.max(0, Math.min(28, (stato.sel[id]||0) + (+d)));
     if (n) stato.sel[id] = n; else delete stato.sel[id];
-    renderTutto(); salvaCondiviso(); return;
+    renderTutto(); syncStato('sel.' + id, n || deleteField()); return;
   }
 
   const apri = t.closest('[data-apri]');
@@ -880,7 +878,7 @@ document.addEventListener('click', e => {
     renderSpesa(); salvaLocale(); return; }
 
   const modo = t.closest('[data-modo]');
-  if (modo){ const [id, m] = modo.dataset.modo.split('|'); stato.modiBase[id] = m; renderTutto(); salvaCondiviso(); return; }
+  if (modo){ const [id, m] = modo.dataset.modo.split('|'); stato.modiBase[id] = m; renderTutto(); syncStato('modiBase.' + id, m); return; }
 
   const tim = t.closest('.timer'); if (tim){ avviaTimer(tim); return; }
 
@@ -940,8 +938,10 @@ document.addEventListener('click', e => {
     const [tipo, nome, livello] = imp.dataset.imp.split('|');
     const isBase = tipo === 'b';
     const cat = isBase ? stato.importanza.basi : stato.importanza.ingredienti;
-    if (livello === importanzaDefault(nome, isBase)) delete cat[nome]; else cat[nome] = livello;
-    salvaImportanza(); renderScorte(); return;
+    const campo = (isBase ? 'basi.' : 'ingredienti.') + nome;
+    if (livello === importanzaDefault(nome, isBase)) { delete cat[nome]; syncImportanza(campo, deleteField()); }
+    else { cat[nome] = livello; syncImportanza(campo, livello); }
+    renderScorte(); return;
   }
 
   if (t.closest('#vedi-archiviati')){
@@ -1014,25 +1014,35 @@ document.addEventListener('click', e => {
 
   if (t.closest('#carica-settimana')){
     PASTI.forEach(p => stato.sel[p.id] = 2);
-    renderTutto(); salvaCondiviso(); toast('Settimana intera caricata: 27 pasti'); vaiA('lista'); return;
+    renderTutto(); syncStato('sel', stato.sel); toast('Settimana intera caricata: 27 pasti'); vaiA('lista'); return;
   }
   if (t.closest('#svuota-sel') || t.closest('#svuota-sel-2')){
-    stato.sel = {}; stato.hoGia = {}; stato.preso = {}; renderTutto(); salvaCondiviso(); toast('Lista svuotata'); return;
+    stato.sel = {}; stato.hoGia = {}; stato.preso = {}; renderTutto();
+    syncStato('sel', {}); syncStato('hoGia', {}); syncStato('preso', {});
+    toast('Lista svuotata'); return;
   }
   if (t.closest('#extra-add')){
     const v = ($('#extra-n').value || '').trim();
     if (!v) return;
     if (!stato.extra.includes(v)) stato.extra.push(v);
-    $('#extra-n').value = ''; renderSpesa(); salvaCondiviso(); return;
+    $('#extra-n').value = ''; renderSpesa();
+    if (HOUSEHOLD_ID) updateDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), { extra: arrayUnion(v) })
+      .catch(err => erroreSync('stato condiviso', err));
+    return;
   }
   const dx = t.closest('[data-delx]');
-  if (dx){ const i = +dx.dataset.delx;
-    delete stato.preso['+' + stato.extra[i]];
-    stato.extra.splice(i,1); renderSpesa(); salvaCondiviso(); return; }
+  if (dx){ const i = +dx.dataset.delx; const v = stato.extra[i];
+    delete stato.preso['+' + v];
+    stato.extra.splice(i,1); renderSpesa();
+    if (HOUSEHOLD_ID) updateDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'),
+      'extra', arrayRemove(v), new FieldPath('preso', '+' + v), deleteField())
+      .catch(err => erroreSync('stato condiviso', err));
+    return; }
 
   if (t.closest('#reset-spunte')){
+    const campo = stato.passo === 'dispensa' ? 'hoGia' : 'preso';
     if (stato.passo === 'dispensa') stato.hoGia = {}; else stato.preso = {};
-    renderSpesa(); salvaCondiviso(); toast('Spunte azzerate'); return;
+    renderSpesa(); syncStato(campo, {}); toast('Spunte azzerate'); return;
   }
   if (t.closest('#copia')){
     const testo = testoLista();
@@ -1069,17 +1079,18 @@ document.addEventListener('change', e => {
     const [tipo, nome] = scorta.dataset.scorta.split('|');
     impostaScorta(nome, tipo === 'b', scorta.checked);
     scorta.closest('.voce').classList.toggle('fatta', scorta.checked);
-    salvaScorte();
     return;
   }
 
   const sp = e.target.closest('[data-sp]');
   if (!sp) return;
   const n = sp.dataset.sp;
+  const extra = n[0] === '+';
+  const campoMappa = stato.passo === 'dispensa' ? 'hoGia' : 'preso';
   const mappa = stato.passo === 'dispensa' ? stato.hoGia : stato.preso;
   if (sp.checked) mappa[n] = true; else delete mappa[n];
   if (stato.passo === 'dispensa' && sp.checked) delete stato.preso[n];
-  if (stato.passo === 'spesa' && sp.checked && n[0] !== '+') impostaScorta(n, false, true);
+  if (stato.passo === 'spesa' && sp.checked && !extra) impostaScorta(n, false, true);
   sp.closest('.voce').classList.toggle('fatta', sp.checked);
   // ricalcola solo la barra, senza ridisegnare (per non perdere lo scroll)
   let tot = 0, fatti = 0;
@@ -1092,8 +1103,16 @@ document.addEventListener('change', e => {
   if (stato.passo === 'spesa') stato.extra.forEach(x => { tot++; if (stato.preso['+'+x]) fatti++; });
   $('#barra').style.width = (tot ? Math.round(fatti/tot*100) : 0) + '%';
   $('#b-spesa').textContent = stato.passo === 'dispensa' ? '' : String(tot - fatti || '');
-  salvaCondiviso();
-  if (stato.passo === 'spesa' && sp.checked && n[0] !== '+') salvaScorte();
+  // le voci "fuori piano" sono testo libero: il nome può contenere un punto, che
+  // in un percorso puntato verrebbe letto come una chiave annidata, quindi qui
+  // serve FieldPath invece della stringa 'preso.'+n usata per gli ingredienti normali
+  if (extra){
+    if (HOUSEHOLD_ID) updateDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), new FieldPath('preso', n), sp.checked ? true : deleteField())
+      .catch(err => erroreSync('stato condiviso', err));
+  } else {
+    syncStato(campoMappa + '.' + n, sp.checked ? true : deleteField());
+    if (stato.passo === 'dispensa' && sp.checked) syncStato('preso.' + n, deleteField());
+  }
 });
 
 $('#cerca').addEventListener('input', () => renderCatalogo());

@@ -121,6 +121,17 @@ dati statici solo a runtime in `sorgenti/app.js`:
 
 ## Vincoli da non rompere
 
+- **Non scrivere mai l'intero documento `stato/corrente` (o `scorte/corrente`/
+  `importanza/corrente`) con `setDoc`.** Le scritture condivise passano da
+  `syncStato()`/`syncScorte()`/`syncImportanza()` in `app.js`, che aggiornano
+  con `updateDoc` solo il campo puntato cambiato (es. `sel.<pastoId>`). Due
+  persone possono modificare l'household nello stesso momento da telefoni
+  diversi: un `setDoc` dell'intero oggetto sovrascriverebbe silenziosamente
+  la modifica dell'altra persona se il suo snapshot arriva durante la
+  finestra di debounce (400 ms). Le voci "fuori piano" (testo libero in
+  `extra`/`preso`) sono un'eccezione: usano `FieldPath`/`arrayUnion`/
+  `arrayRemove` invece di un percorso puntato stringa, perché il testo può
+  contenere un punto che verrebbe letto come chiave annidata.
 - **Non inventare valori nutrizionali.** Tutte le grammature e le stime vengono dai due
   documenti autorevoli. Due eccezioni dichiarate: il pranzo di venerdì (`ven-pra`, pasta
   al pomodoro con pollo sfilacciato, valori stimati) e l'hot dog di sabato (`sab-pra`,

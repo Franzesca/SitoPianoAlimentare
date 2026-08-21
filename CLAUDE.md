@@ -34,8 +34,9 @@ Target: 1.450 kcal / 115 g proteine, uguale per entrambi.
 
 ```bash
 cd sorgenti
-node build.js     # riscrive ../cucina.html
-node test.js      # verifiche incrociate contro i documenti
+node build.js             # riscrive ../cucina.html
+node test.js              # verifiche incrociate contro i documenti
+node audit-nutrizionale.js   # stima kcal/proteine dagli ingredienti grezzi, pasto per pasto
 ```
 
 - `sorgenti/dati.js` — registro ingredienti (`ING`), le 14 basi (`BASI`), i 27 pasti (`PASTI`), i target. **È qui che si aggiungono o correggono pasti.**
@@ -44,6 +45,13 @@ node test.js      # verifiche incrociate contro i documenti
 - `sorgenti/auth.js` — login, registrazione, creazione/adesione a un household.
 - `sorgenti/firebase-config.js` — chiavi del progetto Firebase.
 - `sorgenti/shell.html` — struttura HTML e CSS. I segnaposto `/*__FIREBASE_CONFIG__*/`, `/*__AUTH__*/`, `/*__DATI__*/`, `/*__MOTORE__*/`, `/*__APP__*/` vengono sostituiti da build.js, in quest'ordine, dentro un unico `<script type="module">`.
+- `sorgenti/audit-nutrizionale.js` — non entra in `cucina.html`. Esplode ogni pasto nei
+  suoi ingredienti grezzi (via `calcola()`, lo stesso motore dell'app) e li confronta con
+  una tabella di riferimento nutrizionale (kcal/proteine per 100 g, valori standard tipo
+  USDA/CREA — non i dati dei prodotti realmente comprati). Segnala i pasti dove lo scarto
+  supera il 15% e 30 kcal. È un controllo di plausibilità, non una fonte: se un pasto
+  viene segnalato, il numero da correggere in `dati.js` deve comunque venire da una fonte
+  nutrizionale vera, non dalla stima di questo script.
 
 ## Account e dati condivisi
 
@@ -131,3 +139,11 @@ dati statici solo a runtime in `sorgenti/app.js`:
   controllare il margine soffritto in app.
 - `test.js` verifica queste quantità contro i documenti. Falle passare prima di dire
   che una modifica è finita.
+- **Le stime kcal/proteine dei pasti tendono a essere sottostimate**, non sovrastimate:
+  un audit contro una tabella nutrizionale di riferimento (`audit-nutrizionale.js`,
+  2026-08-21) su tutti i pasti trova la stima calcolata più alta di quella dichiarata
+  in 24 pasti su 26, mediamente +8% sull'intera settimana. I peggiori sono i piatti con
+  legumi secchi o cereali in dose piena (chana saag, harira, kofta, wrap di falafel,
+  lenticchie e polenta): il peso a crudo dei legumi pesa più di quanto sembri a occhio.
+  Se aggiungi un pasto nuovo con legumi/cereali/carne in quantità simili, gira lo script
+  prima di fidarti del numero.

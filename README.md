@@ -114,6 +114,11 @@ node test.js      # verifiche incrociate contro i documenti autorevoli
   esista nel registro, poi ricalcola la settimana intera (2 porzioni per pasto) e la
   confronta con le quantità dichiarate nei documenti autorevoli (consumo delle basi,
   media kcal/proteine, numero di uova, pezzi di falafel…).
+- [`sorgenti/audit-nutrizionale.js`](sorgenti/audit-nutrizionale.js) — non entra in
+  `cucina.html`. Esplode ogni pasto nei suoi ingredienti grezzi con lo stesso motore
+  dell'app e li confronta con una tabella nutrizionale di riferimento, pasto per
+  pasto, per intercettare stime kcal/proteine implausibili. Dettagli e risultati
+  sotto.
 - [`serve.js`](serve.js) — server statico minimo per test in locale (`node serve.js`,
   poi `http://localhost:5173/cucina.html`); serve perché il login Google richiede
   http/https, non un file aperto direttamente. Non serve per la messa online, che è
@@ -140,34 +145,53 @@ node test.js      # verifiche incrociate contro i documenti autorevoli
 
 ## Verifica dei valori nutrizionali
 
-Ho ricontrollato le stime kcal/proteine dei 27 pasti nel modo più oggettivo possibile
-senza un database nutrizionale collegato: ho fatto esplodere via `calcola()` l'intera
-settimana (54 porzioni) nei suoi ingredienti grezzi non arrotondati, e ho sommato quei
-grammi contro una tabella di riferimento nutrizionale standard (valori per 100 g su
-prodotto grezzo, tipo USDA/CREA) per ciascuno degli ~90 ingredienti in `ING`.
+`audit-nutrizionale.js` ricontrolla le stime kcal/proteine dei pasti senza un database
+nutrizionale collegato: esplode ogni pasto (uno alla volta, isolato dal resto della
+settimana) nei suoi ingredienti grezzi con lo stesso motore usato dall'app, e li
+confronta con una tabella di riferimento nutrizionale standard (valori per 100 g su
+prodotto grezzo, tipo USDA/CREA) per ciascuno dei ~90 ingredienti in `ING`.
 
-**Risultato: la stima "dal basso" dà ~1.660 kcal/persona/giorno contro le 1.539
-dichiarate nei documenti — circa l'8% in più**, uno scarto coerente sulla maggior parte
-dei contributori principali (olio EVO, uova, legumi secchi, pollo), non concentrato su
-un solo ingrediente anomalo. Lo stesso segnale si vede isolando la base più usata: il
-soffritto è dichiarato a 87 kcal/100 g, la stima dai suoi ingredienti grezzi (verdure +
-90 g di olio su una resa di 3.300 g) dà ~97 kcal/100 g, circa l'11% in più.
+**Risultato sui 26 pasti con ricetta (esclusa la cena libera della domenica): 24
+stimano più della dichiarazione, solo 2 leggermente meno.** Non è rumore che si
+compensa — è un pattern in una sola direzione. Sull'intera settimana, la stima dà
+~1.663 kcal/persona/giorno contro le 1.539 dichiarate: **+8,1%**. Otto pasti superano
+la soglia di allarme dello script (≥15% e ≥30 kcal di scarto):
 
-Questo non è un bug del codice — `calcola()` somma correttamente i valori dichiarati
-pasto per pasto, `test.js` conferma che il totale settimanale (1.539 kcal/109 g P medi
-a testa) corrisponde esattamente a quanto scritto nei documenti. È lo **stesso ordine
-di grandezza** dello scarto già dichiarato in `piano-pasti-definitivo.md` (+89 kcal
-sopra target, descritto come "dentro il margine d'errore delle stime"), ma va nella
-stessa direzione, non in direzioni opposte che si compensano — un indizio che le stime
-originali tendano sistematicamente a essere un po' ottimistiche piuttosto che
-neutre. Le mie tabelle di riferimento hanno a loro volta un margine di incertezza
-(±5-10% a seconda della fonte, del taglio di carne, della marca), quindi non è una
-prova definitiva — ma è un segnale nella direzione che temevi, non nell'altra.
+| Pasto | Giorno | Dichiarato | Stimato | Scarto |
+|---|---|---|---|---|
+| Chana saag con petto di pollo | Venerdì cena | 545 kcal | ~840 kcal | +54% |
+| Harira e tacchino alla piastra | Martedì cena | 470 kcal | ~674 kcal | +43% |
+| Kofta di tacchino in salsa harissa | Giovedì cena | 500 kcal | ~645 kcal | +29% |
+| Wrap di falafel | Mercoledì pranzo | 485 kcal | ~609 kcal | +26% |
+| Lenticchie e polenta | Giovedì pranzo | 460 kcal | ~568 kcal | +24% |
+| Riso e pulled chicken gochujang | Mercoledì cena | 490 kcal | ~584 kcal | +19% |
+| Breakfast burrito | Martedì colazione | 420 kcal | ~498 kcal | +19% |
+| Shakshuka | Venerdì colazione | 410 kcal | ~479 kcal | +17% |
 
-**Non ho corretto i valori nei pasti**: farlo richiede una fonte nutrizionale vera
-(tabelle CREA/USDA con i prodotti effettivamente comprati), non la mia stima a memoria
-— altrimenti si sostituisce un'approssimazione con un'altra. Ne parliamo insieme per
-decidere come procedere.
+Il filo conduttore: i pasti più fuori soglia sono quasi tutti piatti con **legumi
+secchi o cereali in dose piena** (ceci, lenticchie rosse, riso crudo) insieme a carne.
+I legumi secchi pesano molto già a crudo (~350 kcal/100 g) e restano piuttosto densi
+anche da cotti (~140-150 kcal/100 g): è facile sottostimarli "a occhio" partendo dal
+piatto finito invece che dal peso reale. Il caso peggiore, il chana saag: i soli 180 g
+di ceci cotti + 40 g di riso crudo + 100 g di petto di pollo valgono già ~520 kcal da
+soli, prima di soffritto, latte di cocco e olio — quasi l'intero budget dichiarato per
+il piatto.
+
+Questo non è un bug del codice — `calcola()` somma correttamente i valori dichiarati,
+`test.js` conferma che il totale settimanale corrisponde esattamente a quanto scritto
+nei documenti. Lo scarto reale sembra più ampio di quanto i documenti stessi
+riconoscano: `piano-pasti-definitivo.md` dichiara già uno scarto di +89 kcal/giorno
+sopra target, descritto come "dentro il margine d'errore delle stime" — ma se l'8%
+trovato dall'audit è nel giusto, il piano starebbe realisticamente intorno a +200
+kcal/giorno sopra il target di 1.450, circa il doppio.
+
+**Limiti dello strumento:** la tabella di riferimento in `audit-nutrizionale.js` sono
+valori standard da memoria, non i dati dei prodotti effettivamente comprati — portano
+un margine di incertezza proprio (~5-10% a seconda dell'ingrediente, del taglio di
+carne, della marca). È un controllo di plausibilità utile a individuare *quali* pasti
+guardare più da vicino, non una fonte nutrizionale sostitutiva: **non ho corretto i
+valori in `dati.js`**, perché farlo richiede una fonte vera (tabelle CREA/USDA sui
+prodotti reali), non un'altra stima a memoria.
 
 ## Vincoli da non rompere
 

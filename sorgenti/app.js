@@ -590,23 +590,38 @@ function testoLista(){
    ========================================================================== */
 function renderBasi(){
   const c = $('#basi-corpo');
-  const attive = BASI.filter(b => CALC.basi[b.id]).sort((a,b) => a.ordine - b.ordine);
-  if (!attive.length){
+  const tutte = BASI.slice().sort((a,b) => a.ordine - b.ordine);
+  if (!nPasti()){
     c.innerHTML = `<div class="vuoto">
       <svg viewBox="0 0 24 24"><path d="M4 11h16v3a6 6 0 01-6 6h-4a6 6 0 01-6-6z"/><path d="M20 12h1.5a2 2 0 010 4H20"/></svg>
-      <p>Nessuna base da preparare: i pasti che hai scelto non ne usano.</p>
+      <p>Nessuna base da preparare: non hai ancora scelto pasti.</p>
       <div class="riga-btn" style="justify-content:center"><button class="btn" data-vai="pasti">SCEGLI I PASTI</button></div>
     </div>`;
     return;
   }
+  const attive = tutte.filter(b => CALC.basi[b.id]);
+  const inattive = tutte.filter(b => !CALC.basi[b.id]);
   const attMin = attive.reduce((a,b) => a + (CALC.basi[b.id].modo === 'salta' ? 0 : b.tempoAtt), 0);
+
+  const sezioneMuted = !inattive.length ? '' : `<div class="sez">
+      <div class="sez-h">
+        <h2 class="display" style="opacity:.6">Non ti servono questa settimana</h2>
+        <span class="eyebrow">${inattive.length}</span>
+      </div>
+      <p class="sub" style="font-size:12.5px">In base ai pasti che hai scelto ora. Se aggiungi un pasto che le usa, ricompaiono sopra con tutti i dettagli.</p>
+      <div class="card" style="opacity:.55;padding:4px 16px">
+        ${inattive.map(b => `<div class="riga" style="grid-template-columns:1fr auto;border-color:rgba(var(--bordo-rgb),.5)">
+          <span class="ing">${esc(b.nome)}</span><span class="q" style="color:var(--fumo)">${b.ordine}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
 
   c.innerHTML = `<div class="card">
       <div class="eyebrow">Domenica</div>
       <div class="mono" style="margin-top:6px;font-size:14px"><b style="font-size:22px">${attive.filter(b=>CALC.basi[b.id].modo!=='salta').length}</b> preparazioni · <b style="font-size:22px">${attMin}</b> min di lavoro attivo</div>
       <p class="sub" style="font-size:13px">Fai partire il forno per primo: pane, focaccine, muffin e le creme arrostite lo occupano quasi tutta la mattina. Il soffritto, i legumi e il pulled chicken vanno in parallelo sui fornelli e nell'altro forno, se ne hai due. Una base che hai già segnata come "ce l'ho" in Scorte non compare qui sotto come da fare: sparisce anche dalla spesa.</p>
     </div>` +
-    attive.map(b => {
+    (attive.length ? attive.map(b => {
       const v = CALC.basi[b.id];
       const salta = v.modo === 'salta';
       const f = salta ? 0 : v.produci / b.resa;
@@ -665,7 +680,9 @@ function renderBasi(){
         <div class="qta-base" style="margin-top:11px">Frigo ${b.conserva[0]} · Freezer ${b.conserva[1]}</div>
         <div class="riga-btn"><button class="btn ghost" data-base-fatta="${b.id}">HO PREPARATO QUESTA BASE</button></div>
       </div>`;
-    }).join('');
+    }).join('') : `<div class="vuoto" style="padding:24px 20px">
+      <p>Nessuna preparazione da fare questa settimana: i pasti che hai scelto non usano basi (o le hai già tutte in Scorte).</p>
+    </div>`) + sezioneMuted;
 }
 
 /* più timer possono girare insieme (es. sofritto + pollo + legumi in parallelo);

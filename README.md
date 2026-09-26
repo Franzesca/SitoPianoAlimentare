@@ -1,208 +1,135 @@
 # DietaCosi
 
-Piano alimentare settimanale per una coppia, costruito su **batch cooking domenicale**,
-più `cucina.html`, la web app che lo rende usabile in cucina: scegli i pasti, l'app
-calcola dispensa, lista della spesa e cosa preparare la domenica — in tempo reale,
-condivisa tra i due account della coppia.
+Piano alimentare di coppia — **autunno 2026, 1.250 kcal/giorno** — più `cucina.html`,
+la web app che lo rende usabile in cucina: un catalogo di pasti senza ordine di
+giorno, da cui costruire una lista che diventa dispensa da spuntare e poi lista
+della spesa vera. Condivisa in tempo reale tra i due account della coppia.
 
 ## Il vincolo che spiega tutto
 
-Lui non tollera verdura e frutta crude o poco processate. Tutto il progetto — ricette,
-struttura dei dati, persino il motore di calcolo — esiste per risolvere questo vincolo
-senza cucinare due pasti diversi ogni sera.
+Lui non tollera verdura e frutta crude o poco processate. Tutto il progetto —
+ricette, struttura dei dati, il motore di calcolo — esiste per risolvere questo
+vincolo senza cucinare due pasti diversi ogni sera.
 
-La soluzione è strutturale, non un compromesso pasto per pasto:
+- **Soffritto lungo frullato**: cipolle, carote, sedano, peperoni e pomodoro
+  cotti a lungo e frullati a crema liscia. Base di gran parte dei pasti.
+- **"Una pentola, due finiture"**: si cucina un solo piatto; nel piatto di lei
+  vanno le finiture crude, in quello di lui le stesse note ma cotte o frullate.
+- Le **zuppe e creme** (di zucca, cavolfiore, broccoli, carote, lenticchie e
+  cavolo nero, orzo e verza) sono conformi al vincolo per costruzione: sono
+  frullate o passate per tutti e due, senza bisogno di due versioni.
 
-- **Soffritto lungo frullato**: cipolle, carote, sedano, peperoni e pomodoro cotti 90
-  minuti e frullati fino a crema liscia. È la base di quasi metà dei pasti della
-  settimana ed è il modo in cui la verdura entra nel piatto di lui.
-- **"Una pentola, due finiture"**: si cucina un solo piatto; alla fine, nel piatto di
-  lei vanno le finiture crude (coriandolo, lime, cipolla rossa, kimchi…), in quello di
-  lui le stesse note ma cotte o frullate (salsa di peperoni al posto delle verdure
-  crude, cipolla stufata al posto di quella cruda, spinaci frullati nella salsa invece
-  che saltati interi).
+**Porzione unica**: lei e lui mangiano le stesse grammature — differenza solo
+di consistenza. Fanno eccezione le finiture non condivise (`soloLei`/`soloLui`).
 
-**Dal 2026-08-20, porzione unica:** lui mangia le stesse grammature di lei — non c'è
-più una differenza di quantità, resta solo quella di consistenza (crudo per lei,
-cotto/frullato per lui). Fanno eccezione tre pasti in tutta la settimana, dove la
-finitura non condivisa (`soloLei` / `soloLui`) resta strutturalmente diversa.
+**Target: 1.250 kcal / 100 g proteine al giorno**, uguale per entrambi, **pavimento
+non negoziabile** — ripartiti in colazione 200 · pranzo 450 · cena 600. Vale nei
+giorni interamente da piano; in settimana lui pranza fuori per lavoro, quindi il
+suo reale è più alto (indicativamente 1.600-1.800). Nelle settimane senza
+eccezioni sociali si aggiunge un **modulo +150** (una focaccina o 50 g di pane
+ai semi) per non stare troppo sotto.
 
-**Target nutrizionale:** 1.450 kcal / 115 g proteine al giorno, uguale per entrambi.
+## Cosa è cambiato dal piano di agosto
+
+- Da 1.450 a 1.250 kcal; da 4 pasti/giorno (con spuntino) a 3 (colazione,
+  pranzo, cena) più moduli extra facoltativi.
+- Niente più struttura a 7 giorni fissi: **42 pasti + 6 extra**, organizzati per
+  categoria (colazioni, zuppe, pranzi, cene, extra), da scegliere liberamente.
+  Un pulsante "carica la settimana tipo" resta disponibile come punto di
+  partenza, non come obbligo.
+- 7 nuove zuppe/creme autunnali (zucca, cavolfiore-porri, broccoli-patate,
+  carote-lenticchie rosse, lenticchie-cavolo nero, orzo-borlotti-verza, più la
+  harira già presente) e 7 nuove cene (spezzatino di tacchino, teglia di
+  pollo, polpette, radicchio brasato, pollo al limone, burger, pasta al
+  forno).
+- Panificati fatti in casa (focaccine, pane ai semi, muffin, plumcake,
+  crackers) per colazioni e moduli, al posto delle uova quasi tutti i giorni.
+- **kcal e proteine non sono più dichiarati a mano**: si calcolano dagli
+  ingredienti (tabella nutrizionale CREA/USDA in `dati.js`). Cambiare una
+  grammatura aggiorna da solo tutti i numeri a valle.
+- Storia del peso ripartita da zero (pulsante "AZZERA STORICO" nella vista Peso).
 
 ## I file
 
 | File | Cos'è |
 |---|---|
-| [`piano-pasti-definitivo.md`](piano-pasti-definitivo.md) | **Fonte autorevole dei pasti.** 27 pasti (4 al giorno × 7 giorni − 1), ingredienti in grammi per persona, procedura, variante del vincolo lei/lui, stime kcal/proteine. |
-| [`preparazione-domenicale.md`](preparazione-domenicale.md) | **Fonte autorevole delle basi.** Le 14 preparazioni domenicali con rese, ingredienti crudi lordi, mappa pasti→basi giorno per giorno, bilancio delle basi. |
-| [`piano-alimentare-settimanale.md`](piano-alimentare-settimanale.md) | Prima versione del piano, superata dai due documenti sopra. Resta utile per fabbisogni, sostituzioni e taratura. |
+| [`piano-pasti-definitivo.md`](piano-pasti-definitivo.md) | **Generato da `dati.js`.** Tutti i pasti per categoria, ingredienti, procedura, vincolo, valori. Non editarlo a mano: rigeneralo con `node sorgenti/genera-doc.js`. |
+| [`preparazione-domenicale.md`](preparazione-domenicale.md) | **Generato da `dati.js`.** Le basi con rese e procedure, la settimana tipo, il bilancio delle basi e la lista della spesa calcolati con `calcola()`. |
+| [`piano-alimentare-settimanale.md`](piano-alimentare-settimanale.md) | Piano di agosto 2026 (1.450 kcal), superato. Resta come riferimento storico. |
 | [`cucina.html`](cucina.html) | **La web app**, generata da [`sorgenti/`](sorgenti/). Non si modifica a mano. |
 | [`sorgenti/`](sorgenti/) | I sorgenti di `cucina.html` — vedi sotto. |
-| [`firestore.rules`](firestore.rules) | Regole di sicurezza Firestore: un utente legge/scrive solo l'household a cui è collegato. |
-| [`piano-cucina.html`](piano-cucina.html) | Vecchia app, ordinata per giorno, sui valori della prima versione del piano. Backup, non si tocca. |
+| [`firestore.rules`](firestore.rules) | Regole di sicurezza Firestore (non incluse in questa consegna: verifica che siano ancora quelle del progetto). |
 
 ## La web app
 
-`cucina.html` è una PWA a schermo singolo (installabile su home screen iOS/Android)
-organizzata in viste:
+Viste: **Pasti** (catalogo per categoria o per base, senza giorni obbligati,
+con "carica la settimana tipo"), **Lista** (pasti scelti, media kcal/proteine
+vs target), **Dispensa → Spesa** (spunta cosa hai, poi la lista vera),
+**Basi** (le preparazioni domenicali scalate sul bisogno reale), **Scorte**
+(dispensa virtuale persistente), **Peso** (grafico, verdetto, azzera
+storico), **Wishlist**, **+ Nuova ricetta** (kcal/proteine calcolati dagli
+ingredienti, non stimati a mano).
 
-- **Pasti** — catalogo dei 27 pasti (+ eventuali ricette proprie), filtrabile per tipo,
-  giorno o base, con ricerca testuale. Da qui si sceglie quante porzioni cucinare di
-  ogni pasto con uno stepper (0–28).
-- **Lista** — riepilogo di quello che è stato scelto: kcal/proteine totali e media
-  giornaliera confrontata col target.
-- **Dispensa → Spesa** — due passi sullo stesso elenco di ingredienti: prima si spunta
-  cosa si ha già in casa, poi si compila la lista della spesa vera con quello che manca
-  (più una sezione "fuori piano" per voci libere come detersivo o caffè). Esportabile
-  come testo, stampabile.
-- **Basi** — le preparazioni domenicali da fare, con quantità già scalate su cosa
-  serve davvero, procedura passo-passo e timer da cucina integrati.
-- **Scorte** — una dispensa virtuale persistente: si accende cosa si ha in casa
-  (ingredienti e basi, con un livello di importanza fondamentale/medio/opzionale) e
-  l'app suggerisce cosa si può cucinare subito o quasi. "L'ho cucinato" e "Ho
-  preparato questa base" spengono automaticamente quello che è stato consumato.
-- **Peso** — grafico e verdetto settimanale (calo troppo lento/veloce/nel range), un
-  tracciato per persona.
-- **Wishlist** — promemoria di ricette da provare, senza ingredienti né calcolo.
-- **+ Nuova ricetta** — form per aggiungere ricette proprie da zero al catalogo, con
-  ingredienti liberi o basi esistenti.
-- Ogni pasto è anche modificabile sul posto (nome, tempo, difficoltà, nota) e
-  archiviabile senza doverlo eliminare dal piano.
-
-### Account e dati condivisi
-
-L'app richiede login (Firebase Auth: email/password o Google). I dati di
-pianificazione — pasti scelti, dispensa, spesa, basi, scorte, ricette proprie,
-wishlist — sono condivisi in tempo reale tra i due account collegati allo stesso
-**household** (una famiglia, identificata da un codice che si genera creandola e si
-usa per unirsi dal secondo account). Il peso resta personale, attribuito
-automaticamente a chi è loggato. Le preferenze di interfaccia (filtri aperti, ultima
-vista) restano invece locali al dispositivo.
+Account e dati condivisi: invariato rispetto a prima (Firebase Auth +
+Firestore per household).
 
 ## Come si lavora sui sorgenti
 
-**Non si edita `cucina.html` a mano: è generato.** Si modificano i sorgenti e si
-ricompila:
-
 ```bash
 cd sorgenti
-node build.js     # riscrive ../cucina.html assemblando shell.html + i moduli
-node test.js      # verifiche incrociate contro i documenti autorevoli
+node build.js       # riscrive ../cucina.html assemblando shell.html + i moduli
+node test.js         # verifiche automatiche: riferimenti, cicli, banda kcal, settimana tipo
+node genera-doc.js    # rigenera ../piano-pasti-definitivo.md e ../preparazione-domenicale.md da dati.js
 ```
 
-- [`sorgenti/dati.js`](sorgenti/dati.js) — il registro statico: `ING` (ingredienti,
-  reparto e unità), `BASI` (le 14 preparazioni domenicali, con resa e ingredienti
-  grezzi), `PASTI` (i 27 pasti), `TARGET`. È qui che si aggiungono o correggono pasti.
-- [`sorgenti/motore.js`](sorgenti/motore.js) — `calcola()`: dato un insieme di pasti
-  selezionati, esplode ricorsivamente le basi (anche annidate: il chili contiene
-  soffritto, ceci e fagioli) fino agli ingredienti crudi, scalando ogni base sulla sua
-  resa. `formatta()` arrotonda le quantità in modo leggibile (grammi, kg, pezzi,
-  "~X g di succo" per limoni e lime).
-- [`sorgenti/app.js`](sorgenti/app.js) — tutta la UI: le viste sopra, gli event
-  listener, la sincronizzazione con Firestore, la migrazione una tantum dal vecchio
-  formato `localStorage`.
-- [`sorgenti/auth.js`](sorgenti/auth.js) — login, registrazione, creazione/adesione a
-  un household.
-- [`sorgenti/firebase-config.js`](sorgenti/firebase-config.js) — chiavi del progetto
-  Firebase (pubbliche per design: la sicurezza è nelle regole Firestore, non nel
-  nascondere questa config).
-- [`sorgenti/shell.html`](sorgenti/shell.html) — struttura HTML e CSS. `build.js`
+- [`sorgenti/dati.js`](sorgenti/dati.js) — **la fonte unica.** `ING` (ingredienti
+  con kcal/proteine per 100 g), `BASI` (26 preparazioni domenicali, alcune con
+  `interoDefault:true` per zuppe e panificati), `PASTI` (42 pasti + 6 extra,
+  con `tipo` per la contabilità e `cat` per il catalogo), `TARGET`,
+  `SETTIMANA_TIPO`. kcal e proteine di ogni base e pasto **si calcolano qui**
+  (funzioni `valoriBase100`/`valoriPasto` in fondo al file), non si dichiarano.
+- [`sorgenti/motore.js`](sorgenti/motore.js) — `calcola()`: esplode
+  ricorsivamente le basi (anche annidate) fino agli ingredienti crudi. Il modo
+  di preparazione di default è "ricetta intera" per le basi con
+  `interoDefault` (zuppe, pane, focaccine, muffin: si fanno a dose piena e si
+  congelano), altrimenti "quantità esatta" salvo fabbisogni molto piccoli.
+- [`sorgenti/app.js`](sorgenti/app.js) — tutta la UI e la sincronizzazione
+  Firestore. Nessuna migrazione da `localStorage`: il piano precedente non
+  serve più portarlo avanti.
+- [`sorgenti/auth.js`](sorgenti/auth.js) / [`firebase-config.js`](sorgenti/firebase-config.js) — invariati.
+- [`sorgenti/shell.html`](sorgenti/shell.html) — HTML e CSS. `build.js`
   sostituisce nell'ordine i segnaposto `/*__FIREBASE_CONFIG__*/`, `/*__AUTH__*/`,
-  `/*__DATI__*/`, `/*__MOTORE__*/`, `/*__APP__*/` dentro un unico `<script
-  type="module">`.
-- [`sorgenti/test.js`](sorgenti/test.js) — controlla che ogni ingrediente/base citato
-  esista nel registro, poi ricalcola la settimana intera (2 porzioni per pasto) e la
-  confronta con le quantità dichiarate nei documenti autorevoli (consumo delle basi,
-  media kcal/proteine, numero di uova, pezzi di falafel…).
-- [`sorgenti/audit-nutrizionale.js`](sorgenti/audit-nutrizionale.js) — non entra in
-  `cucina.html`. Esplode ogni pasto nei suoi ingredienti grezzi con lo stesso motore
-  dell'app e li confronta con una tabella nutrizionale di riferimento, pasto per
-  pasto, per intercettare stime kcal/proteine implausibili. Dettagli e risultati
-  sotto.
-- [`serve.js`](serve.js) — server statico minimo per test in locale (`node serve.js`,
-  poi `http://localhost:5173/cucina.html`); serve perché il login Google richiede
-  http/https, non un file aperto direttamente. Non serve per la messa online, che è
-  su GitHub Pages.
-
-## Il modello dati, in breve
-
-- Le quantità nei pasti sono **per persona**, in grammi salvo unità `pz`: lei e lui
-  mangiano la stessa quantità, salvo le finiture non condivise.
-- Un ingrediente che è una base si scrive `{b:'soffritto', q:120}`; uno fresco
-  `{n:'Uova', q:2}`. Le **basi annidate** si scrivono `['@soffritto', 600]` dentro
-  `BASI` (il chili contiene soffritto+ceci+fagioli, il ragù contiene soffritto,
-  l'hummus contiene ceci): `calcola()` le risolve per profondità decrescente.
-- Le finiture non condivise portano `soloLei:true` o `soloLui:true` e pesano su
-  **metà** delle porzioni selezionate (una finitura a testa in ogni coppia di
-  porzioni). Sono tre casi in tutto il piano.
-- Ogni base ha un interruttore *quantità esatta* (scala sul fabbisogno reale) /
-  *ricetta intera* (prepara tutta la dose, utile per fare scorta in freezer). Default:
-  "intero" solo sotto i 200 g di fabbisogno.
-- `PASTI`/`BASI`/`ING` restano statici da `dati.js`. Scorte, importanza, override sui
-  pasti (`pastiExtra`), ricette proprie (`ricetteExtra`) e wishlist vivono tutte come
-  documenti Firestore per household e si fondono con i dati statici solo a runtime in
-  `app.js` — `dati.js` non cambia mai per queste funzionalità.
+  `/*__DATI__*/`, `/*__MOTORE__*/`, `/*__APP__*/`.
+- [`sorgenti/test.js`](sorgenti/test.js) — controlla che ogni ingrediente/base
+  citato esista, che non ci siano cicli tra le basi, che ogni pasto sia dentro
+  banda ±15% dal target del suo tipo, e che la settimana tipo sia coerente col
+  target giornaliero.
+- [`sorgenti/genera-doc.js`](sorgenti/genera-doc.js) — genera i due `.md`
+  autorevoli da `dati.js`, senza ricalcoli a mano.
 
 ## Verifica dei valori nutrizionali
 
-`audit-nutrizionale.js` ricontrolla le stime kcal/proteine dei pasti senza un database
-nutrizionale collegato: esplode ogni pasto (uno alla volta, isolato dal resto della
-settimana) nei suoi ingredienti grezzi con lo stesso motore usato dall'app, e li
-confronta con una tabella di riferimento nutrizionale standard (valori per 100 g su
-prodotto grezzo, tipo USDA/CREA) per ciascuno dei ~90 ingredienti in `ING`.
+kcal e proteine non sono più stime dichiarate: sono calcolate dagli
+ingredienti con una tabella nutrizionale di riferimento (valori medi per
+100 g su prodotto crudo, tipo CREA/USDA) per ciascun ingrediente in `ING`. Ho
+controllato il calcolo due volte con motori indipendenti: una volta in
+JavaScript (le funzioni in `dati.js`, usate anche dall'app), una volta con
+una riscrittura in Python dello stesso algoritmo a partire dagli stessi dati
+grezzi — le 49 schede pasto coincidono esattamente tra i due.
 
-**Risultato sui 26 pasti con ricetta (esclusa la cena libera della domenica): 24
-stimano più della dichiarazione, solo 2 leggermente meno.** Non è rumore che si
-compensa — è un pattern in una sola direzione. Sull'intera settimana, la stima dà
-~1.663 kcal/persona/giorno contro le 1.539 dichiarate: **+8,1%**. Otto pasti superano
-la soglia di allarme dello script (≥15% e ≥30 kcal di scarto):
-
-| Pasto | Giorno | Dichiarato | Stimato | Scarto |
-|---|---|---|---|---|
-| Chana saag con petto di pollo | Venerdì cena | 545 kcal | ~840 kcal | +54% |
-| Harira e tacchino alla piastra | Martedì cena | 470 kcal | ~674 kcal | +43% |
-| Kofta di tacchino in salsa harissa | Giovedì cena | 500 kcal | ~645 kcal | +29% |
-| Wrap di falafel | Mercoledì pranzo | 485 kcal | ~609 kcal | +26% |
-| Lenticchie e polenta | Giovedì pranzo | 460 kcal | ~568 kcal | +24% |
-| Riso e pulled chicken gochujang | Mercoledì cena | 490 kcal | ~584 kcal | +19% |
-| Breakfast burrito | Martedì colazione | 420 kcal | ~498 kcal | +19% |
-| Shakshuka | Venerdì colazione | 410 kcal | ~479 kcal | +17% |
-
-Il filo conduttore: i pasti più fuori soglia sono quasi tutti piatti con **legumi
-secchi o cereali in dose piena** (ceci, lenticchie rosse, riso crudo) insieme a carne.
-I legumi secchi pesano molto già a crudo (~350 kcal/100 g) e restano piuttosto densi
-anche da cotti (~140-150 kcal/100 g): è facile sottostimarli "a occhio" partendo dal
-piatto finito invece che dal peso reale. Il caso peggiore, il chana saag: i soli 180 g
-di ceci cotti + 40 g di riso crudo + 100 g di petto di pollo valgono già ~520 kcal da
-soli, prima di soffritto, latte di cocco e olio — quasi l'intero budget dichiarato per
-il piatto.
-
-Questo non è un bug del codice — `calcola()` somma correttamente i valori dichiarati,
-`test.js` conferma che il totale settimanale corrisponde esattamente a quanto scritto
-nei documenti. Lo scarto reale sembra più ampio di quanto i documenti stessi
-riconoscano: `piano-pasti-definitivo.md` dichiara già uno scarto di +89 kcal/giorno
-sopra target, descritto come "dentro il margine d'errore delle stime" — ma se l'8%
-trovato dall'audit è nel giusto, il piano starebbe realisticamente intorno a +200
-kcal/giorno sopra il target di 1.450, circa il doppio.
-
-**Limiti dello strumento:** la tabella di riferimento in `audit-nutrizionale.js` sono
-valori standard da memoria, non i dati dei prodotti effettivamente comprati — portano
-un margine di incertezza proprio (~5-10% a seconda dell'ingrediente, del taglio di
-carne, della marca). È un controllo di plausibilità utile a individuare *quali* pasti
-guardare più da vicino, non una fonte nutrizionale sostitutiva: **non ho corretto i
-valori in `dati.js`**, perché farlo richiede una fonte vera (tabelle CREA/USDA sui
-prodotti reali), non un'altra stima a memoria.
+**Limite dichiarato:** la tabella nutrizionale in `ING` sono valori medi da
+tabelle di composizione standard, non i dati dei prodotti che comprate
+davvero — un margine di incertezza proprio (5-10% a seconda del taglio, della
+marca, di quanto la zucca è più o meno acquosa). Non ho inventato numeri: se
+un valore non era ricavabile con sicurezza da fonti nutrizionali standard,
+l'ingrediente non è nel piano.
 
 ## Vincoli da non rompere
 
-- **Non inventare valori nutrizionali.** Tutte le grammature e le stime vengono dai
-  due documenti autorevoli. Due eccezioni dichiarate: il pranzo di venerdì (`ven-pra`,
-  valori stimati) e l'hot dog di sabato (`sab-pra`, il contorno di lui pesa un po' di
-  più, non quantificato).
-- **Il soffritto dipende da come si preparano chili e ragù**: farli entrambi a
-  ricetta intera nella stessa domenica costa ~120 g più della resa del soffritto.
-  Controllare il margine in app prima di farlo.
-- `test.js` verifica le quantità contro i documenti: farlo passare prima di dire che
-  una modifica è finita.
-
-Dettagli completi in [`CLAUDE.md`](CLAUDE.md).
+- **Non inventare valori nutrizionali.** Le kcal/proteine si calcolano da
+  `dati.js`; se aggiungi un ingrediente nuovo, servono k (kcal/100 g) e p
+  (proteine/100 g) da una fonte nutrizionale, non a occhio.
+- `test.js` verifica riferimenti, cicli e banda kcal: farlo passare prima di
+  dire che una modifica è finita.
+- `piano-pasti-definitivo.md` e `preparazione-domenicale.md` sono **generati**:
+  non editarli a mano, editare `dati.js` e rilanciare `genera-doc.js`.

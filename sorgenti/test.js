@@ -1,55 +1,88 @@
-const D = require('./dati.js');
-const {calcola, formatta} = require('./motore.js');
+// Verifiche automatiche sul modello dati. node test.js
+const fs = require('fs');
+const path = require('path');
 
-// 1. controllo integrità: ogni ingrediente citato esiste nel registro
-const mancanti = new Set();
-D.PASTI.forEach(p => (p.ing||[]).forEach(i => { if (i.n && !D.ING[i.n]) mancanti.add(i.n); }));
-D.BASI.forEach(b => b.ing.forEach(([n]) => {
-  if (n[0]==='@'){ if(!D.BASI.find(x=>x.id===n.slice(1))) mancanti.add(n); }
-  else if (!D.ING[n]) mancanti.add(n);
-}));
-console.log('Ingredienti non registrati:', mancanti.size ? [...mancanti] : 'nessuno ✓');
+// dati.js e motore.js sono script semplici (pensati per essere incollati in un
+// <script type="module">, senza export): li carichiamo con Function() e
+// appendiamo un module.exports nello stesso scope lessicale, così le const di
+// primo livello restano visibili qui senza modificare i sorgenti.
+function caricaModulo(file, nomi){
+  const src = fs.readFileSync(path.join(__dirname, file), 'utf8')
+    + '\n;module.exports = {' + nomi.join(',') + '};';
+  const mod = { exports: {} };
+  new Function('module', 'exports', src)(mod, mod.exports);
+  return mod.exports;
+}
+const { ING, BASI, PASTI, TARGET, SETTIMANA_TIPO } = caricaModulo('dati.js',
+  ['ING','BASI','PASTI','TARGET','TIPI','CATEGORIE','SETTIMANA_TIPO','valoriBase100','valoriPasto']);
+const { calcola, formatta } = caricaModulo('motore.js', ['calcola','formatta','costruisciIndici']);
 
-// 2. ogni base citata dai pasti esiste
-const bMancanti = new Set();
-D.PASTI.forEach(p => (p.ing||[]).forEach(i => { if (i.b && !D.BASI.find(x=>x.id===i.b)) bMancanti.add(i.b); }));
-console.log('Basi non definite:', bMancanti.size ? [...bMancanti] : 'nessuna ✓');
+let errori = 0;
+const fail = msg => { console.log('✗ ' + msg); errori++; };
+const ok   = msg => console.log('✓ ' + msg);
 
-// 3. settimana intera, 2 porzioni (lei+lui) per ogni pasto
-const sel = {};
-D.PASTI.forEach(p => sel[p.id] = 2);
-const modi = {}; D.BASI.forEach(b => modi[b.id]='esatto');
-const r = calcola(sel, modi, D);
+/* 1. ogni ingrediente/base citato esiste */
+(function testRiferimenti(){
+  let bad = 0;
+  const checkList = (list, ctxLabel) => (list||[]).forEach(i => {
+    if (i.b && !BASI.find(b => b.id === i.b)) { console.log('  base mancante', i.b, 'in', ctxLabel); bad++; }
+    if (i.n && !ING[i.n]) { console.log('  ingrediente mancante', i.n, 'in', ctxLabel); bad++; }
+  });
+  PASTI.forEach(p => checkList(p.ing, p.id));
+  BASI.forEach(b => b.ing.forEach(([n]) => {
+    if (n[0] === '@' && !BASI.find(x => x.id === n.slice(1))) { console.log('  base-in-base mancante', n, 'in', b.id); bad++; }
+    else if (n[0] !== '@' && !ING[n]) { console.log('  ingrediente mancante (base)', n, 'in', b.id); bad++; }
+  }));
+  bad ? fail('riferimenti a ingredienti/basi (' + bad + ' problemi)') : ok('tutti gli ingredienti e le basi citati esistono nel registro');
+})();
 
-console.log('\n=== BASI: fabbisogno settimana intera ===');
-Object.entries(r.basi).forEach(([id,v]) => {
-  const b = D.BASI.find(x=>x.id===id);
-  console.log(`${b.nome.padEnd(38)} serve ${Math.round(v.serve)} g  (dai pasti ${Math.round(r.usoPasti[id]||0)} g)  · resa ricetta ${b.resa} g`);
-});
+/* 2. niente id duplicati */
+(function testDuplicati(){
+  const idsP = PASTI.map(p => p.id), idsB = BASI.map(b => b.id);
+  const dupP = idsP.filter((id,i) => idsP.indexOf(id) !== i);
+  const dupB = idsB.filter((id,i) => idsB.indexOf(id) !== i);
+  (dupP.length || dupB.length) ? fail('id duplicati: pasti ' + dupP + ' basi ' + dupB)
+    : ok('nessun id duplicato (' + PASTI.length + ' pasti, ' + BASI.length + ' basi)');
+})();
 
-console.log('\n=== VALORI SETTIMANA (totale coppia) ===');
-console.log('Totale:', Math.round(r.val[0]), 'kcal ·', Math.round(r.val[1]), 'g P');
-console.log('A testa:', Math.round(r.val[0]/2), 'kcal ·', Math.round(r.val[1]/2), 'g P  → media/gg a testa', Math.round(r.val[0]/2/7), '/', Math.round(r.val[1]/2/7));
+/* 3. niente cicli tra le basi (costruisciIndici lancia se ce ne sono) */
+(function testCicli(){
+  try { calcola({}, {}, {ING, BASI, PASTI}); ok('nessun ciclo tra le basi'); }
+  catch(e){ fail('ciclo tra le basi: ' + e.message); }
+})();
 
-console.log('\n=== LISTA COMPLETA (settimana intera) ===');
-D.REPARTI.forEach(([k,label]) => {
-  const righe = Object.entries(r.ing).filter(([n]) => (D.ING[n]||{}).r === k).sort((a,b)=>b[1]-a[1]);
-  if (!righe.length) return;
-  console.log('\n-- ' + label);
-  righe.forEach(([n,q]) => console.log('   ' + n.padEnd(44) + formatta(n,q,D.ING)));
-});
+/* 4. ogni pasto dentro banda ±15% dal target del suo tipo (extra esclusi) */
+(function testBanda(){
+  let bad = 0;
+  PASTI.forEach(p => {
+    if (p.tipo === 'extra') return;
+    const t = TARGET.pasti[p.tipo];
+    if (!t) return;
+    const d = (p.val[0] - t) / t;
+    if (Math.abs(d) > 0.15) { console.log('  fuori banda', p.id, p.tipo, p.val[0], 'target', t, (d*100).toFixed(0)+'%'); bad++; }
+  });
+  bad ? fail(bad + ' pasti fuori banda ±15%') : ok('tutti i pasti dentro banda ±15% dal target del loro tipo');
+})();
 
-// ---- verifiche incrociate con i documenti -------------------------------
-const chk = [];
-const v = (n, atteso, ottenuto, tol=1) => chk.push([n, atteso, Math.round(ottenuto), Math.abs(ottenuto-atteso)<=tol ? 'ok' : 'DIVERGE']);
-v('Pulled chicken consumato (doc: 640 g)', 640, r.usoPasti.pulled);
-v('Lenticchie verdi consumate (doc: 360 g)', 360, r.usoPasti.lenticchie);
-v('Ragù consumato (doc: 300 g)', 300, r.usoPasti.ragu);
-v('Ceci dai pasti (doc: 560 g)', 560, r.usoPasti.ceci);
-v('Falafel: 8 pezzi da 55-60 g (doc)', 8, r.usoPasti.falafel/57, 0.3);
-v('Media kcal a testa/gg (doc: 1539)', 1539, r.val[0]/2/7, 2);
-v('Media proteine a testa/gg (doc: 109)', 109, r.val[1]/2/7, 1);
-v('Uova settimana (doc lista spesa: 24)', 24, r.ing['Uova'], 1);
-console.log('\n=== VERIFICHE ===');
-chk.forEach(([n,a,o,s]) => console.log((s==='ok'?'  ok  ':' >>>> ') + n.padEnd(46) + 'atteso ' + a + ' · ottenuto ' + o));
-console.log(chk.every(c=>c[3]==='ok') ? '\nTutte le verifiche passano.' : '\nATTENZIONE: divergenze.');
+/* 5. settimana tipo: ogni id esiste, e i giorni con pranzo in piano stanno
+   entro +-100 kcal dal target giornaliero (i giorni con pranzo fuori non sono
+   valutabili sul totale, li saltiamo) */
+(function testSettimanaTipo(){
+  const byId = {}; PASTI.forEach(p => byId[p.id] = p);
+  let bad = 0;
+  const targetGiorno = TARGET.kcal;
+  SETTIMANA_TIPO.giorni.forEach(d => {
+    const col = byId[d.col], cen = byId[d.cena];
+    if (!col) { console.log('  id colazione mancante', d.col, 'per', d.g); bad++; }
+    if (!cen) { console.log('  id cena mancante', d.cena, 'per', d.g); bad++; }
+    if (!d.pra || !col || !cen) return;
+    const pra = byId[d.pra];
+    if (!pra) { console.log('  id pranzo mancante', d.pra, 'per', d.g); bad++; return; }
+    const k = col.val[0] + pra.val[0] + cen.val[0];
+    if (Math.abs(k - targetGiorno) > 100) { console.log('  ', d.g, k, 'kcal, scarto', k - targetGiorno, 'dal target', targetGiorno); bad++; }
+  });
+  bad ? fail('settimana tipo: ' + bad + ' problema/i') : ok('settimana tipo: ogni giorno con pranzo in piano è entro ±100 kcal dal target');
+})();
+
+console.log('\n' + (errori ? errori + ' problema/i trovati.' : 'Tutti i controlli passati.'));
+process.exit(errori ? 1 : 0);

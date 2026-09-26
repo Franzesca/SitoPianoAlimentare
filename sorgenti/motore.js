@@ -31,7 +31,7 @@ function calcola(selezione, modiBase, DATI){
 
   const ing  = {};                 // ingrediente crudo -> quantità
   const need = {};                 // base -> grammi richiesti
-  const val  = [0, 0];
+  const val  = [0, 0];             // somma dei piatti di lei + di lui (media di coppia)
   const usoPasti = {};             // base -> grammi richiesti dai soli pasti
 
   const add = (nome, q) => { if (q) ing[nome] = (ing[nome]||0) + q; };
@@ -39,8 +39,11 @@ function calcola(selezione, modiBase, DATI){
   PASTI.forEach(p => {
     const n = selezione[p.id] || 0;
     if (!n) return;
-    val[0] += p.val[0] * n;
-    val[1] += p.val[1] * n;
+    // val è il piatto di lei, valLui quello di lui: se differiscono (finiture
+    // soloLei/soloLui) la media di coppia è la loro media, non solo val*2
+    const vLui = p.valLui || p.val;
+    val[0] += (p.val[0] + vLui[0]) / 2 * n;
+    val[1] += (p.val[1] + vLui[1]) / 2 * n;
     (p.ing||[]).forEach(i => {
       // le finiture non condivise valgono solo per metà delle porzioni:
       // in ogni coppia di porzioni, una sola delle due persone la riceve.
@@ -58,10 +61,11 @@ function calcola(selezione, modiBase, DATI){
   ordine.forEach(b => {
     const serve = need[b.id] || 0;
     if (!serve) return;
-    // default: dose piena solo quando la quantità esatta sarebbe troppo piccola
-    // da preparare davvero (es. 40 g di hummus), altrimenti si scala al fabbisogno
+    // default: "intero" se la base lo segnala esplicitamente (zuppe, panificati:
+    // si fanno a dose piena e si congelano) oppure se la quantità esatta sarebbe
+    // troppo piccola da preparare davvero; altrimenti si scala al fabbisogno
     const modo = (modiBase && modiBase[b.id])
-      || ((serve < 200 && serve < b.resa * 0.5) ? 'intero' : 'esatto');
+      || (b.interoDefault ? 'intero' : ((serve < 200 && serve < b.resa * 0.5) ? 'intero' : 'esatto'));
     const ricette = Math.max(1, Math.ceil(serve / b.resa - 1e-9));
     const produci = modo === 'intero' ? ricette * b.resa : serve;
     basi[b.id] = {serve, produci, modo, ricette, avanzo: produci - serve};
@@ -100,5 +104,3 @@ function formatta(nome, q, ING){
   if (r >= 1000) return (r/1000).toFixed(r % 1000 === 0 ? 0 : 1).replace('.', ',') + ' kg';
   return String(r).replace('.', ',') + ' g';
 }
-
-if (typeof module !== 'undefined') module.exports = {calcola, formatta, arrotonda, costruisciIndici};

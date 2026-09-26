@@ -130,9 +130,10 @@ input:focus{outline:2px solid var(--accento);outline-offset:-1px}
 .tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;font-weight:700;letter-spacing:.07em;
   text-transform:uppercase;padding:3px 7px;border-radius:5px;background:var(--bordo);color:var(--fumo)}
 .tag.t-colazione{background:rgba(var(--curcuma-rgb),.16);color:var(--curcuma)}
+.tag.t-zuppa{background:rgba(var(--pistacchio-rgb),.22);color:var(--pistacchio)}
 .tag.t-pranzo{background:rgba(var(--pistacchio-rgb),.16);color:var(--pistacchio)}
 .tag.t-cena{background:rgba(var(--harissa-rgb),.18);color:var(--harissa)}
-.tag.t-spuntino{background:rgba(var(--panna-rgb),.1);color:var(--panna)}
+.tag.t-extra{background:rgba(var(--panna-rgb),.1);color:var(--panna)}
 .tag.base{background:transparent;border:1px solid var(--bordo2);color:var(--fumo);text-transform:none;letter-spacing:.03em}
 .tag.tempo{background:transparent;border:1px solid var(--bordo2);color:var(--fumo)}
 .tag.diff-facile{background:rgba(var(--pistacchio-rgb),.14);color:var(--pistacchio)}
@@ -346,14 +347,6 @@ ol.passi li{margin-bottom:6px}
 
   <!-- ============ PASTI ============ -->
   <section class="vista on" id="v-pasti">
-    <div class="card" id="migra-banner" hidden>
-      <div class="card-t">Hai dati salvati su questo telefono</div>
-      <p class="sub" style="margin-top:6px">Vuoi importarli nella famiglia condivisa? Si fa una volta sola.</p>
-      <div class="riga-btn">
-        <button class="btn" data-migra="si">IMPORTA</button>
-        <button class="btn ghost" data-migra="no">IGNORA</button>
-      </div>
-    </div>
     <div class="eyebrow">Catalogo</div>
     <h1 class="display">Tutti i pasti</h1>
     <p class="sub" id="pasti-sub">Nessun giorno obbligato: scegli quelli che vuoi cucinare e la lista fa il resto.</p>
@@ -362,11 +355,11 @@ ol.passi li{margin-bottom:6px}
     <div style="margin-top:18px"><input type="search" id="cerca" placeholder="Cerca un pasto o un ingrediente…" aria-label="Cerca"></div>
     <div class="seg" style="margin-top:9px" id="filtro-tipo" role="group" aria-label="Filtra per tipo"></div>
     <div class="seg" style="margin-top:8px" id="filtro-vista" role="group" aria-label="Raggruppa">
-      <button data-grp="tipo" aria-pressed="true">Per tipo</button>
+      <button data-grp="cat" aria-pressed="true">Per categoria</button>
       <button data-grp="base" aria-pressed="false">Per base</button>
     </div>
     <div class="riga-btn">
-      <button class="btn" id="carica-settimana">CARICA LA SETTIMANA INTERA</button>
+      <button class="btn" id="carica-settimana">CARICA LA SETTIMANA TIPO</button>
       <button class="btn ghost" id="svuota-sel">SVUOTA LA SELEZIONE</button>
       <button class="btn ghost" id="nuova-ricetta-toggle">+ NUOVA RICETTA</button>
     </div>
@@ -379,7 +372,7 @@ ol.passi li{margin-bottom:6px}
           <option value="colazione">Colazione</option>
           <option value="pranzo">Pranzo</option>
           <option value="cena">Cena</option>
-          <option value="spuntino">Spuntino</option>
+          <option value="extra">Extra</option>
         </select>
         <input type="number" id="nr-tempo" placeholder="Minuti" style="flex:1">
       </div>
@@ -391,10 +384,10 @@ ol.passi li{margin-bottom:6px}
           <option value="difficile">Difficile</option>
         </select>
       </div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <input type="number" id="nr-kcal" placeholder="kcal (tua stima)" style="flex:1">
-        <input type="number" id="nr-prot" placeholder="g proteine (facoltativo)" style="flex:1">
-      </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14px;color:var(--testo-tenue)">
+        <input type="checkbox" id="nr-zuppa" style="width:auto"> È una zuppa o crema
+      </label>
+      <p class="sub" style="margin-top:6px;font-size:12px">Kcal e proteine si calcolano da soli dagli ingredienti che metti sotto — non serve stimarli a mano.</p>
 
       <div class="eyebrow" style="margin-top:18px">Ingredienti</div>
       <div id="nr-ingredienti" style="margin-top:8px"></div>
@@ -511,10 +504,15 @@ ol.passi li{margin-bottom:6px}
 
 <script type="module">
 /*__FIREBASE_CONFIG__*/
+
 /*__AUTH__*/
+
 /*__DATI__*/
+
 /*__MOTORE__*/
+
 /*__APP__*/
 </script>
 </body>
 </html>
+

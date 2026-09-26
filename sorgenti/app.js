@@ -7,6 +7,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':
 const BASE_BY_ID = {}; BASI.forEach(b => BASE_BY_ID[b.id] = b);
 let PASTO_BY_ID = {};
 const TIPO_LABEL = Object.fromEntries(TIPI);
+const CAT_LABEL = Object.fromEntries(CATEGORIE);
 // PASTO_BY_ID/tuttiIPasti() contengono sempre i pasti già fusi con le loro
 // eventuali modifiche (pastoEffettivo) — così calcola(), la ricerca nel
 // catalogo, pastoFattibile() ecc. vedono automaticamente ingredienti e
@@ -22,7 +23,7 @@ function ricostruisciPastoById(){
 /* ---------- stato + persistenza ---------- */
 const CHIAVE_UI = 'dietacosi.ui.v1';
 let stato = {
-  grp:'tipo', filtro:'tutti', passo:'dispensa',
+  grp:'cat', filtro:'tutti', passo:'dispensa',
   sel:{}, modiBase:{}, hoGia:{}, preso:{}, pesi:[], pesoUid:null, aperti:{}, extra:[],
   scorte:{ingredienti:{}, basi:{}}, importanza:{ingredienti:{}, basi:{}}, pastiExtra:{},
   mostraArchiviati:false, wishlist:[], ricetteExtra:[]
@@ -40,7 +41,7 @@ function caricaLocale(){
     const r = localStorage.getItem(CHIAVE_UI);
     if (r) Object.assign(stato, JSON.parse(r));
   } catch(e){}
-  if (stato.grp === 'giorno') stato.grp = 'tipo';
+  if (stato.grp === 'giorno' || stato.grp === 'tipo') stato.grp = 'cat';
 }
 
 /* ---------- tema chiaro/scuro ---------- */
@@ -98,7 +99,6 @@ function osservaCondiviso(){
     stato.preso = r.preso || {};
     stato.extra = r.extra || [];
     renderTutto();
-    controllaMigrazione();
   }, err => erroreSync('stato condiviso', err));
 }
 
@@ -241,29 +241,6 @@ function segnaBasePreparata(baseId){
   toast('Scorte aggiornate');
 }
 
-let migrazioneControllata = false;
-function controllaMigrazione(){
-  if (migrazioneControllata) return;
-  migrazioneControllata = true;
-  let vecchio = null;
-  try { const r = localStorage.getItem('dietacosi.v1'); if (r) vecchio = JSON.parse(r); } catch(e){}
-  const vuoto = !Object.keys(stato.sel).length && !Object.keys(stato.hoGia).length && !Object.keys(stato.preso).length;
-  if (vecchio && vuoto) $('#migra-banner').hidden = false;
-}
-function importaDatiVecchi(){
-  let vecchio = null;
-  try { const r = localStorage.getItem('dietacosi.v1'); if (r) vecchio = JSON.parse(r); } catch(e){}
-  if (!vecchio) return;
-  let sel = vecchio.sel || {};
-  Object.keys(sel).forEach(id => { const s = sel[id]; if (s && typeof s === 'object') sel[id] = (s.lei||0)+(s.lui||0); });
-  stato.sel = sel; stato.modiBase = vecchio.modiBase||{}; stato.hoGia = vecchio.hoGia||{};
-  stato.preso = vecchio.preso||{}; stato.extra = vecchio.extra||[];
-  renderTutto();
-  syncStato('sel', stato.sel); syncStato('modiBase', stato.modiBase);
-  syncStato('hoGia', stato.hoGia); syncStato('preso', stato.preso); syncStato('extra', stato.extra);
-  $('#migra-banner').hidden = true;
-  toast('Dati importati');
-}
 function toast(m){
   const t = $('#toast'); t.textContent = m; t.classList.add('on');
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2200);
@@ -292,8 +269,9 @@ function nomeIng(i){
   if (i.soloLui) s += '<em>solo lui</em>';
   return s;
 }
-const nPorzioni = () => Object.values(stato.sel).reduce((a,n) => a + (n||0), 0);
-const nPasti    = () => Object.values(stato.sel).filter(n => (n||0) > 0).length;
+// solo id ancora esistenti nel catalogo corrente (pasti rimossi/rinominati non contano)
+const nPorzioni = () => Object.entries(stato.sel).reduce((a,[id,n]) => a + (PASTO_BY_ID[id] ? (n||0) : 0), 0);
+const nPasti    = () => Object.entries(stato.sel).filter(([id,n]) => PASTO_BY_ID[id] && (n||0) > 0).length;
 
 /* ---------- calcolo corrente ---------- */
 let CALC = null;
@@ -315,6 +293,12 @@ function vociSpesa(){                     // ingredienti ordinati per reparto
 /* ==========================================================================
    VISTA · CATALOGO
    ========================================================================== */
+function pillValori(p){
+  const vLui = p.valLui || p.val;
+  const diff = Math.abs(p.val[0] - vLui[0]) >= 15;
+  if (!diff) return `<span class="pill"><b>${p.val[0]}</b> kcal · <b>${p.val[1]}</b> g P</span>`;
+  return `<span class="pill"><b>${p.val[0]}</b>/<b>${vLui[0]}</b> kcal · <b>${p.val[1]}</b>/<b>${vLui[1]}</b> g P</span>`;
+}
 function schedaPasto(p){
   const n = stato.sel[p.id] || 0;
   const attivo = n > 0;
@@ -375,13 +359,14 @@ function schedaPasto(p){
         <svg class="chev" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
       </div>
       <div class="p-info">
-        <span class="pill"><b>${p.val[0]}</b> kcal · <b>${p.val[1]}</b> g P</span>
+        ${pillValori(p)}
         ${stepper()}
       </div>
       <div class="p-meta">
         ${p.tempo ? `<span class="tag tempo">${p.tempo} min</span>` : ''}
         ${p.difficolta ? `<span class="tag diff-${p.difficolta}">${esc(p.difficolta)}</span>` : ''}
-        <span class="tag t-${p.tipo}">${TIPO_LABEL[p.tipo]}</span>
+        <span class="tag t-${p.cat}">${CAT_LABEL[p.cat] || TIPO_LABEL[p.tipo]}</span>
+        ${p.crudo ? '<span class="tag" style="background:rgba(var(--harissa-rgb),.14);color:var(--harissa)">pranzo da sola</span>' : ''}
         ${p.mia ? '<span class="tag" style="background:rgba(var(--pistacchio-rgb),.16);color:var(--pistacchio)">tua</span>' : ''}
         ${p.nuovo ? '<span class="tag" style="background:rgba(var(--curcuma-rgb),.16);color:var(--curcuma)">nuovo</span>' : ''}
         ${basi.map(b => `<span class="tag base">${esc(BASE_BY_ID[b].breve)}</span>`).join('')}
@@ -411,7 +396,7 @@ function renderCatalogo(){
   const tutti = tuttiIPasti();
   let lista = tutti.filter(p => {
     if (!!p.archiviato !== !!stato.mostraArchiviati) return false;
-    if (stato.filtro !== 'tutti' && p.tipo !== stato.filtro) return false;
+    if (stato.filtro !== 'tutti' && p.cat !== stato.filtro) return false;
     if (!q) return true;
     const testo = [p.nome, p.desc||'', p.proc||'',
       ...(p.ing||[]).map(i => i.b ? BASE_BY_ID[i.b].nome : i.n)].join(' ').toLowerCase();
@@ -430,7 +415,7 @@ function renderCatalogo(){
     });
     gruppi = [...m.entries()];
   } else {
-    gruppi = TIPI.map(([k,label]) => [label, lista.filter(p => p.tipo === k)]);
+    gruppi = CATEGORIE.map(([k,label]) => [label, lista.filter(p => p.cat === k)]);
   }
 
   const html = gruppi.filter(([,ps]) => ps.length).map(([label, ps]) => `
@@ -487,8 +472,8 @@ function renderLista(){
       </div></div>`;
   };
 
-  const gruppi = TIPI.map(([k,label]) => [label, tuttiIPasti().filter(p => {
-    return !p.archiviato && p.tipo === k && (stato.sel[p.id]||0) > 0;
+  const gruppi = CATEGORIE.map(([k,label]) => [label, tuttiIPasti().filter(p => {
+    return !p.archiviato && p.cat === k && (stato.sel[p.id]||0) > 0;
   })]).filter(([,ps]) => ps.length);
 
   c.innerHTML = `
@@ -498,7 +483,7 @@ function renderLista(){
         <span style="color:var(--curcuma)">${Math.round(v[0]).toLocaleString('it')} kcal · ${Math.round(v[1])} g P</span>
       </div>
       ${mediaBlocco()}
-      <p class="sub" style="font-size:12.5px;margin-top:11px">La media giornaliera conta una colazione = un giorno. Target: ${TARGET.kcal} kcal / ${TARGET.p} g P.</p>
+      <p class="sub" style="font-size:12.5px;margin-top:11px">La media giornaliera conta una colazione = un giorno. Target: ${TARGET.kcal} kcal / ${TARGET.p} g P (${TARGET.pasti.colazione} · ${TARGET.pasti.pranzo} · ${TARGET.pasti.cena}). 1.250 è il pavimento: non andare sotto, nelle settimane senza eccezioni conta un modulo +150.</p>
       <div class="riga-btn">
         <button class="btn" data-vai="spesa">VAI ALLA DISPENSA</button>
         <button class="btn ghost" id="svuota-sel-2">SVUOTA</button>
@@ -619,18 +604,19 @@ function renderBasi(){
   c.innerHTML = `<div class="card">
       <div class="eyebrow">Domenica</div>
       <div class="mono" style="margin-top:6px;font-size:14px"><b style="font-size:22px">${attive.length}</b> preparazioni · <b style="font-size:22px">${attMin}</b> min di lavoro attivo</div>
-      <p class="sub" style="font-size:13px">Fai partire il sofrito per primo: è il collo di bottiglia. Legumi e pollo cuociono in parallelo mentre il sofrito riduce.</p>
+      <p class="sub" style="font-size:13px">Fai partire il forno per primo: pane, focaccine, muffin e le creme arrostite lo occupano quasi tutta la mattina. Il soffritto, i legumi e il pulled chicken vanno in parallelo sui fornelli e nell'altro forno, se ne hai due.</p>
     </div>` +
     attive.map(b => {
       const v = CALC.basi[b.id];
       const f = v.produci / b.resa;
       const scarso = v.serve > b.resa;
+      const porzText = b.porz ? ` · ~${Math.ceil(v.produci/(b.resa/b.porz))} porzioni` : '';
       return `<div class="card">
         <div class="base-h">
           <div style="flex:1;min-width:0">
             <div class="eyebrow">${b.ordine} · ${b.tempoTot} min</div>
             <div class="card-t" style="margin-top:4px">${esc(b.nome)}</div>
-            <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ~${Math.ceil(v.produci/(b.resa/b.pezzi))} pezzi` : ''}</div>
+            <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ~${Math.ceil(v.produci/(b.resa/b.pezzi))} pezzi` : ''}${porzText}</div>
           </div>
         </div>
         <div class="seg" style="margin-top:11px;max-width:300px">
@@ -776,8 +762,10 @@ function htmlRigaIngrediente(ing){
 function svuotaFormRicetta(){
   $('#nuova-ricetta').hidden = true;
   $('#nr-ingredienti').innerHTML = '';
-  ['nr-nome','nr-tempo','nr-kcal','nr-prot','nr-proc','nr-nota'].forEach(id => { $('#'+id).value = ''; });
+  ['nr-nome','nr-tempo','nr-nota'].forEach(id => { const el = $('#'+id); if (el) el.value = ''; });
+  const proc = $('#nr-proc'); if (proc) proc.value = '';
   $('#nr-difficolta').value = ''; $('#nr-tipo').value = 'colazione';
+  const zuppa = $('#nr-zuppa'); if (zuppa) zuppa.checked = false;
 }
 
 /* ==========================================================================
@@ -817,7 +805,10 @@ function renderPeso(){
 
   const p = stato.pesi.filter(x => x.uid === uid).sort((a,b) => a.data.localeCompare(b.data));
   const c = $('#p-contenuto');
-  if (!p.length){ c.innerHTML = `<div class="vuoto"><p>Nessuna misura ancora.</p></div>`; return; }
+  const azzera = uid === UID
+    ? `<div class="riga-btn"><button class="btn ghost" id="p-azzera">AZZERA STORICO</button></div>`
+    : '';
+  if (!p.length){ c.innerHTML = `<div class="vuoto"><p>Nessuna misura ancora.</p></div>` + (azzera ? `<div class="card">${azzera}</div>` : ''); return; }
 
   c.innerHTML = `<div class="card">${grafico(p)}${verdetto(p)}</div>
     <div class="card pesi-l">
@@ -826,6 +817,7 @@ function renderPeso(){
         <span>${new Date(x.data).toLocaleDateString('it-IT',{day:'2-digit',month:'short'})}</span>
         <span><b>${nf(x.kg)}</b> kg <button data-del-peso="${x.id}" aria-label="Elimina">×</button></span>
       </div>`).join('')}
+      ${azzera}
     </div>`;
 }
 function grafico(p){
@@ -859,7 +851,7 @@ function verdetto(p){
   // "prima metà / seconda metà" per numero di misure si disallinea dalla vera
   // finestra temporale se le pesate non sono equispaziate (es. un buco di
   // qualche settimana), producendo un kg/settimana impreciso proprio nel
-  // momento in cui guida il consiglio "togli/aggiungi 150 kcal"
+  // momento in cui guida il consiglio
   const t0 = new Date(p[0].data).getTime();
   const xs = p.map(x => (new Date(x.data).getTime() - t0) / 86400000);
   const ys = p.map(x => x.kg);
@@ -869,8 +861,8 @@ function verdetto(p){
   for (let i = 0; i < n; i++){ num += (xs[i]-mx)*(ys[i]-my); den += (xs[i]-mx)**2; }
   const sett = (den ? num/den : 0) * 7;
   let t;
-  if (sett > -0.1) t = 'La media non sta calando. Togli ~150 kcal al giorno: 40 g di riso o 20 g di pane.';
-  else if (sett < -1.2) t = 'Stai calando troppo in fretta. Aggiungi ~150 kcal: un calo rapido costa massa magra.';
+  if (sett > -0.1) t = 'La media non sta calando. Non toccare la struttura base (1.250 kcal è il pavimento, non si scende): nelle settimane senza eccezioni salta un modulo +150 invece di aggiungerlo.';
+  else if (sett < -1.2) t = 'Stai calando troppo in fretta. Aggiungi un modulo +150 più spesso (una focaccina o 50 g di pane ai semi): un calo rapido costa massa magra.';
   else t = 'Sei nel range previsto. Non toccare niente.';
   return `<div class="nota" style="margin-top:12px"><b class="mono">${sett > 0 ? '+' : ''}${sett.toFixed(2).replace('.', ',')} kg/settimana</b> — ${t}</div>`;
 }
@@ -938,14 +930,14 @@ document.addEventListener('click', e => {
   const delPeso = t.closest('[data-del-peso]');
   if (delPeso){ deleteDoc(doc(db, 'households', HOUSEHOLD_ID, 'pesi', delPeso.dataset.delPeso)); return; }
 
-  const pchi = t.closest('[data-pchi]'); if (pchi){ stato.pesoUid = pchi.dataset.pchi; renderPeso(); salvaLocale(); return; }
-
-  const migra = t.closest('[data-migra]');
-  if (migra){
-    if (migra.dataset.migra === 'si') importaDatiVecchi();
-    else $('#migra-banner').hidden = true;
+  if (t.closest('#p-azzera')){
+    if (!confirm('Cancellare tutto lo storico del peso? Non si può annullare.')) return;
+    stato.pesi.filter(x => x.uid === UID).forEach(x => deleteDoc(doc(db, 'households', HOUSEHOLD_ID, 'pesi', x.id)));
+    toast('Storico azzerato');
     return;
   }
+
+  const pchi = t.closest('[data-pchi]'); if (pchi){ stato.pesoUid = pchi.dataset.pchi; renderPeso(); salvaLocale(); return; }
 
   const cucinato = t.closest('[data-cucinato]');
   if (cucinato){ segnaCucinato(cucinato.dataset.cucinato); return; }
@@ -1040,11 +1032,9 @@ document.addEventListener('click', e => {
     const nome = ($('#nr-nome').value || '').trim();
     if (!nome){ toast('Serve almeno un nome'); return; }
     const tipo = $('#nr-tipo').value;
+    const zuppa = $('#nr-zuppa') && $('#nr-zuppa').checked;
     const tempo = parseInt($('#nr-tempo').value, 10);
     const difficolta = $('#nr-difficolta').value;
-    const kcal = parseFloat($('#nr-kcal').value) || 0;
-    if (!kcal){ toast('Serve una stima delle kcal'); return; }
-    const prot = parseFloat($('#nr-prot').value) || 0;
     const proc = ($('#nr-proc').value || '').trim();
     const nota = ($('#nr-nota').value || '').trim();
     const ing = [];
@@ -1062,7 +1052,16 @@ document.addEventListener('click', e => {
       }
     });
     if (!ing.length){ toast('Aggiungi almeno un ingrediente con quantità'); return; }
-    const ricetta = { nome, tipo, val: [kcal, prot], ing };
+    // kcal/proteine calcolate dagli ingredienti (come i pasti del catalogo),
+    // non chieste all'utente: evita di dover inventare una stima a mano
+    let k = 0, p = 0;
+    try {
+      ing.forEach(i => {
+        if (i.b){ const v = valoriBase100(i.b); k += v.k * i.q / 100; p += v.p * i.q / 100; }
+        else if (ING[i.n]) { const g = ING[i.n].u === 'pz' ? i.q * (ING[i.n].pz||0) : i.q; k += ING[i.n].k * g / 100; p += ING[i.n].p * g / 100; }
+      });
+    } catch(err){}
+    const ricetta = { nome, tipo, cat: zuppa ? 'zuppa' : tipo, val: [Math.round(k/5)*5, Math.round(p)], ing };
     if (!isNaN(tempo)) ricetta.tempo = tempo;
     if (difficolta) ricetta.difficolta = difficolta;
     if (proc) ricetta.proc = proc;
@@ -1089,8 +1088,9 @@ document.addEventListener('click', e => {
   if (delWish){ rimuoviWishlist(delWish.dataset.delWish); return; }
 
   if (t.closest('#carica-settimana')){
-    PASTI.forEach(p => stato.sel[p.id] = 2);
-    renderTutto(); syncStato('sel', stato.sel); toast('Settimana intera caricata: 27 pasti'); vaiA('lista'); return;
+    Object.assign(stato.sel, SETTIMANA_TIPO.sel);
+    renderTutto(); syncStato('sel', stato.sel);
+    toast('Settimana tipo caricata'); vaiA('lista'); return;
   }
   if (t.closest('#svuota-sel') || t.closest('#svuota-sel-2')){
     stato.sel = {}; stato.hoGia = {}; stato.preso = {}; renderTutto();
@@ -1209,7 +1209,7 @@ if (window.self !== window.top) {
 quandoPronto(() => {
   caricaLocale();
   aggiornaBottoneTema();
-  $('#filtro-tipo').innerHTML = [['tutti','Tutti'], ...TIPI]
+  $('#filtro-tipo').innerHTML = [['tutti','Tutti'], ...CATEGORIE]
     .map(([k,l]) => `<button data-f="${k}" aria-pressed="${stato.filtro===k}">${l}</button>`).join('');
   $$('#filtro-tipo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.f === stato.filtro)));
   $$('#filtro-vista button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.grp === stato.grp)));

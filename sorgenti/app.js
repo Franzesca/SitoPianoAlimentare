@@ -276,7 +276,7 @@ const nPasti    = () => Object.entries(stato.sel).filter(([id,n]) => PASTO_BY_ID
 /* ---------- calcolo corrente ---------- */
 let CALC = null;
 function ricalcola(){
-  CALC = calcola(stato.sel, stato.modiBase, {ING, BASI, PASTI: tuttiIPasti()});
+  CALC = calcola(stato.sel, stato.modiBase, {ING, BASI, PASTI: tuttiIPasti()}, stato.scorte);
   return CALC;
 }
 function vociSpesa(){                     // ingredienti ordinati per reparto
@@ -599,18 +599,38 @@ function renderBasi(){
     </div>`;
     return;
   }
-  const attMin = attive.reduce((a,b) => a + b.tempoAtt, 0);
+  const attMin = attive.reduce((a,b) => a + (CALC.basi[b.id].modo === 'salta' ? 0 : b.tempoAtt), 0);
 
   c.innerHTML = `<div class="card">
       <div class="eyebrow">Domenica</div>
-      <div class="mono" style="margin-top:6px;font-size:14px"><b style="font-size:22px">${attive.length}</b> preparazioni · <b style="font-size:22px">${attMin}</b> min di lavoro attivo</div>
-      <p class="sub" style="font-size:13px">Fai partire il forno per primo: pane, focaccine, muffin e le creme arrostite lo occupano quasi tutta la mattina. Il soffritto, i legumi e il pulled chicken vanno in parallelo sui fornelli e nell'altro forno, se ne hai due.</p>
+      <div class="mono" style="margin-top:6px;font-size:14px"><b style="font-size:22px">${attive.filter(b=>CALC.basi[b.id].modo!=='salta').length}</b> preparazioni · <b style="font-size:22px">${attMin}</b> min di lavoro attivo</div>
+      <p class="sub" style="font-size:13px">Fai partire il forno per primo: pane, focaccine, muffin e le creme arrostite lo occupano quasi tutta la mattina. Il soffritto, i legumi e il pulled chicken vanno in parallelo sui fornelli e nell'altro forno, se ne hai due. Una base che hai già segnata come "ce l'ho" in Scorte non compare qui sotto come da fare: sparisce anche dalla spesa.</p>
     </div>` +
     attive.map(b => {
       const v = CALC.basi[b.id];
-      const f = v.produci / b.resa;
+      const salta = v.modo === 'salta';
+      const f = salta ? 0 : v.produci / b.resa;
       const scarso = v.serve > b.resa;
       const porzText = b.porz ? ` · ~${Math.ceil(v.produci/(b.resa/b.porz))} porzioni` : '';
+      const segControl = `<div class="seg" style="margin-top:11px;max-width:300px">
+          <button data-modo="${b.id}|esatto" aria-pressed="${v.modo==='esatto'}">Quantità esatta</button>
+          <button data-modo="${b.id}|intero" aria-pressed="${v.modo==='intero'}">${v.ricette>1?v.ricette+' ricette':'Ricetta intera'}</button>
+        </div>`;
+      if (salta){
+        return `<div class="card">
+          <div class="base-h">
+            <div style="flex:1;min-width:0">
+              <div class="eyebrow">${b.ordine}</div>
+              <div class="card-t" style="margin-top:4px">${esc(b.nome)}</div>
+              <div class="qta-base">i pasti che hai scelto ne userebbero <b>${fmtG(v.serve)}</b></div>
+            </div>
+          </div>
+          ${segControl}
+          <div class="nota" style="margin-top:12px">${v.inScorte
+            ? `Segnata "ce l'ho" in Scorte: non è nella lista della spesa e non compare tra le preparazioni di domenica. Togli la spunta in Scorte se invece vuoi rifarla.`
+            : `Non è nella lista della spesa questa settimana.`}</div>
+        </div>`;
+      }
       return `<div class="card">
         <div class="base-h">
           <div style="flex:1;min-width:0">
@@ -619,10 +639,7 @@ function renderBasi(){
             <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ~${Math.ceil(v.produci/(b.resa/b.pezzi))} pezzi` : ''}${porzText}</div>
           </div>
         </div>
-        <div class="seg" style="margin-top:11px;max-width:300px">
-          <button data-modo="${b.id}|esatto" aria-pressed="${v.modo==='esatto'}">Quantità esatta</button>
-          <button data-modo="${b.id}|intero" aria-pressed="${v.modo==='intero'}">${v.ricette>1?v.ricette+' ricette':'Ricetta intera'}</button>
-        </div>
+        ${segControl}
         ${scarso && v.modo === 'esatto' ? `<div class="avviso">Ti serve più di una dose piena (la ricetta base rende ${b.resa} g). Le quantità qui sotto sono già riscalate: verifica che ti stiano in pentola.</div>` : ''}
         <div class="gram" style="margin-top:12px">
           ${b.ing.map(([n,q]) => {
@@ -1088,9 +1105,11 @@ document.addEventListener('click', e => {
   if (delWish){ rimuoviWishlist(delWish.dataset.delWish); return; }
 
   if (t.closest('#carica-settimana')){
-    Object.assign(stato.sel, SETTIMANA_TIPO.sel);
+    // sostituisce la selezione corrente, non la somma: altrimenti pasti tolti
+    // in un secondo momento restano "fantasma" nel calcolo delle basi
+    stato.sel = Object.assign({}, SETTIMANA_TIPO.sel);
     renderTutto(); syncStato('sel', stato.sel);
-    toast('Settimana tipo caricata'); vaiA('lista'); return;
+    toast('Settimana tipo caricata (sostituisce la selezione precedente)'); vaiA('lista'); return;
   }
   if (t.closest('#svuota-sel') || t.closest('#svuota-sel-2')){
     stato.sel = {}; stato.hoGia = {}; stato.preso = {}; renderTutto();

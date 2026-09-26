@@ -24,8 +24,13 @@ function costruisciIndici(BASI){
 
 /*  selezione: { pastoId: n }   n = numero di porzioni totali (entrambi insieme)
     modiBase:  { idBase: 'esatto' | 'intero' }
+    scorte:    { ingredienti:{nome:true}, basi:{idBase:true} } — quello che hai
+               già in dispensa (dalla vista Scorte). Una base già in casa non
+               si ricalcola come "da fare"; un ingrediente già in casa non
+               pesa sulla spesa. Sostituibile in ogni momento: basta togliere
+               la spunta in Scorte per farla ricomparire.
     ritorna: {ing:{nome:qta}, basi:{id:{serve,produci}}, val:[kcal,p]}  */
-function calcola(selezione, modiBase, DATI){
+function calcola(selezione, modiBase, DATI, scorte){
   const {BASI, PASTI, ING} = DATI;
   const {perId, prof} = costruisciIndici(BASI);
 
@@ -61,11 +66,23 @@ function calcola(selezione, modiBase, DATI){
   ordine.forEach(b => {
     const serve = need[b.id] || 0;
     if (!serve) return;
-    // default: "intero" se la base lo segnala esplicitamente (zuppe, panificati:
-    // si fanno a dose piena e si congelano) oppure se la quantità esatta sarebbe
-    // troppo piccola da preparare davvero; altrimenti si scala al fabbisogno
+    // default: "salta" se è già in Scorte (già in casa: non serve rifarla),
+    // altrimenti "intero" se la base lo segnala esplicitamente (zuppe,
+    // panificati: si fanno a dose piena e si congelano) oppure se la
+    // quantità esatta sarebbe troppo piccola da preparare davvero; altrimenti
+    // si scala al fabbisogno. Una scelta esplicita in Basi (i due pulsanti)
+    // vince sempre su questo default.
+    const inScorte = !!(scorte && scorte.basi && scorte.basi[b.id]);
     const modo = (modiBase && modiBase[b.id])
+      || (inScorte ? 'salta' : null)
       || (b.interoDefault ? 'intero' : ((serve < 200 && serve < b.resa * 0.5) ? 'intero' : 'esatto'));
+    if (modo === 'salta'){
+      // già in dispensa (o scelta esplicita di rimandarla): resta visibile in
+      // Basi come promemoria di cosa la richiede, ma non entra nel calcolo
+      // degli ingredienti a monte né nella lista della spesa.
+      basi[b.id] = {serve, produci: 0, modo, ricette: 0, avanzo: -serve, inScorte};
+      return;
+    }
     const ricette = Math.max(1, Math.ceil(serve / b.resa - 1e-9));
     const produci = modo === 'intero' ? ricette * b.resa : serve;
     basi[b.id] = {serve, produci, modo, ricette, avanzo: produci - serve};
@@ -75,6 +92,11 @@ function calcola(selezione, modiBase, DATI){
       else add(n, q * f);
     });
   });
+
+  // un ingrediente fresco già segnato "ce l'ho" in Scorte non pesa sulla spesa
+  if (scorte && scorte.ingredienti){
+    Object.keys(scorte.ingredienti).forEach(n => { if (scorte.ingredienti[n]) delete ing[n]; });
+  }
 
   return {ing, basi, val, usoPasti};
 }

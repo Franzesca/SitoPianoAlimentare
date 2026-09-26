@@ -172,14 +172,21 @@ function osservaPastiExtra(){
 /* ---------- pasto effettivo (dati.js + eventuali override) ---------- */
 function pastoEffettivo(p){
   const ex = stato.pastiExtra[p.id] || {};
+  const ing = ex.ing || p.ing;
+  // se gli ingredienti sono stati cambiati da "MODIFICA", kcal/proteine vanno
+  // ricalcolati dagli ingredienti nuovi — altrimenti la scheda mostra ancora
+  // i valori di prima della modifica
+  const ricalcolare = !!ex.ing;
   return Object.assign({}, p, {
     nome: ex.nome || p.nome,
     tempo: ex.tempo != null ? ex.tempo : p.tempo,
     difficolta: ex.difficolta || p.difficolta,
-    ing: ex.ing || p.ing,
+    ing,
     proc: ex.proc != null ? ex.proc : p.proc,
     notaMia: ex.nota || '',
-    archiviato: !!ex.archiviato
+    archiviato: !!ex.archiviato,
+    val: ricalcolare ? valoriPasto({ing}, 'lei') : p.val,
+    valLui: ricalcolare ? valoriPasto({ing}, 'lui') : p.valLui
   });
 }
 
@@ -588,6 +595,67 @@ function testoLista(){
 /* ==========================================================================
    VISTA · BASI
    ========================================================================== */
+const GRUPPO_LABEL = {forno:'Forno', fornelli:'Fornelli', freddo:'A freddo (impasti e frullati)'};
+function schedaBase(b){
+  const v = CALC.basi[b.id];
+  const salta = v.modo === 'salta';
+  const f = salta ? 0 : v.produci / b.resa;
+  const scarso = v.serve > b.resa;
+  const porzText = b.porz ? ` · ~${Math.ceil(v.produci/(b.resa/b.porz))} porzioni` : '';
+  const segControl = `<div class="seg" style="margin-top:11px;max-width:300px">
+      <button data-modo="${b.id}|esatto" aria-pressed="${v.modo==='esatto'}">Quantità esatta</button>
+      <button data-modo="${b.id}|intero" aria-pressed="${v.modo==='intero'}">${v.ricette>1?v.ricette+' ricette':'Ricetta intera'}</button>
+    </div>`;
+  if (salta){
+    return `<div class="card">
+      <div class="base-h">
+        <div style="flex:1;min-width:0">
+          <div class="eyebrow">${b.ordine}</div>
+          <div class="card-t" style="margin-top:4px">${esc(b.nome)}</div>
+          <div class="qta-base">i pasti che hai scelto ne userebbero <b>${fmtG(v.serve)}</b></div>
+        </div>
+      </div>
+      ${segControl}
+      <div class="nota" style="margin-top:12px">${v.inScorte
+        ? `Segnata "ce l'ho" in Scorte: non è nella lista della spesa e non compare tra le preparazioni di domenica. Togli la spunta in Scorte se invece vuoi rifarla.`
+        : `Non è nella lista della spesa questa settimana.`}</div>
+    </div>`;
+  }
+  return `<div class="card">
+    <div class="base-h">
+      <div style="flex:1;min-width:0">
+        <div class="eyebrow">${b.ordine} · ${b.tempoTot} min</div>
+        <div class="card-t" style="margin-top:4px">${esc(b.nome)}</div>
+        <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ~${Math.ceil(v.produci/(b.resa/b.pezzi))} pezzi` : ''}${porzText}</div>
+      </div>
+    </div>
+    ${segControl}
+    ${scarso && v.modo === 'esatto' ? `<div class="avviso">Ti serve più di una dose piena (la ricetta base rende ${b.resa} g). Le quantità qui sotto sono già riscalate: verifica che ti stiano in pentola.</div>` : ''}
+    <div class="gram" style="margin-top:12px">
+      ${b.ing.map(([n,q]) => {
+        const nome = n[0] === '@' ? BASE_BY_ID[n.slice(1)].nome + '<em>base</em>' : esc(n);
+        const m = n[0] === '@' ? {u:'g'} : (ING[n] || {u:'g'});
+        const qq = q * f;
+        const testo = m.u === 'pz' ? nf(Math.ceil(qq - 1e-9)) + ' pz' : formatta(n[0]==='@' ? 'x' : n, qq, ING).replace(/ \(.*\)/,'');
+        return `<div class="riga" style="grid-template-columns:1fr auto">
+          <span class="ing">${nome}</span><span class="q">${testo}</span></div>`;
+      }).join('')}
+    </div>
+    ${b.proc ? `<ol class="passi">${b.proc.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : ''}
+    ${(b.timer||[]).map(([nome,min], i) => {
+      const chiave = b.id + '|' + i;
+      const att = timersAttivi[chiave];
+      const rimasti = att ? Math.max(0, Math.round((att.fine - Date.now())/1000)) : null;
+      const testo = att ? esc(nome) + ' · ' + fmtMinSec(rimasti) : esc(nome) + ' · ' + min + '′';
+      return `<button class="timer${att?' attivo':''}" data-timer-key="${chiave}" data-timer="${min}" data-nome="${esc(nome)}">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+      <span class="timer-testo">${testo}</span></button>`;
+    }).join('')}
+    ${b.nota ? `<div class="nota">${esc(b.nota)}</div>` : ''}
+    <div class="qta-base" style="margin-top:11px">Frigo ${b.conserva[0]} · Freezer ${b.conserva[1]}</div>
+    <div class="riga-btn"><button class="btn ghost" data-base-fatta="${b.id}">HO PREPARATO QUESTA BASE</button></div>
+  </div>`;
+}
 function renderBasi(){
   const c = $('#basi-corpo');
   const tutte = BASI.slice().sort((a,b) => a.ordine - b.ordine);
@@ -602,6 +670,14 @@ function renderBasi(){
   const attive = tutte.filter(b => CALC.basi[b.id]);
   const inattive = tutte.filter(b => !CALC.basi[b.id]);
   const attMin = attive.reduce((a,b) => a + (CALC.basi[b.id].modo === 'salta' ? 0 : b.tempoAtt), 0);
+  const sforato = attMin > 120;
+
+  const sezioniAttive = GRUPPI_BASI.map(g => [g, attive.filter(b => b.gruppo === g)])
+    .filter(([,ps]) => ps.length)
+    .map(([g, ps]) => `<div class="sez">
+      <div class="sez-h"><h2 class="display">${GRUPPO_LABEL[g]}</h2><span class="eyebrow">${ps.length}</span></div>
+      ${ps.map(schedaBase).join('')}
+    </div>`).join('');
 
   const sezioneMuted = !inattive.length ? '' : `<div class="sez">
       <div class="sez-h">
@@ -611,76 +687,18 @@ function renderBasi(){
       <p class="sub" style="font-size:12.5px">In base ai pasti che hai scelto ora. Se aggiungi un pasto che le usa, ricompaiono sopra con tutti i dettagli.</p>
       <div class="card" style="opacity:.55;padding:4px 16px">
         ${inattive.map(b => `<div class="riga" style="grid-template-columns:1fr auto;border-color:rgba(var(--bordo-rgb),.5)">
-          <span class="ing">${esc(b.nome)}</span><span class="q" style="color:var(--fumo)">${b.ordine}</span>
+          <span class="ing">${esc(b.nome)}</span><span class="q" style="color:var(--fumo)">${GRUPPO_LABEL[b.gruppo]}</span>
         </div>`).join('')}
       </div>
     </div>`;
 
   c.innerHTML = `<div class="card">
       <div class="eyebrow">Domenica</div>
-      <div class="mono" style="margin-top:6px;font-size:14px"><b style="font-size:22px">${attive.filter(b=>CALC.basi[b.id].modo!=='salta').length}</b> preparazioni · <b style="font-size:22px">${attMin}</b> min di lavoro attivo</div>
-      <p class="sub" style="font-size:13px">Fai partire il forno per primo: pane, focaccine, muffin e le creme arrostite lo occupano quasi tutta la mattina. Il soffritto, i legumi e il pulled chicken vanno in parallelo sui fornelli e nell'altro forno, se ne hai due. Una base che hai già segnata come "ce l'ho" in Scorte non compare qui sotto come da fare: sparisce anche dalla spesa.</p>
+      <div class="mono" style="margin-top:6px;font-size:14px"><b style="font-size:22px">${attive.filter(b=>CALC.basi[b.id].modo!=='salta').length}</b> preparazioni · <b style="font-size:22px;color:${sforato?'var(--harissa)':'inherit'}">${attMin}</b> min di lavoro attivo</div>
+      ${sforato ? `<div class="avviso">Sei a ${attMin} min di lavoro attivo, sopra le 2 ore (120 min) che ti eri data. Segna qualcosa come "ce l'ho" in Scorte per saltarla questa settimana, o spostane una infrasettimana.</div>` : ''}
+      <p class="sub" style="font-size:13px">Ordine consigliato: forno per primo (parte e corre da solo), poi fornelli, poi le preparazioni a freddo (solo impasto o frullatore, nessuna cottura oggi). Dentro ogni gruppo, parti da quella che dura di più. Una base già segnata "ce l'ho" in Scorte non compare come da fare: sparisce anche dalla spesa.</p>
     </div>` +
-    (attive.length ? attive.map(b => {
-      const v = CALC.basi[b.id];
-      const salta = v.modo === 'salta';
-      const f = salta ? 0 : v.produci / b.resa;
-      const scarso = v.serve > b.resa;
-      const porzText = b.porz ? ` · ~${Math.ceil(v.produci/(b.resa/b.porz))} porzioni` : '';
-      const segControl = `<div class="seg" style="margin-top:11px;max-width:300px">
-          <button data-modo="${b.id}|esatto" aria-pressed="${v.modo==='esatto'}">Quantità esatta</button>
-          <button data-modo="${b.id}|intero" aria-pressed="${v.modo==='intero'}">${v.ricette>1?v.ricette+' ricette':'Ricetta intera'}</button>
-        </div>`;
-      if (salta){
-        return `<div class="card">
-          <div class="base-h">
-            <div style="flex:1;min-width:0">
-              <div class="eyebrow">${b.ordine}</div>
-              <div class="card-t" style="margin-top:4px">${esc(b.nome)}</div>
-              <div class="qta-base">i pasti che hai scelto ne userebbero <b>${fmtG(v.serve)}</b></div>
-            </div>
-          </div>
-          ${segControl}
-          <div class="nota" style="margin-top:12px">${v.inScorte
-            ? `Segnata "ce l'ho" in Scorte: non è nella lista della spesa e non compare tra le preparazioni di domenica. Togli la spunta in Scorte se invece vuoi rifarla.`
-            : `Non è nella lista della spesa questa settimana.`}</div>
-        </div>`;
-      }
-      return `<div class="card">
-        <div class="base-h">
-          <div style="flex:1;min-width:0">
-            <div class="eyebrow">${b.ordine} · ${b.tempoTot} min</div>
-            <div class="card-t" style="margin-top:4px">${esc(b.nome)}</div>
-            <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ~${Math.ceil(v.produci/(b.resa/b.pezzi))} pezzi` : ''}${porzText}</div>
-          </div>
-        </div>
-        ${segControl}
-        ${scarso && v.modo === 'esatto' ? `<div class="avviso">Ti serve più di una dose piena (la ricetta base rende ${b.resa} g). Le quantità qui sotto sono già riscalate: verifica che ti stiano in pentola.</div>` : ''}
-        <div class="gram" style="margin-top:12px">
-          ${b.ing.map(([n,q]) => {
-            const nome = n[0] === '@' ? BASE_BY_ID[n.slice(1)].nome + '<em>base</em>' : esc(n);
-            const m = n[0] === '@' ? {u:'g'} : (ING[n] || {u:'g'});
-            const qq = q * f;
-            const testo = m.u === 'pz' ? nf(Math.ceil(qq - 1e-9)) + ' pz' : formatta(n[0]==='@' ? 'x' : n, qq, ING).replace(/ \(.*\)/,'');
-            return `<div class="riga" style="grid-template-columns:1fr auto">
-              <span class="ing">${nome}</span><span class="q">${testo}</span></div>`;
-          }).join('')}
-        </div>
-        ${b.proc ? `<ol class="passi">${b.proc.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : ''}
-        ${(b.timer||[]).map(([nome,min], i) => {
-          const chiave = b.id + '|' + i;
-          const att = timersAttivi[chiave];
-          const rimasti = att ? Math.max(0, Math.round((att.fine - Date.now())/1000)) : null;
-          const testo = att ? esc(nome) + ' · ' + fmtMinSec(rimasti) : esc(nome) + ' · ' + min + '′';
-          return `<button class="timer${att?' attivo':''}" data-timer-key="${chiave}" data-timer="${min}" data-nome="${esc(nome)}">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
-          <span class="timer-testo">${testo}</span></button>`;
-        }).join('')}
-        ${b.nota ? `<div class="nota">${esc(b.nota)}</div>` : ''}
-        <div class="qta-base" style="margin-top:11px">Frigo ${b.conserva[0]} · Freezer ${b.conserva[1]}</div>
-        <div class="riga-btn"><button class="btn ghost" data-base-fatta="${b.id}">HO PREPARATO QUESTA BASE</button></div>
-      </div>`;
-    }).join('') : `<div class="vuoto" style="padding:24px 20px">
+    (attive.length ? sezioniAttive : `<div class="vuoto" style="padding:24px 20px">
       <p>Nessuna preparazione da fare questa settimana: i pasti che hai scelto non usano basi (o le hai già tutte in Scorte).</p>
     </div>`) + sezioneMuted;
 }

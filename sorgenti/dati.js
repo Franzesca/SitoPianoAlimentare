@@ -179,7 +179,7 @@ const REPARTI = [
    ------------------------------------------------------------------------ */
 const BASI = [
 { id:'soffritto', nome:'Soffritto lungo frullato', resa:1650,
-  tempoAtt:20, tempoTot:95, ordine:1,
+  tempoAtt:20, tempoTot:95, gruppo:'fornelli',
   conserva:['5 giorni','3 mesi'],
   nota:'Dose dimezzata rispetto al vecchio piano: ora è una base tra le altre, non il centro di tutto. Frulla finché non è perfettamente liscia: è questo passaggio che la rende compatibile con il vincolo di lui.',
   proc:[
@@ -193,32 +193,32 @@ const BASI = [
        ['Aglio',22],['Olio EVO',45],['Pomodori pelati',600],['Concentrato di pomodoro',30],
        ['Sale',13]] },
 
-{ id:'ceci', nome:'Ceci cotti', resa:1130, ordine:2, tempoAtt:5, tempoTot:40,
+{ id:'ceci', nome:'Ceci cotti', resa:1130, gruppo:'fornelli', tempoAtt:5, tempoTot:40,
   conserva:['4 giorni','3 mesi'],
   nota:'Se quella settimana fai anche i falafel, ammolla insieme anche i loro 150 g di ceci: quelli restano crudi.',
   proc:['Ammollo 12 ore con il bicarbonato.','Scola. Pentola a pressione 40 minuti con l\'alloro.','Sala a fine cottura. Tieni un po\' di acqua di cottura se fai l\'hummus.'],
   timer:[['Pentola a pressione',40]],
   ing:[['Ceci secchi',450],['Bicarbonato',3],['Alloro',2],['Sale',8]] },
 
-{ id:'fagioli', nome:'Fagioli neri cotti', resa:1000, ordine:3, tempoAtt:5, tempoTot:35,
+{ id:'fagioli', nome:'Fagioli neri cotti', resa:1000, gruppo:'fornelli', tempoAtt:5, tempoTot:35,
   conserva:['4 giorni','3 mesi'],
   proc:['Ammollo 12 ore.','Pentola a pressione 35 minuti.','Sala a fine cottura.'],
   timer:[['Pentola a pressione',35]],
   ing:[['Fagioli neri secchi',400],['Alloro',2],['Sale',7]] },
 
-{ id:'borlotti', nome:'Fagioli borlotti cotti', resa:750, ordine:4, tempoAtt:5, tempoTot:30,
+{ id:'borlotti', nome:'Fagioli borlotti cotti', resa:750, gruppo:'fornelli', tempoAtt:5, tempoTot:30,
   conserva:['4 giorni','3 mesi'],
   proc:['Ammollo 12 ore.','Pentola a pressione 30 minuti.','Sala a fine cottura.'],
   timer:[['Pentola a pressione',30]],
   ing:[['Fagioli borlotti secchi',300],['Alloro',2],['Sale',5]] },
 
-{ id:'lenticchie', nome:'Lenticchie verdi cotte', resa:500, ordine:5, tempoAtt:3, tempoTot:25,
+{ id:'lenticchie', nome:'Lenticchie verdi cotte', resa:500, gruppo:'fornelli', tempoAtt:3, tempoTot:25,
   conserva:['4 giorni','3 mesi'],
   proc:['25 minuti in acqua non salata, scolate.'],
   timer:[['Cottura',25]],
   ing:[['Lenticchie verdi secche',200]] },
 
-{ id:'pulled', nome:'Pulled chicken', resa:890, ordine:6, tempoAtt:10, tempoTot:130,
+{ id:'pulled', nome:'Pulled chicken', resa:890, gruppo:'forno', tempoAtt:10, tempoTot:130,
   conserva:['3 giorni','2 mesi'],
   nota:'Non condirlo adesso: va in direzioni diverse durante la settimana. Resa dopo cottura ~68% del crudo. Se il forno ti serve per zuppe e panificati, mettilo dentro per primo la mattina: sono 2 ore passive.',
   proc:['Massaggia le sovracosce con le spezie e il sale.','Forno 150 °C, 2 ore, teglia coperta con alluminio, con il brodo sul fondo.','Sfilaccia con due forchette.'],
@@ -226,7 +226,7 @@ const BASI = [
   ing:[['Sovracosce di pollo disossate senza pelle',1300],['Cumino',10],['Paprika affumicata',8],
        ['Aglio in polvere',6],['Sale',14],['Pepe nero',3],['Brodo (o acqua)',150]] },
 
-{ id:'focaccine', nome:'Focaccine integrali', resa:432, pezzi:8, ordine:7, tempoAtt:20, tempoTot:130,
+{ id:'focaccine', nome:'Focaccine integrali', resa:432, pezzi:8, gruppo:'forno', tempoAtt:20, tempoTot:130,
   interoDefault:true,
   conserva:['3 giorni','2 mesi'],
   nota:'La colazione salata della settimana. Con l\'impastatrice sono 8 minuti di lavoro e un\'ora e mezza di attesa: fai partire l\'impasto per primo la domenica e informale tra una cosa e l\'altra.',
@@ -238,7 +238,7 @@ const BASI = [
   ing:[['Farina integrale',230],['Farina 0',60],['Acqua',190],['Lievito di birra secco',3],
        ['Olio EVO',15],['Sale',5],['Zucchero',3],['Rosmarino',1]] },
 
-{ id:'pane', nome:'Pane integrale ai semi', resa:800, ordine:8, tempoAtt:15, tempoTot:200,
+{ id:'pane', nome:'Pane integrale ai semi', resa:800, gruppo:'forno', tempoAtt:15, tempoTot:200,
   interoDefault:true,
   conserva:['3 giorni','2 mesi (a fette)'],
   nota:'Una pagnotta da 800 g. Tagliala a fette da 40-50 g e congelale: si tostano da congelate. Vale anche come "modulo +150" (50 g) nelle sere in cui la cena è una zuppa.',
@@ -250,7 +250,7 @@ const BASI = [
   ing:[['Farina integrale',450],['Farina 0',50],['Semi misti',60],['Acqua',350],
        ['Lievito di birra secco',5],['Sale',9],['Miele',5]] },
 
-{ id:'zucca', nome:'Crema di zucca arrosto e ceci', resa:2000, porz:5, ordine:9, tempoAtt:15, tempoTot:55,
+{ id:'zucca', nome:'Crema di zucca arrosto e ceci', resa:2000, porz:5, gruppo:'forno', tempoAtt:15, tempoTot:55,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
   nota:'5 porzioni da ~400 g. La zucca arrostita in forno invece che bollita è quello che fa la differenza: caramella e la crema non ha bisogno d\'altro.',
@@ -262,7 +262,7 @@ const BASI = [
   ing:[['Zucca',1000],['Cipolle dorate',150],['Aglio',8],['Rosmarino',2],['Olio EVO',20],
        ['@ceci',400],['Brodo (o acqua)',800],['Sale',8]] },
 
-{ id:'lentcavolo', nome:'Zuppa di lenticchie e cavolo nero', resa:2000, porz:5, ordine:10, tempoAtt:15, tempoTot:40,
+{ id:'lentcavolo', nome:'Zuppa di lenticchie e cavolo nero', resa:2000, porz:5, gruppo:'fornelli', tempoAtt:15, tempoTot:40,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
   nota:'5 porzioni da ~400 g. Si fa sui fornelli mentre il forno è occupato. Per lui va frullata tutta: il cavolo nero cotto ma a strisce è fuori vincolo.',
@@ -274,7 +274,7 @@ const BASI = [
   ing:[['@lenticchie',500],['Cavolo nero',300],['Patate',250],['@soffritto',200],['Passata di pomodoro',120],
        ['Olio EVO',18],['Aglio',5],['Rosmarino',1],['Brodo (o acqua)',900],['Sale',6]] },
 
-{ id:'cavolfiore', nome:'Crema di cavolfiore e porri', resa:2000, porz:5, ordine:11, tempoAtt:15, tempoTot:55,
+{ id:'cavolfiore', nome:'Crema di cavolfiore e porri', resa:2000, porz:5, gruppo:'forno', tempoAtt:15, tempoTot:55,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
   nota:'5 porzioni da ~400 g. Il cavolfiore arrostito perde il suo odore da bollito: è la crema più delicata del piano.',
@@ -285,7 +285,7 @@ const BASI = [
   ing:[['Cavolfiore',900],['Porri',300],['Patate',300],['Aglio',8],['Olio EVO',20],
        ['Brodo (o acqua)',900],['Sale',8],['Noce moscata',1]] },
 
-{ id:'orzoborlotti', nome:'Minestra di orzo, borlotti e verza', resa:2400, porz:6, ordine:12, tempoAtt:15, tempoTot:65,
+{ id:'orzoborlotti', nome:'Minestra di orzo, borlotti e verza', resa:2400, porz:6, gruppo:'fornelli', tempoAtt:15, tempoTot:65,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
   nota:'6 porzioni da ~400 g. La verza e metà dei borlotti vengono frullati prima di aggiungere l\'orzo: la minestra lega, resta rustica e per lui la verdura è passata.',
@@ -297,7 +297,7 @@ const BASI = [
   ing:[['Orzo perlato',200],['@borlotti',600],['Verza',500],['Patate',200],['@soffritto',250],
        ['Passata di pomodoro',150],['Alloro',2],['Rosmarino',1],['Olio EVO',20],['Brodo (o acqua)',1300],['Sale',8]] },
 
-{ id:'broccoli', nome:'Crema di broccoli e patate', resa:2000, porz:5, ordine:13, tempoAtt:15, tempoTot:45,
+{ id:'broccoli', nome:'Crema di broccoli e patate', resa:2000, porz:5, gruppo:'forno', tempoAtt:15, tempoTot:45,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
   nota:'5 porzioni da ~400 g. I broccoli in forno bruciano facilmente: 25 minuti, non di più.',
@@ -308,7 +308,7 @@ const BASI = [
   ing:[['Broccoli',800],['Patate',400],['Porri',200],['Aglio',8],['Olio EVO',20],
        ['Brodo (o acqua)',900],['Sale',8]] },
 
-{ id:'carote', nome:'Crema di carote arrosto e lenticchie rosse allo zenzero', resa:2200, porz:5, ordine:14, tempoAtt:15, tempoTot:50,
+{ id:'carote', nome:'Crema di carote arrosto e lenticchie rosse allo zenzero', resa:2200, porz:5, gruppo:'forno', tempoAtt:15, tempoTot:50,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
   nota:'5 porzioni da ~440 g. Le lenticchie rosse spariscono nella crema e la rendono vellutata senza latticini.',
@@ -319,7 +319,7 @@ const BASI = [
   ing:[['Carote',800],['Lenticchie rosse secche',250],['Cipolle dorate',150],['Zenzero fresco',20],['Aglio',8],
        ['Curcuma',4],['Cumino',4],['Olio EVO',20],['Brodo (o acqua)',1200],['Sale',9],['Limoni',20]] },
 
-{ id:'muffin', nome:'Muffin avena, ricotta e mela', resa:660, pezzi:12, ordine:15, tempoAtt:12, tempoTot:40,
+{ id:'muffin', nome:'Muffin avena, ricotta e mela', resa:660, pezzi:12, gruppo:'forno', tempoAtt:12, tempoTot:40,
   interoDefault:true,
   conserva:['3 giorni','2 mesi'],
   nota:'12 muffin da ~55 g. La mela cuoce dentro, quindi va bene anche per lui. Congelali a coppie: 20 secondi di microonde o 5 minuti in forno la mattina.',
@@ -331,7 +331,7 @@ const BASI = [
   ing:[['Fiocchi d\'avena',120],['Farina integrale',60],['Ricotta magra',200],['Albumi',5],['Uova',1],
        ['Miele',30],['Mele',150],['Olio EVO',10],['Lievito per dolci',8],['Cannella',3],['Sale',1]] },
 
-{ id:'muffinzucca', nome:'Muffin zucca e cannella', resa:680, pezzi:12, ordine:16, tempoAtt:12, tempoTot:45,
+{ id:'muffinzucca', nome:'Muffin zucca e cannella', resa:680, pezzi:12, gruppo:'forno', tempoAtt:12, tempoTot:45,
   interoDefault:true,
   conserva:['3 giorni','2 mesi'],
   nota:'12 muffin da ~57 g. La zucca li tiene umidi per giorni.',
@@ -343,7 +343,7 @@ const BASI = [
   ing:[['Zucca',250],['Fiocchi d\'avena',120],['Farina integrale',80],['Yogurt greco 0%',150],['Albumi',3],['Uova',1],
        ['Miele',30],['Olio EVO',10],['Lievito per dolci',8],['Cannella',4],['Noce moscata',1],['Sale',1]] },
 
-{ id:'plumcake', nome:'Plumcake yogurt e pera', resa:720, pezzi:10, ordine:17, tempoAtt:12, tempoTot:55,
+{ id:'plumcake', nome:'Plumcake yogurt e pera', resa:720, pezzi:10, gruppo:'forno', tempoAtt:12, tempoTot:55,
   interoDefault:true,
   conserva:['3 giorni','2 mesi (a fette)'],
   nota:'10 fette da ~72 g. Tagliato e congelato a fette, ne esce una alla volta.',
@@ -355,7 +355,7 @@ const BASI = [
   ing:[['Farina integrale',150],['Fiocchi d\'avena',50],['Yogurt greco 0%',200],['Uova',2],['Albumi',2],
        ['Miele',40],['Olio EVO',15],['Pere',200],['Lievito per dolci',8],['Cannella',2],['Sale',1]] },
 
-{ id:'crackers', nome:'Crackers integrali ai semi', resa:380, ordine:18, tempoAtt:15, tempoTot:40,
+{ id:'crackers', nome:'Crackers integrali ai semi', resa:380, gruppo:'forno', tempoAtt:15, tempoTot:40,
   interoDefault:true,
   conserva:['10 giorni in scatola di latta','—'],
   nota:'Circa 380 g di crackers. Non hanno bisogno del freezer: in una scatola chiusa restano croccanti.',
@@ -365,7 +365,7 @@ const BASI = [
   timer:[['Forno 180 °C',19]],
   ing:[['Farina integrale',250],['Semi misti',40],['Olio EVO',20],['Acqua',120],['Sale',4],['Rosmarino',1]] },
 
-{ id:'chili', nome:'Chili di ceci e fagioli neri', resa:1400, ordine:19, tempoAtt:8, tempoTot:20,
+{ id:'chili', nome:'Chili di ceci e fagioli neri', resa:1400, gruppo:'fornelli', tempoAtt:8, tempoTot:20,
   conserva:['4 giorni','3 mesi'],
   nota:'Quello che avanza va in freezer: è il pasto di riserva per la sera in cui non avete voglia di niente.',
   proc:['Tutto in pentola, 20 minuti a fuoco medio-basso.'],
@@ -374,7 +374,7 @@ const BASI = [
        ['Brodo (o acqua)',150],['Cumino',8],['Paprika affumicata',6],['Cacao amaro',5],
        ['Cannella',1],['Peperoncino',2],['Sale',6]] },
 
-{ id:'ragu', nome:'Ragù al coltello', resa:800, ordine:20, tempoAtt:15, tempoTot:100,
+{ id:'ragu', nome:'Ragù al coltello', resa:800, gruppo:'fornelli', tempoAtt:15, tempoTot:100,
   conserva:['3 giorni','3 mesi'],
   proc:['Rosola la carne a fuoco alto e in due riprese: tutta insieme bolle invece di rosolare.',
         'Sfuma col vino rosso.','Unisci soffritto, passata e alloro. Fuoco bassissimo, 90 minuti.'],
@@ -382,7 +382,7 @@ const BASI = [
   ing:[['Manzo magro per ragù',500],['@soffritto',400],['Passata di pomodoro',200],
        ['Vino rosso',150],['Olio EVO',10],['Alloro',2],['Sale',6]] },
 
-{ id:'vellutata', nome:'Vellutata di lenticchie rosse e zucca', resa:1500, ordine:21, tempoAtt:10, tempoTot:35,
+{ id:'vellutata', nome:'Vellutata di lenticchie rosse e zucca', resa:1500, gruppo:'fornelli', tempoAtt:10, tempoTot:35,
   conserva:['4 giorni','3 mesi'],
   nota:'Serve solo al curry di sovracosce: l\'app la scala al bisogno. A dose piena avanza molto, ed è un ottimo contorno caldo.',
   proc:['Tutto in pentola, 30 minuti.','Frulla.'],
@@ -390,26 +390,26 @@ const BASI = [
   ing:[['Lenticchie rosse secche',200],['Zucca',1100],['Cipolle dorate',100],['Zenzero fresco',15],
        ['Brodo (o acqua)',1200],['Olio EVO',15],['Curcuma',3],['Sale',9]] },
 
-{ id:'salsayogurt', nome:'Salsa yogurt, aglio e menta secca', resa:560, ordine:22, tempoAtt:5, tempoTot:5,
+{ id:'salsayogurt', nome:'Salsa yogurt, aglio e menta secca', resa:560, gruppo:'freddo', tempoAtt:5, tempoTot:5,
   conserva:['4 giorni','—'],
   nota:'Menta secca, non fresca: essiccata ha un profilo più resinoso ed è quella giusta per questa salsa. Risolve anche il vincolo di lui.',
   proc:['Mescola tutto. Riposo in frigo almeno un\'ora.'],
   ing:[['Yogurt greco 0%',500],['Aglio',6],['Menta secca',4],['Limoni',15],['Sale',4],['Olio EVO',10]] },
 
-{ id:'cipolle', nome:'Cipolle caramellate frullate', resa:250, ordine:23, tempoAtt:8, tempoTot:45,
+{ id:'cipolle', nome:'Cipolle caramellate frullate', resa:250, gruppo:'fornelli', tempoAtt:8, tempoTot:45,
   conserva:['5 giorni','2 mesi'],
   nota:'Il condimento di hot dog e burger, e il sostituto strutturale di qualsiasi cipolla cruda per lui.',
   proc:['Fuoco basso 40 minuti finché non sono brune e dolci.','Frulla.'],
   timer:[['Fuoco basso',40]],
   ing:[['Cipolle dorate',500],['Olio EVO',15],['Aceto di riso',20],['Acqua',100],['Sale',4]] },
 
-{ id:'hummus', nome:'Hummus', resa:420, ordine:24, tempoAtt:10, tempoTot:10,
+{ id:'hummus', nome:'Hummus', resa:420, gruppo:'freddo', tempoAtt:10, tempoTot:10,
   conserva:['5 giorni','2 mesi'],
   proc:['Frulla tutto a lungo, aggiungendo l\'acqua di cottura dei ceci poco per volta.'],
   ing:[['@ceci',250],['Tahina',50],['Limoni',35],['Acqua',60],['Olio EVO',15],
        ['Aglio',5],['Cumino',3],['Sale',4]] },
 
-{ id:'falafel', nome:'Impasto falafel', resa:600, pezzi:12, ordine:25, tempoAtt:15, tempoTot:75,
+{ id:'falafel', nome:'Impasto falafel', resa:600, pezzi:12, gruppo:'freddo', tempoAtt:15, tempoTot:75,
   conserva:['3 giorni (da crudo)','—'],
   nota:'Ceci ammollati e crudi, mai cotti: con quelli cotti l\'impasto non lega e si disfa in forno. 12 pezzi da 50 g; si infornano al momento, non la domenica.',
   proc:['Frulla a impulsi fino a granuloso, non a crema.','Riposo in frigo 1 ora.','Forma 12 palline da 50 g.',
@@ -419,7 +419,7 @@ const BASI = [
        ['Farina di ceci',25],['Cumino',5],['Coriandolo in polvere',4],['Bicarbonato',2],
        ['Sale',6],['Olio EVO',15]] },
 
-{ id:'riso', nome:'Riso basmati cotto', resa:690, ordine:26, tempoAtt:3, tempoTot:15,
+{ id:'riso', nome:'Riso basmati cotto', resa:690, gruppo:'fornelli', tempoAtt:3, tempoTot:15,
   conserva:['3 giorni','—'],
   nota:'Il riso cotto si conserva massimo 3 giorni e va raffreddato in fretta, allargato su un vassoio. Se ti serve più avanti nella settimana, cuocilo fresco: sono 15 minuti.',
   proc:['Riso, acqua e sale, coperchio, 12 minuti.','Raffredda in fretta allargandolo su un vassoio.'],
@@ -823,6 +823,16 @@ const PASTI = [
 const TARGET = { kcal:1250, p:100, pasti:{ colazione:200, pranzo:450, cena:600 } };
 
 // tipi = come conta nella giornata · categorie = come si presenta nel catalogo
+// ordine di lavoro consigliato per domenica: forno (parte tutto insieme, è
+// passivo) prima di fornelli, prima delle preparazioni a freddo (solo
+// impasto/frullatore, nessuna cottura richiesta quella mattina); dentro ogni
+// gruppo, tempo totale decrescente — si parte da chi corre più a lungo da
+// solo, così passa mentre fai il resto.
+const GRUPPI_BASI = ['forno', 'fornelli', 'freddo'];
+GRUPPI_BASI
+  .flatMap(g => BASI.filter(b => b.gruppo === g).sort((a,b) => b.tempoTot - a.tempoTot))
+  .forEach((b, i) => { b.ordine = i + 1; });
+
 const TIPI = [['colazione','Colazione'],['pranzo','Pranzo'],['cena','Cena'],['extra','Extra']];
 const CATEGORIE = [
   ['colazione','Colazioni da forno'],

@@ -12,7 +12,7 @@ function caricaModulo(file, nomi){
 }
 const { ING, BASI, PASTI, TARGET, CATEGORIE, SETTIMANA_TIPO } = caricaModulo('dati.js',
   ['ING','BASI','PASTI','TARGET','TIPI','CATEGORIE','SETTIMANA_TIPO','valoriBase100','valoriPasto']);
-const { calcola, formatta } = caricaModulo('motore.js', ['calcola','formatta','costruisciIndici']);
+const { calcola, formatta, testoBase } = caricaModulo('motore.js', ['calcola','formatta','costruisciIndici','testoBase']);
 
 const BASE_BY_ID = {}; BASI.forEach(b => BASE_BY_ID[b.id] = b);
 const REPARTI = [
@@ -99,9 +99,9 @@ function generaPrep(){
       out += `| ${nome} | ${fmtQIng(n[0]==='@'?'x':n, q)} |\n`;
     });
     out += '\n**Procedura**\n';
-    (b.proc||[]).forEach((s,i) => out += `${i+1}. ${s}\n`);
+    (b.proc||[]).forEach((s,i) => out += `${i+1}. ${testoBase(s, b, 1)}\n`);
     out += '\n';
-    if (b.nota) out += `> ${b.nota}\n\n`;
+    if (b.nota) out += `> ${testoBase(b.nota, b, 1)}\n\n`;
     out += `Conservazione: frigo ${b.conserva[0]} · freezer ${b.conserva[1]}.\n\n---\n\n`;
   });
 

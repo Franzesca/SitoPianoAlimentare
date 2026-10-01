@@ -118,6 +118,42 @@ input[type=search],input[type=number],input[type=date],input[type=text],input[ty
   padding:10px 12px;font-family:inherit;font-size:15px;width:100%}
 input:focus{outline:2px solid var(--accento);outline-offset:-1px}
 
+/* ---------- vista Cucina ora (schermo intero) ---------- */
+body.bloccato{overflow:hidden}
+#cucina{position:fixed;inset:0;z-index:100;display:none;background:var(--pepe)}
+#cucina.on{display:block}
+.c-pannello{display:flex;flex-direction:column;height:100%;max-width:760px;margin:0 auto}
+.c-top{display:flex;align-items:center;gap:12px;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));
+  border-bottom:1px solid var(--bordo);background:var(--pepe);flex-shrink:0}
+.c-chiudi{background:none;border:1px solid var(--bordo2);color:var(--panna);width:42px;height:42px;border-radius:10px;
+  font-size:26px;line-height:1;cursor:pointer;flex-shrink:0}
+.c-titolo{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.02em;line-height:1.2}
+.c-corpo{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(28px + env(safe-area-inset-bottom))}
+.c-porz{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--pentola);
+  border:1px solid var(--accento);border-radius:var(--r);padding:12px 14px}
+.c-porz-sub{font-size:12px;color:var(--fumo);margin-top:3px}
+.c-step button{width:46px;height:46px;font-size:24px}
+.c-step span{font-size:20px;min-width:30px}
+.c-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;align-items:center}
+.c-h{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:17px;letter-spacing:-.01em;margin:22px 0 9px}
+.c-ing{border:1px solid var(--bordo);border-radius:12px;overflow:hidden}
+.c-riga{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;
+  background:var(--pentola);border:0;border-top:1px solid var(--bordo);color:var(--panna);padding:14px;
+  font-family:inherit;font-size:16.5px;line-height:1.3;cursor:pointer}
+.c-riga:first-child{border-top:0}
+.c-riga .ing em{font-style:normal;color:var(--curcuma);font-size:11px;font-family:'JetBrains Mono',monospace;
+  letter-spacing:.05em;display:block;margin-top:2px}
+.c-riga .q{font-family:'JetBrains Mono',monospace;font-size:15.5px;color:var(--curcuma);white-space:nowrap;text-align:right}
+.c-check{width:22px;height:22px;border:2px solid var(--bordo2);border-radius:6px;position:relative}
+.c-riga.fatto .c-check{background:var(--pistacchio);border-color:var(--pistacchio)}
+.c-riga.fatto .c-check::after{content:'';position:absolute;left:6px;top:2px;width:6px;height:11px;
+  border:solid var(--pepe);border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.c-riga.fatto .ing,.c-riga.fatto .q{opacity:.4;text-decoration:line-through}
+.c-hint{font-size:12.5px;color:var(--fumo);margin-top:8px;line-height:1.5}
+ol.c-passi{margin:0 0 0 24px;font-size:17px;line-height:1.6;color:var(--panna)}
+ol.c-passi li{margin-bottom:12px;padding-left:4px}
+ol.c-passi li::marker{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--curcuma)}
+
 /* ---------- scheda pasto ---------- */
 .pasto{background:var(--pentola);border:1px solid var(--bordo);border-radius:var(--r);margin-top:11px;overflow:hidden;transition:border-color .2s}
 .pasto.sel{border-color:var(--accento)}
@@ -250,7 +286,7 @@ ol.passi li{margin-bottom:6px}
 @media print{
   body{background:#fff;color:#000;padding:0}
   body::before,header,nav,.seg,.riga-btn,.btn,.vuoto svg,#toast,.progress,
-  #extra-n,#extra-add,[data-delx]{display:none!important}
+  #extra-n,#extra-add,[data-delx],#cucina{display:none!important}
   .vista{display:none!important}.vista.on{display:block!important}
   .card,.rep{border-color:#ccc;background:#fff}
   .voce{border-bottom:1px solid #ddd}
@@ -500,6 +536,7 @@ ol.passi li{margin-bottom:6px}
 </nav>
 
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="cucina"></div>
 </div>
 
 <script type="module">
@@ -858,7 +895,7 @@ const BASI = [
 
 { id:'ceci', nome:'Ceci cotti', resa:1130, gruppo:'fornelli', tempoAtt:5, tempoTot:40,
   conserva:['4 giorni','3 mesi'],
-  nota:'Se quella settimana fai anche i falafel, ammolla insieme anche i loro 150 g di ceci: quelli restano crudi.',
+  nota:'Se quella settimana fai anche i falafel, ammolla insieme anche i ceci secchi del loro impasto (la quantità è nella scheda dei falafel): quelli restano crudi.',
   proc:['Ammollo 12 ore con il bicarbonato.','Scola. Pentola a pressione 40 minuti con l\'alloro.','Sala a fine cottura. Tieni un po\' di acqua di cottura se fai l\'hummus.'],
   timer:[['Pentola a pressione',40]],
   ing:[['Ceci secchi',450],['Bicarbonato',3],['Alloro',2],['Sale',8]] },
@@ -889,26 +926,29 @@ const BASI = [
   ing:[['Sovracosce di pollo disossate senza pelle',1300],['Cumino',10],['Paprika affumicata',8],
        ['Aglio in polvere',6],['Sale',14],['Pepe nero',3],['Brodo (o acqua)',150]] },
 
-{ id:'focaccine', nome:'Focaccine integrali', resa:432, pezzi:8, gruppo:'forno', tempoAtt:20, tempoTot:130,
+{ id:'focaccine', nome:'Focaccine integrali', resa:464, pezzi:8, gruppo:'forno', tempoAtt:20, tempoTot:175,
   interoDefault:true,
   conserva:['3 giorni','2 mesi'],
-  nota:'La colazione salata della settimana. Con l\'impastatrice sono 8 minuti di lavoro e un\'ora e mezza di attesa: fai partire l\'impasto per primo la domenica e informale tra una cosa e l\'altra.',
-  proc:['Impastatrice: farine, lievito, zucchero, acqua tiepida, 3 minuti; poi olio e sale, altri 5 minuti a velocità media.',
-        'Lievitazione coperta 60-90 minuti, finché non raddoppia.',
-        'Dividi in 8 pezzi da ~55 g, schiacciali a dischi da 1 cm su carta forno, rosmarino e un pizzico di sale sopra. Altri 20 minuti coperti.',
-        'Forno 220 °C, 12-14 minuti. Fredde, in freezer a coppie: 3 minuti in forno o tostapane la mattina.'],
-  timer:[['Lievitazione',75],['Seconda lievitazione',20],['Forno 220 °C',13]],
-  ing:[['Farina integrale',230],['Farina 0',60],['Acqua',190],['Lievito di birra secco',3],
-       ['Olio EVO',15],['Sale',5],['Zucchero',3],['Rosmarino',1]] },
+  nota:'La colazione salata della settimana: pochi minuti di lavoro e tanta attesa, quindi l\'impasto parte per primo la domenica. Se escono basse e dure, quasi sempre è uno di tre motivi: lievito sbagliato o morto (la prova della schiuma lo dice subito), lievitazione troppo corta in una casa fresca, dischi troppo sottili. Resa da cotte stimata (~58 g a focaccina): se pesandole ti viene diversa, va corretta.',
+  proc:['Controlla il lievito: deve essere lievito di birra secco (bustina "lievito di birra secco attivo"), non il lievito istantaneo per pizze e torte salate, che è chimico e con la lievitazione lunga non fa niente.',
+        'Sciogli lievito e zucchero in un terzo dell\'acqua, tiepida e non calda (al polso deve sembrare appena tiepida, sui 35 °C: sopra i 45 °C il lievito muore). Dopo 10 minuti deve aver fatto schiuma in superficie. Se non la fa, il lievito è da buttare: inutile andare avanti.',
+        'Impastatrice: farine, acqua col lievito e il resto dell\'acqua, 4 minuti a velocità bassa; poi olio e sale, altri 6 minuti a velocità media. L\'impasto resta morbido e un po\' appiccicoso: con la farina integrale è giusto così, non aggiungere farina.',
+        'Lievitazione coperta in un posto tiepido (il forno spento con la sola luce accesa è perfetto) finché non raddoppia davvero di volume: 1 ora e mezza, anche 2 se la casa è fresca. Conta il volume, non l\'orologio.',
+        'Dividi in {pezzi:pezzo|pezzi} da ~65 g di impasto, arrotondali a pallina e appiattiscili appena, a dischi spessi 2 cm: più sottili diventano biscotti. Su carta forno, coperti, altri 40-45 minuti, finché non si gonfiano di nuovo.',
+        'Fossette con i polpastrelli, rosmarino e un pizzico di sale sopra. Forno già caldo a 200 °C, 14-16 minuti, finché non sono dorate anche sotto. Appena sfornate coprile con un canovaccio mentre si raffreddano: restano morbide.',
+        'Fredde, in freezer a coppie: 3 minuti in forno o tostapane la mattina.'],
+  timer:[['Schiuma del lievito',10],['Lievitazione',90],['Seconda lievitazione',40],['Forno 200 °C',15]],
+  ing:[['Farina integrale',200],['Farina 0',90],['Acqua',215],['Lievito di birra secco',4],
+       ['Olio EVO',15],['Sale',5],['Zucchero',4],['Rosmarino',1]] },
 
 { id:'pane', nome:'Pane integrale ai semi', resa:800, gruppo:'forno', tempoAtt:15, tempoTot:200,
   interoDefault:true,
   conserva:['3 giorni','2 mesi (a fette)'],
-  nota:'Una pagnotta da 800 g. Tagliala a fette da 40-50 g e congelale: si tostano da congelate. Vale anche come "modulo +150" (50 g) nelle sere in cui la cena è una zuppa.',
+  nota:'La ricetta intera è una pagnotta da 800 g.{multipla: Con più di una dose fai pagnotte separate, non una gigante: i tempi di forno restano quelli.} Tagliala a fette da 40-50 g e congelale: si tostano da congelate. Vale anche come "modulo +150" (50 g) nelle sere in cui la cena è una zuppa.',
   proc:['Impastatrice: farine, semi, lievito, miele, acqua tiepida, 3 minuti; poi il sale, 8 minuti a velocità media.',
         'Lievitazione coperta 90 minuti.',
         'Forma la pagnotta su carta forno, incidi la superficie, altri 40 minuti coperta.',
-        'Forno 220 °C per 15 minuti, poi 200 °C per altri 25. Fredda completamente prima di tagliarla.'],
+        'Forno 220 °C per 15 minuti, poi 200 °C per altri 25.{ridotta: Con una pagnotta più piccola controlla già dopo 30 minuti in tutto: battendo sotto deve suonare vuota.} Fredda completamente prima di tagliarla.'],
   timer:[['Lievitazione',90],['Seconda lievitazione',40],['Forno 220 °C',15],['Forno 200 °C',25]],
   ing:[['Farina integrale',450],['Farina 0',50],['Semi misti',60],['Acqua',350],
        ['Lievito di birra secco',5],['Sale',9],['Miele',5]] },
@@ -916,11 +956,11 @@ const BASI = [
 { id:'zucca', nome:'Crema di zucca arrosto e ceci', resa:2000, porz:5, gruppo:'forno', tempoAtt:15, tempoTot:55,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
-  nota:'5 porzioni da ~400 g. La zucca arrostita in forno invece che bollita è quello che fa la differenza: caramella e la crema non ha bisogno d\'altro.',
+  nota:'{porz:porzione|porzioni} da ~400 g. La zucca arrostita in forno invece che bollita è quello che fa la differenza: caramella e la crema non ha bisogno d\'altro.',
   proc:['Zucca a cubi da 3 cm e cipolla a spicchi in una teglia con olio, rosmarino, aglio in camicia e sale: forno 200 °C per 35-40 minuti, finché i bordi non caramellano.',
         'Butta il rosmarino, sbuccia l\'aglio, versa tutto in pentola con i ceci e il brodo caldo.',
         'Frulla a immersione fino a crema liscia. Se è troppo densa, altro brodo; se troppo liquida, 5 minuti sul fuoco scoperta.',
-        'Dividi in 5 porzioni uguali: 2-3 in frigo, il resto in freezer.'],
+        'Dividi in {porz:porzione|porzioni} uguali: in frigo quelle dei prossimi 3-4 giorni, il resto in freezer.'],
   timer:[['Forno 200 °C',38]],
   ing:[['Zucca',1000],['Cipolle dorate',150],['Aglio',8],['Rosmarino',2],['Olio EVO',20],
        ['@ceci',400],['Brodo (o acqua)',800],['Sale',8]] },
@@ -928,11 +968,11 @@ const BASI = [
 { id:'lentcavolo', nome:'Zuppa di lenticchie e cavolo nero', resa:2000, porz:5, gruppo:'fornelli', tempoAtt:15, tempoTot:40,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
-  nota:'5 porzioni da ~400 g. Si fa sui fornelli mentre il forno è occupato. Per lui va frullata tutta: il cavolo nero cotto ma a strisce è fuori vincolo.',
+  nota:'{porz:porzione|porzioni} da ~400 g. Si fa sui fornelli mentre il forno è occupato. Per lui va frullata tutta: il cavolo nero cotto ma a strisce è fuori vincolo.',
   proc:['Soffritto, olio, aglio e rosmarino in pentola, 2 minuti.',
         'Patate a cubetti, passata e brodo: 12 minuti.',
         'Cavolo nero a striscioline (solo la foglia) e lenticchie: altri 15 minuti.',
-        'Togli il rosmarino e frulla tutto a immersione, fino a crema. Dividi in 5 porzioni.'],
+        'Togli il rosmarino e frulla tutto a immersione, fino a crema. Dividi in {porz:porzione|porzioni}.'],
   timer:[['Patate',12],['Cavolo nero e lenticchie',15]],
   ing:[['@lenticchie',500],['Cavolo nero',300],['Patate',250],['@soffritto',200],['Passata di pomodoro',120],
        ['Olio EVO',18],['Aglio',5],['Rosmarino',1],['Brodo (o acqua)',900],['Sale',6]] },
@@ -940,10 +980,10 @@ const BASI = [
 { id:'cavolfiore', nome:'Crema di cavolfiore e porri', resa:2000, porz:5, gruppo:'forno', tempoAtt:15, tempoTot:55,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
-  nota:'5 porzioni da ~400 g. Il cavolfiore arrostito perde il suo odore da bollito: è la crema più delicata del piano.',
+  nota:'{porz:porzione|porzioni} da ~400 g. Il cavolfiore arrostito perde il suo odore da bollito: è la crema più delicata del piano.',
   proc:['Cavolfiore a cimette, porri a rondelle spesse, patate a cubi: in teglia con olio, aglio in camicia e sale, forno 200 °C per 35 minuti, girando a metà.',
         'Sbuccia l\'aglio, versa tutto in pentola con il brodo caldo e la noce moscata.',
-        'Frulla a immersione fino a crema liscia. Dividi in 5 porzioni.'],
+        'Frulla a immersione fino a crema liscia. Dividi in {porz:porzione|porzioni}.'],
   timer:[['Forno 200 °C',35]],
   ing:[['Cavolfiore',900],['Porri',300],['Patate',300],['Aglio',8],['Olio EVO',20],
        ['Brodo (o acqua)',900],['Sale',8],['Noce moscata',1]] },
@@ -951,11 +991,11 @@ const BASI = [
 { id:'orzoborlotti', nome:'Minestra di orzo, borlotti e verza', resa:2400, porz:6, gruppo:'fornelli', tempoAtt:15, tempoTot:65,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
-  nota:'6 porzioni da ~400 g. La verza e metà dei borlotti vengono frullati prima di aggiungere l\'orzo: la minestra lega, resta rustica e per lui la verdura è passata.',
+  nota:'{porz:porzione|porzioni} da ~400 g. La verza e metà dei borlotti vengono frullati prima di aggiungere l\'orzo: la minestra lega, resta rustica e per lui la verdura è passata.',
   proc:['Soffritto, olio, alloro e rosmarino in pentola, 2 minuti.',
         'Verza a strisce, patate a cubetti, passata, metà dei borlotti e il brodo: 25 minuti.',
         'Togli alloro e rosmarino; frulla tutto liscio.',
-        'Rimetti sul fuoco con l\'orzo sciacquato e i borlotti rimasti: 25-30 minuti, finché l\'orzo non è tenero. Se stringe, altro brodo. Dividi in 6 porzioni.'],
+        'Rimetti sul fuoco con l\'orzo sciacquato e i borlotti rimasti: 25-30 minuti, finché l\'orzo non è tenero. Se stringe, altro brodo. Dividi in {porz:porzione|porzioni}.'],
   timer:[['Verza e patate',25],['Orzo',28]],
   ing:[['Orzo perlato',200],['@borlotti',600],['Verza',500],['Patate',200],['@soffritto',250],
        ['Passata di pomodoro',150],['Alloro',2],['Rosmarino',1],['Olio EVO',20],['Brodo (o acqua)',1300],['Sale',8]] },
@@ -963,10 +1003,10 @@ const BASI = [
 { id:'broccoli', nome:'Crema di broccoli e patate', resa:2000, porz:5, gruppo:'forno', tempoAtt:15, tempoTot:45,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
-  nota:'5 porzioni da ~400 g. I broccoli in forno bruciano facilmente: 25 minuti, non di più.',
+  nota:'{porz:porzione|porzioni} da ~400 g. I broccoli in forno bruciano facilmente: 25 minuti, non di più.',
   proc:['Broccoli a cimette e porri a rondelle in teglia con olio, aglio e sale: forno 200 °C per 25 minuti.',
         'Intanto le patate a cubi cuociono nel brodo, 15 minuti.',
-        'Tutto insieme in pentola, frulla a immersione fino a crema. Dividi in 5 porzioni.'],
+        'Tutto insieme in pentola, frulla a immersione fino a crema. Dividi in {porz:porzione|porzioni}.'],
   timer:[['Forno 200 °C',25],['Patate nel brodo',15]],
   ing:[['Broccoli',800],['Patate',400],['Porri',200],['Aglio',8],['Olio EVO',20],
        ['Brodo (o acqua)',900],['Sale',8]] },
@@ -974,10 +1014,10 @@ const BASI = [
 { id:'carote', nome:'Crema di carote arrosto e lenticchie rosse allo zenzero', resa:2200, porz:5, gruppo:'forno', tempoAtt:15, tempoTot:50,
   interoDefault:true,
   conserva:['4 giorni','3 mesi'],
-  nota:'5 porzioni da ~440 g. Le lenticchie rosse spariscono nella crema e la rendono vellutata senza latticini.',
+  nota:'{porz:porzione|porzioni} da ~440 g. Le lenticchie rosse spariscono nella crema e la rendono vellutata senza latticini.',
   proc:['Carote a tocchi e cipolla a spicchi in teglia con olio, cumino e sale: forno 200 °C per 35 minuti.',
         'Intanto lenticchie rosse, zenzero grattugiato, aglio e curcuma nel brodo: 20 minuti, finché non si disfano.',
-        'Unisci le carote, frulla a immersione fino a crema, limone a fuoco spento. Dividi in 5 porzioni.'],
+        'Unisci le carote, frulla a immersione fino a crema, limone a fuoco spento. Dividi in {porz:porzione|porzioni}.'],
   timer:[['Forno 200 °C',35],['Lenticchie nel brodo',20]],
   ing:[['Carote',800],['Lenticchie rosse secche',250],['Cipolle dorate',150],['Zenzero fresco',20],['Aglio',8],
        ['Curcuma',4],['Cumino',4],['Olio EVO',20],['Brodo (o acqua)',1200],['Sale',9],['Limoni',20]] },
@@ -985,10 +1025,10 @@ const BASI = [
 { id:'muffin', nome:'Muffin avena, ricotta e mela', resa:660, pezzi:12, gruppo:'forno', tempoAtt:12, tempoTot:40,
   interoDefault:true,
   conserva:['3 giorni','2 mesi'],
-  nota:'12 muffin da ~55 g. La mela cuoce dentro, quindi va bene anche per lui. Congelali a coppie: 20 secondi di microonde o 5 minuti in forno la mattina.',
+  nota:'{pezzi:muffin|muffin} da ~55 g. La mela cuoce dentro, quindi va bene anche per lui. Congelali a coppie: 20 secondi di microonde o 5 minuti in forno la mattina.',
   proc:['Frulla ricotta, albumi, uovo, miele e olio fino a crema liscia.',
         'Unisci avena, farina, lievito, cannella e sale; per ultima la mela a dadini piccoli.',
-        '12 pirottini, forno 180 °C per 22-24 minuti: lo stecchino deve uscire asciutto.',
+        '{pezzi:pirottino|pirottini}, forno 180 °C per 22-24 minuti: lo stecchino deve uscire asciutto.',
         'Freddi su una griglia, poi in freezer.'],
   timer:[['Forno 180 °C',23]],
   ing:[['Fiocchi d\'avena',120],['Farina integrale',60],['Ricotta magra',200],['Albumi',5],['Uova',1],
@@ -997,11 +1037,11 @@ const BASI = [
 { id:'muffinzucca', nome:'Muffin zucca e cannella', resa:680, pezzi:12, gruppo:'forno', tempoAtt:12, tempoTot:45,
   interoDefault:true,
   conserva:['3 giorni','2 mesi'],
-  nota:'12 muffin da ~57 g. La zucca li tiene umidi per giorni.',
+  nota:'{pezzi:muffin|muffin} da ~57 g. La zucca li tiene umidi per giorni.',
   proc:['Zucca a cubetti 8 minuti al microonde (o al vapore), schiacciata a purea e lasciata intiepidire.',
         'Frulla la purea con yogurt, albumi, uovo, miele e olio.',
         'Unisci avena, farina, lievito, cannella, noce moscata e sale.',
-        '12 pirottini, forno 180 °C per 24 minuti. Freddi, in freezer.'],
+        '{pezzi:pirottino|pirottini}, forno 180 °C per 24 minuti. Freddi, in freezer.'],
   timer:[['Forno 180 °C',24]],
   ing:[['Zucca',250],['Fiocchi d\'avena',120],['Farina integrale',80],['Yogurt greco 0%',150],['Albumi',3],['Uova',1],
        ['Miele',30],['Olio EVO',10],['Lievito per dolci',8],['Cannella',4],['Noce moscata',1],['Sale',1]] },
@@ -1009,11 +1049,11 @@ const BASI = [
 { id:'plumcake', nome:'Plumcake yogurt e pera', resa:720, pezzi:10, gruppo:'forno', tempoAtt:12, tempoTot:55,
   interoDefault:true,
   conserva:['3 giorni','2 mesi (a fette)'],
-  nota:'10 fette da ~72 g. Tagliato e congelato a fette, ne esce una alla volta.',
+  nota:'{pezzi:fetta|fette} da ~72 g. Tagliato e congelato a fette, ne esce una alla volta.',
   proc:['Sbatti uova, albumi, miele, olio e yogurt.',
         'Unisci farina, avena, lievito, cannella e sale; poi la pera a dadini.',
-        'Stampo da plumcake foderato, forno 180 °C per 40 minuti. Stecchino asciutto.',
-        'Freddo del tutto, poi 10 fette.'],
+        'Stampo da plumcake foderato, forno 180 °C per 40 minuti. Stecchino asciutto.{ridotta: Con una dose ridotta usa uno stampo più piccolo (o chiudi metà di quello grande con una sponda di carta forno piegata) e controlla con lo stecchino già dopo 30 minuti.}{multipla: Con più di una dose usa più stampi, non uno più grande: i tempi restano quelli.}',
+        'Freddo del tutto, poi {pezzi:fetta|fette}.'],
   timer:[['Forno 180 °C',40]],
   ing:[['Farina integrale',150],['Fiocchi d\'avena',50],['Yogurt greco 0%',200],['Uova',2],['Albumi',2],
        ['Miele',40],['Olio EVO',15],['Pere',200],['Lievito per dolci',8],['Cannella',2],['Sale',1]] },
@@ -1021,7 +1061,7 @@ const BASI = [
 { id:'crackers', nome:'Crackers integrali ai semi', resa:380, gruppo:'forno', tempoAtt:15, tempoTot:40,
   interoDefault:true,
   conserva:['10 giorni in scatola di latta','—'],
-  nota:'Circa 380 g di crackers. Non hanno bisogno del freezer: in una scatola chiusa restano croccanti.',
+  nota:'Circa {resa} di crackers. Non hanno bisogno del freezer: in una scatola chiusa restano croccanti.',
   proc:['Impasta farina, semi, olio, acqua e sale (anche a mano: 3 minuti).',
         'Stendi sottile, 2 mm, direttamente su carta forno. Taglia a rettangoli con la rotella, bucherella con una forchetta, rosmarino e sale sopra.',
         'Forno 180 °C per 18-20 minuti, finché non sono dorati. Freddi diventano croccanti.'],
@@ -1074,8 +1114,8 @@ const BASI = [
 
 { id:'falafel', nome:'Impasto falafel', resa:600, pezzi:12, gruppo:'freddo', tempoAtt:15, tempoTot:75,
   conserva:['3 giorni (da crudo)','—'],
-  nota:'Ceci ammollati e crudi, mai cotti: con quelli cotti l\'impasto non lega e si disfa in forno. 12 pezzi da 50 g; si infornano al momento, non la domenica.',
-  proc:['Frulla a impulsi fino a granuloso, non a crema.','Riposo in frigo 1 ora.','Forma 12 palline da 50 g.',
+  nota:'Ceci ammollati e crudi, mai cotti: con quelli cotti l\'impasto non lega e si disfa in forno. {pezzi:pezzo|pezzi} da 50 g; si infornano al momento, non la domenica.',
+  proc:['Frulla a impulsi fino a granuloso, non a crema.','Riposo in frigo 1 ora.','Forma {pezzi:pallina|palline} da 50 g.',
         'Al momento: forno 200 °C per 20 minuti, girati a metà, spennellati d\'olio.'],
   timer:[['Riposo in frigo',60],['Forno 200 °C',20]],
   ing:[['Ceci secchi',150],['Cipolle dorate',50],['Aglio',8],['Prezzemolo fresco',20],
@@ -1126,13 +1166,13 @@ const PASTI = [
 { id:'col-focaccina-uovo', nome:'Focaccina con uovo sodo', tipo:'colazione', nuovo:true,
   tempo:3, difficolta:'facile',
   desc:'La colazione salata, semplice come chiedevi: una focaccina e un uovo.',
-  ing:[{b:'focaccine',q:54},{n:'Uova',q:1},{n:'Sale',q:0,qb:true}],
+  ing:[{b:'focaccine',q:58},{n:'Uova',q:1},{n:'Sale',q:0,qb:true}],
   proc:'Focaccina 3 minuti in forno o tostapane. Le uova sode si fanno la domenica: 6 in un colpo, 9 minuti dall\'acqua che bolle, poi acqua fredda; 5 giorni in frigo col guscio.',
   nota:'Vale anche con la focaccina calda e l\'uovo tagliato dentro, a panino.' },
 
 { id:'col-focaccina-tacchino', nome:'Focaccina con fesa di tacchino', tipo:'colazione', nuovo:true,
   tempo:3, difficolta:'facile',
-  ing:[{b:'focaccine',q:54},{n:'Fesa di tacchino affettata',q:40}],
+  ing:[{b:'focaccine',q:58},{n:'Fesa di tacchino affettata',q:40}],
   proc:'Focaccina calda tagliata a metà, la fesa dentro. Da mangiare anche per strada.' },
 
 { id:'col-pane-ricotta', nome:'Pane ai semi con ricotta e miele', tipo:'colazione', nuovo:true,
@@ -1437,7 +1477,7 @@ const PASTI = [
        {n:'Latte di cocco light',q:40},{n:'Yogurt greco 0%',q:40},
        {n:'Garam masala',q:3},{n:'Cumino',q:2},{n:'Zenzero fresco',q:5},{n:'Aglio',q:5},
        {n:'Olio EVO',q:3},{n:'Pane integrale',q:15}],
-  proc:'Gli spinaci vanno cotti 15 minuti in pochissima acqua e frullati: 400 g freschi diventano una crema verde densa. Intanto rosola il pollo a cubi, mettilo da parte. Nella stessa pentola: spezie, soffritto, ceci, latte di cocco, 10 minuti. Unisci la crema di spinaci e il pollo, altri 5 minuti. Yogurt fuori dal fuoco. Pane per raccogliere, al posto del riso.' },
+  proc:'Gli spinaci vanno cotti 15 minuti in pochissima acqua e frullati: diventano una crema verde densa. Intanto rosola il pollo a cubi, mettilo da parte. Nella stessa pentola: spezie, soffritto, ceci, latte di cocco, 10 minuti. Unisci la crema di spinaci e il pollo, altri 5 minuti. Yogurt fuori dal fuoco. Pane per raccogliere, al posto del riso.' },
 
 { id:'cen-thai', nome:'Curry thai rosso di gamberi', tipo:'cena',
   tempo:15, difficolta:'media',
@@ -1454,7 +1494,7 @@ const PASTI = [
 { id:'ex-focaccina', nome:'Modulo +150 · una focaccina', tipo:'extra', nuovo:true,
   tempo:3, difficolta:'facile',
   desc:'Da aggiungere quando una zuppa da pranzo fa da cena, o nelle settimane senza nessuna eccezione.',
-  ing:[{b:'focaccine',q:54}] },
+  ing:[{b:'focaccine',q:58}] },
 
 { id:'ex-pane', nome:'Modulo +150 · pane ai semi', tipo:'extra', nuovo:true,
   tempo:2, difficolta:'facile',
@@ -1711,6 +1751,40 @@ function formatta(nome, q, ING){
   }
   if (r >= 1000) return (r/1000).toFixed(r % 1000 === 0 ? 0 : 1).replace('.', ',') + ' kg';
   return String(r).replace('.', ',') + ' g';
+}
+
+/* --- testi delle basi riscalati sulla dose -----------------------------------
+   Nei testi delle basi (proc, nota) i numeri che dipendono dalla dose non si
+   scrivono a mano ma come segnaposto, così una dose ridotta non dice
+   "dividi in 5 porzioni" quando ne stai facendo 2:
+     {porz}             numero di porzioni che escono dalla dose che prepari
+     {porz:sing|plur}   idem, con la parola accordata ("1 porzione", "5 porzioni")
+     {pezzi} / {pezzi:sing|plur}   stessa cosa per i pezzi (muffin, focaccine…)
+     {resa}             peso totale prodotto ("380 g", "1,6 kg")
+     {g:N}              N grammi della ricetta intera, riscalati
+     {n:N}              N oggetti contabili della ricetta intera, riscalati (min 1)
+     {ridotta:testo}    compare solo se prepari meno di una dose intera
+     {multipla:testo}   compare solo se prepari più di una dose intera
+   f = grammi prodotti / resa della ricetta (1 = intera, 2 = doppia, 0,4 = 40%).
+   Usata dall'app (vista Basi) e da genera-doc.js (sempre con f = 1). */
+function contaScalata(N, f){ return Math.max(1, Math.round(N * f)); }
+function testoBase(s, b, f){
+  if (!s) return s;
+  if (f == null || !isFinite(f) || f <= 0) f = 1;
+  const parola = (n, forme) => {
+    if (!forme) return String(n);
+    const [sing, plur] = forme.split('|');
+    return n + ' ' + (n === 1 ? sing : (plur || sing));
+  };
+  return s
+    .replace(/\{ridotta:([^}]*)\}/g,  (_, t) => f < 0.95 ? t : '')
+    .replace(/\{multipla:([^}]*)\}/g, (_, t) => f > 1.05 ? t : '')
+    .replace(/\{porz(?::([^}]*))?\}/g,  (_, forme) => parola(contaScalata(b.porz  || 1, f), forme))
+    .replace(/\{pezzi(?::([^}]*))?\}/g, (_, forme) => parola(contaScalata(b.pezzi || 1, f), forme))
+    .replace(/\{resa\}/g,               () => formatta('', b.resa * f, {}))
+    .replace(/\{g:(\d+(?:\.\d+)?)\}/g,  (_, N) => formatta('', +N * f, {}))
+    .replace(/\{n:(\d+)\}/g,            (_, N) => String(contaScalata(+N, f)))
+    .replace(/[ \t]{2,}/g, ' ').trim();
 }
 
 /* ==========================================================================
@@ -1991,6 +2065,14 @@ function nomeIng(i){
   if (i.soloLui) s += '<em>solo lui</em>';
   return s;
 }
+// un ingrediente del pasto moltiplicato per n porzioni, con la stessa regola
+// di calcola(): le finiture soloLei/soloLui valgono per metà delle porzioni
+// (una a testa in ogni coppia), tutto il resto per tutte
+function scalaIng(i, n){
+  const molt = (i.soloLei || i.soloLui) ? Math.round(n / 2) : n;
+  return Object.assign({}, i, {q: (i.q || 0) * molt});
+}
+const etichettaPorz = n => n === 1 ? '1 porzione' : n + ' porzioni';
 // solo id ancora esistenti nel catalogo corrente (pasti rimossi/rinominati non contano)
 const nPorzioni = () => Object.entries(stato.sel).reduce((a,[id,n]) => a + (PASTO_BY_ID[id] ? (n||0) : 0), 0);
 const nPasti    = () => Object.entries(stato.sel).filter(([id,n]) => PASTO_BY_ID[id] && (n||0) > 0).length;
@@ -2034,9 +2116,12 @@ function schedaPasto(p){
       <button data-step="${p.id}|1" aria-label="Aggiungi una porzione">+</button>
     </div>`;
 
+  // le grammature seguono le porzioni impostate col + e −: con 2 porzioni
+  // vedi le quantità per 2; senza porzioni scelte, quelle per 1
+  const nMostra = n > 0 ? n : 1;
   const righe = (p.ing||[]).map(i => `<div class="riga">
       <span class="ing">${nomeIng(i)}</span>
-      <span class="q${(i.q||i.qb)?'':' zero'}">${fmtQ(i)}</span>
+      <span class="q${(i.q||i.qb)?'':' zero'}">${fmtQ(scalaIng(i, nMostra))}</span>
     </div>`).join('');
 
   const vincolo = p.vincolo ? `<div class="vincolo">
@@ -2097,12 +2182,13 @@ function schedaPasto(p){
     <div class="p-corpo">
       ${p.desc ? `<p class="p-desc">${esc(p.desc)}</p>` : ''}
       ${righe ? `<div class="gram">
-        <div class="intest"><span></span><span>Porzione</span></div>
+        <div class="intest"><span>Quantità per ${etichettaPorz(nMostra)}</span><span></span></div>
         ${righe}</div>` : ''}
       ${p.proc ? `<div class="proc">${esc(p.proc)}</div>` : ''}
       ${vincolo}${nota}${notaMia}
       ${modificaForm}
       <div class="riga-btn">
+        <button class="btn" data-cucina="${p.id}">CUCINA ORA</button>
         <button class="btn ghost" data-cucinato="${p.id}">L'HO CUCINATO</button>
         ${p.mia
           ? `<button class="btn ghost" data-elimina-ricetta="${p.id}">ELIMINA</button>`
@@ -2316,7 +2402,7 @@ function schedaBase(b){
   const salta = v.modo === 'salta';
   const f = salta ? 0 : v.produci / b.resa;
   const scarso = v.serve > b.resa;
-  const porzText = b.porz ? ` · ~${Math.ceil(v.produci/(b.resa/b.porz))} porzioni` : '';
+  const porzText = b.porz ? ` · ${testoBase('{porz:porzione|porzioni}', b, f)}` : '';
   const segControl = `<div class="seg" style="margin-top:11px;max-width:300px">
       <button data-modo="${b.id}|esatto" aria-pressed="${v.modo==='esatto'}">Quantità esatta</button>
       <button data-modo="${b.id}|intero" aria-pressed="${v.modo==='intero'}">${v.ricette>1?v.ricette+' ricette':'Ricetta intera'}</button>
@@ -2341,7 +2427,7 @@ function schedaBase(b){
       <div style="flex:1;min-width:0">
         <div class="eyebrow">${b.ordine} · ${b.tempoTot} min</div>
         <div class="card-t" style="margin-top:4px">${esc(b.nome)}</div>
-        <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ~${Math.ceil(v.produci/(b.resa/b.pezzi))} pezzi` : ''}${porzText}</div>
+        <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ${testoBase('{pezzi:pezzo|pezzi}', b, f)}` : ''}${porzText}</div>
       </div>
     </div>
     ${segControl}
@@ -2356,7 +2442,7 @@ function schedaBase(b){
           <span class="ing">${nome}</span><span class="q">${testo}</span></div>`;
       }).join('')}
     </div>
-    ${b.proc ? `<ol class="passi">${b.proc.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : ''}
+    ${b.proc ? `<ol class="passi">${b.proc.map(p => `<li>${esc(testoBase(p, b, f))}</li>`).join('')}</ol>` : ''}
     ${(b.timer||[]).map(([nome,min], i) => {
       const chiave = b.id + '|' + i;
       const att = timersAttivi[chiave];
@@ -2366,7 +2452,7 @@ function schedaBase(b){
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
       <span class="timer-testo">${testo}</span></button>`;
     }).join('')}
-    ${b.nota ? `<div class="nota">${esc(b.nota)}</div>` : ''}
+    ${b.nota ? `<div class="nota">${esc(testoBase(b.nota, b, f))}</div>` : ''}
     <div class="qta-base" style="margin-top:11px">Frigo ${b.conserva[0]} · Freezer ${b.conserva[1]}</div>
     <div class="riga-btn"><button class="btn ghost" data-base-fatta="${b.id}">HO PREPARATO QUESTA BASE</button></div>
   </div>`;
@@ -2635,11 +2721,132 @@ function verdetto(p){
 }
 
 /* ==========================================================================
+   VISTA · CUCINA ORA (schermo intero)
+   Si apre da una scheda pasto. Ha un suo contatore di porzioni, separato da
+   quello della lista: cambiarlo qui non tocca la settimana pianificata.
+   Stato solo locale (non sincronizzato): è la ricetta che hai davanti adesso.
+   ========================================================================== */
+let cucina = null;            // {id, n, fatti:Set di indici ingrediente spuntati}
+let wakeLock = null;
+async function tieniSchermoAcceso(on){
+  try {
+    if (on && !wakeLock && 'wakeLock' in navigator){
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } else if (!on && wakeLock){
+      await wakeLock.release(); wakeLock = null;
+    }
+  } catch(e){ /* non supportato o negato: pazienza, lo schermo si spegnerà da solo */ }
+}
+// la procedura è un testo unico: a schermo intero si legge meglio a passi,
+// uno per frase
+function dividiPassi(proc){
+  if (!proc) return [];
+  return String(proc).replace(/([.!?])\s+(?=[A-ZÀ-ÖØ-Ý0-9])/g, '$1\u0001')
+    .split('\u0001').map(x => x.trim()).filter(Boolean);
+}
+function apriCucina(id){
+  if (!PASTO_BY_ID[id]) return;
+  const nSel = stato.sel[id] || 0;
+  cucina = {id, n: nSel > 0 ? nSel : 2, fatti: new Set()};
+  try { history.pushState({dcCucina:true}, ''); } catch(e){}
+  renderCucina();
+  tieniSchermoAcceso(true);
+}
+function chiudiCucinaSubito(){
+  cucina = null;
+  renderCucina();
+  tieniSchermoAcceso(false);
+}
+function chiudiCucina(){
+  // se l'apertura ha aggiunto una voce alla cronologia, la togliamo: così il
+  // tasto "indietro" del telefono e la X fanno la stessa cosa
+  if (history.state && history.state.dcCucina) history.back();
+  else chiudiCucinaSubito();
+}
+window.addEventListener('popstate', () => { if (cucina) chiudiCucinaSubito(); });
+document.addEventListener('visibilitychange', () => {
+  if (cucina && document.visibilityState === 'visible') tieniSchermoAcceso(true);
+});
+function renderCucina(){
+  const box = $('#cucina');
+  if (!box) return;
+  if (!cucina){
+    box.classList.remove('on'); box.innerHTML = '';
+    document.body.classList.remove('bloccato');
+    return;
+  }
+  const p = PASTO_BY_ID[cucina.id];
+  if (!p){ chiudiCucinaSubito(); return; }
+  const n = cucina.n;
+  const scroll = box.querySelector('.c-corpo') ? box.querySelector('.c-corpo').scrollTop : 0;
+
+  const righe = (p.ing||[]).map((i, k) => {
+    const fatto = cucina.fatti.has(k);
+    return `<button type="button" class="c-riga${fatto?' fatto':''}" data-cspunta="${k}" aria-pressed="${fatto}">
+        <span class="c-check" aria-hidden="true"></span>
+        <span class="ing">${nomeIng(i)}</span>
+        <span class="q">${fmtQ(scalaIng(i, n))}</span>
+      </button>`;
+  }).join('');
+  const passi = dividiPassi(p.proc);
+  const vincolo = p.vincolo ? `<div class="vincolo">
+      <span class="eyebrow" style="color:var(--harissa)">Il vincolo · lei</span>
+      <p>${esc(p.vincolo.lei)}</p>
+      <span class="eyebrow" style="color:var(--harissa)">Lui</span>
+      <p>${esc(p.vincolo.lui)}</p>
+    </div>` : '';
+  const haFinitureDivise = (p.ing||[]).some(i => i.soloLei || i.soloLui);
+
+  box.innerHTML = `<div class="c-pannello" role="dialog" aria-modal="true" aria-labelledby="c-titolo">
+    <div class="c-top">
+      <button type="button" class="c-chiudi" data-cchiudi aria-label="Chiudi">×</button>
+      <div class="c-titolo" id="c-titolo">${esc(p.nome)}</div>
+    </div>
+    <div class="c-corpo">
+      <div class="c-porz">
+        <div>
+          <div class="eyebrow">Quante porzioni cucini adesso</div>
+          <div class="c-porz-sub">Non cambia la lista della settimana</div>
+        </div>
+        <div class="step on c-step">
+          <button type="button" data-cstep="-1" aria-label="Una porzione in meno">−</button>
+          <span>${n}</span>
+          <button type="button" data-cstep="1" aria-label="Una porzione in più">+</button>
+        </div>
+      </div>
+      <div class="c-meta">
+        ${pillValori(p)}<span class="c-porz-sub" style="align-self:center">a porzione</span>
+        ${p.tempo ? `<span class="tag tempo">${p.tempo} min</span>` : ''}
+        ${p.difficolta ? `<span class="tag diff-${p.difficolta}">${esc(p.difficolta)}</span>` : ''}
+      </div>
+      ${righe ? `<h3 class="c-h">Ingredienti · ${etichettaPorz(n)}</h3>
+      <div class="c-ing">${righe}</div>
+      <p class="c-hint">Tocca un ingrediente quando l'hai preso o pesato.${haFinitureDivise ? ' Le voci "solo lei" e "solo lui" sono già contate una a testa per ogni coppia di porzioni.' : ''}</p>` : ''}
+      ${passi.length ? `<h3 class="c-h">Come si fa</h3>
+      <ol class="c-passi">${passi.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
+      ${vincolo}
+      ${p.nota ? `<div class="nota">${esc(p.nota)}</div>` : ''}
+      ${p.notaMia ? `<div class="nota">📌 ${esc(p.notaMia)}</div>` : ''}
+      <div class="riga-btn" style="margin-top:22px">
+        <button type="button" class="btn" data-cucinato-chiudi="${p.id}">L'HO CUCINATO</button>
+        <button type="button" class="btn ghost" data-cchiudi>CHIUDI</button>
+      </div>
+    </div>
+  </div>`;
+  box.classList.add('on');
+  document.body.classList.add('bloccato');
+  const corpo = box.querySelector('.c-corpo');
+  if (corpo) corpo.scrollTop = scroll;
+}
+
+/* ==========================================================================
    ORCHESTRAZIONE
    ========================================================================== */
 function renderTutto(){
   ricalcola();
   renderCatalogo(); renderLista(); renderSpesa(); renderBasi(); renderPeso(); renderScorte(); renderWishlist();
+  renderCucina();
   const n = nPorzioni();
   $('#b-lista').textContent = n ? String(n) : '';
 }
@@ -2656,6 +2863,20 @@ document.addEventListener('click', e => {
   const nav = t.closest('nav button');        if (nav){ vaiA(nav.dataset.v); return; }
   const vai = t.closest('[data-vai]');        if (vai){ vaiA(vai.dataset.vai); return; }
   if (t.closest('#tema-switch')){ impostaTema(temaCorrente() === 'chiaro' ? 'scuro' : 'chiaro'); return; }
+
+  // --- vista Cucina ora
+  const apriC = t.closest('[data-cucina]');
+  if (apriC){ apriCucina(apriC.dataset.cucina); return; }
+  if (cucina){
+    if (t.id === 'cucina' || t.closest('[data-cchiudi]')){ chiudiCucina(); return; }
+    const cs = t.closest('[data-cstep]');
+    if (cs){ cucina.n = Math.max(1, Math.min(20, cucina.n + (+cs.dataset.cstep))); renderCucina(); return; }
+    const sp = t.closest('[data-cspunta]');
+    if (sp){ const k = +sp.dataset.cspunta;
+      cucina.fatti.has(k) ? cucina.fatti.delete(k) : cucina.fatti.add(k); renderCucina(); return; }
+    const fatto = t.closest('[data-cucinato-chiudi]');
+    if (fatto){ const id = fatto.dataset.cucinatoChiudi; chiudiCucina(); segnaCucinato(id); return; }
+  }
 
   const step = t.closest('[data-step]');
   if (step){
@@ -2962,6 +3183,7 @@ document.addEventListener('change', e => {
 
 $('#cerca').addEventListener('input', () => renderCatalogo());
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && cucina){ chiudiCucina(); return; }
   if (e.key === 'Enter' && e.target.id === 'extra-n'){ e.preventDefault(); $('#extra-add').click(); }
 });
 

@@ -10,106 +10,61 @@ Ordine di esecuzione consigliato: forno per primo (pane, focaccine, muffin, le c
 
 ---
 
-## 1 · Soffritto lungo frullato
-**Resa: ~1650 g** · Tempo attivo: 20 min · Tempo totale: 95 min
+## 1 · Pane integrale ai semi
+**Resa: ~800 g** · Tempo attivo: 15 min · Tempo totale: 200 min
 
 | Ingrediente | Quantità |
 |---|---|
-| Cipolle dorate | 1,3 kg |
-| Carote | 700 g |
-| Sedano | 350 g |
-| Peperoni rossi | 575 g |
-| Aglio | 22 g |
-| Olio EVO | 45 g |
-| Pomodori pelati | 600 g |
-| Concentrato di pomodoro | 30 g |
-| Sale | 13 g |
+| Farina integrale | 450 g |
+| Farina 0 | 50 g |
+| Semi misti | 60 g |
+| Acqua | 350 g |
+| Lievito di birra secco | 5 g |
+| Sale | 9 g |
+| Miele | 5 g |
 
 **Procedura**
-1. Trita tutto grossolanamente col robot da cucina, a impulsi, non a purea.
-2. Pentola larga, olio, tutte le verdure: coperchio, fuoco basso, 45 minuti. Mescola ogni 15. Devono collassare, non rosolare.
-3. Scoperchia, unisci pelati e concentrato. Altri 45 minuti a fuoco basso, scoperto: è qui che perde acqua.
-4. Frulla a immersione fino a crema perfettamente liscia.
-5. Dividi subito: quello che serve alla settimana in frigo, il resto in freezer in porzioni da 250 g.
+1. Impastatrice: farine, semi, lievito, miele, acqua tiepida, 3 minuti; poi il sale, 8 minuti a velocità media.
+2. Lievitazione coperta 90 minuti.
+3. Forma la pagnotta su carta forno, incidi la superficie, altri 40 minuti coperta.
+4. Forno 220 °C per 15 minuti, poi 200 °C per altri 25. Fredda completamente prima di tagliarla.
 
-> Dose dimezzata rispetto al vecchio piano: ora è una base tra le altre, non il centro di tutto. Frulla finché non è perfettamente liscia: è questo passaggio che la rende compatibile con il vincolo di lui.
+> La ricetta intera è una pagnotta da 800 g. Tagliala a fette da 40-50 g e congelale: si tostano da congelate. Vale anche come "modulo +150" (50 g) nelle sere in cui la cena è una zuppa.
 
-Conservazione: frigo 5 giorni · freezer 3 mesi.
+Conservazione: frigo 3 giorni · freezer 2 mesi (a fette).
 
 ---
 
-## 2 · Ceci cotti
-**Resa: ~1130 g** · Tempo attivo: 5 min · Tempo totale: 40 min
+## 2 · Focaccine integrali
+**Resa: ~464 g** (8 pezzi) · Tempo attivo: 20 min · Tempo totale: 175 min
 
 | Ingrediente | Quantità |
 |---|---|
-| Ceci secchi | 450 g |
-| Bicarbonato | 3 g |
-| Alloro | 10 pz |
-| Sale | 8 g |
-
-**Procedura**
-1. Ammollo 12 ore con il bicarbonato.
-2. Scola. Pentola a pressione 40 minuti con l'alloro.
-3. Sala a fine cottura. Tieni un po' di acqua di cottura se fai l'hummus.
-
-> Se quella settimana fai anche i falafel, ammolla insieme anche i loro 150 g di ceci: quelli restano crudi.
-
-Conservazione: frigo 4 giorni · freezer 3 mesi.
-
----
-
-## 3 · Fagioli neri cotti
-**Resa: ~1000 g** · Tempo attivo: 5 min · Tempo totale: 35 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Fagioli neri secchi | 400 g |
-| Alloro | 10 pz |
-| Sale | 7 g |
-
-**Procedura**
-1. Ammollo 12 ore.
-2. Pentola a pressione 35 minuti.
-3. Sala a fine cottura.
-
-Conservazione: frigo 4 giorni · freezer 3 mesi.
-
----
-
-## 4 · Fagioli borlotti cotti
-**Resa: ~750 g** · Tempo attivo: 5 min · Tempo totale: 30 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Fagioli borlotti secchi | 300 g |
-| Alloro | 10 pz |
+| Farina integrale | 200 g |
+| Farina 0 | 90 g |
+| Acqua | 215 g |
+| Lievito di birra secco | 4 g |
+| Olio EVO | 15 g |
 | Sale | 5 g |
+| Zucchero | 4 g |
+| Rosmarino | 1 pz |
 
 **Procedura**
-1. Ammollo 12 ore.
-2. Pentola a pressione 30 minuti.
-3. Sala a fine cottura.
+1. Controlla il lievito: deve essere lievito di birra secco (bustina "lievito di birra secco attivo"), non il lievito istantaneo per pizze e torte salate, che è chimico e con la lievitazione lunga non fa niente.
+2. Sciogli lievito e zucchero in un terzo dell'acqua, tiepida e non calda (al polso deve sembrare appena tiepida, sui 35 °C: sopra i 45 °C il lievito muore). Dopo 10 minuti deve aver fatto schiuma in superficie. Se non la fa, il lievito è da buttare: inutile andare avanti.
+3. Impastatrice: farine, acqua col lievito e il resto dell'acqua, 4 minuti a velocità bassa; poi olio e sale, altri 6 minuti a velocità media. L'impasto resta morbido e un po' appiccicoso: con la farina integrale è giusto così, non aggiungere farina.
+4. Lievitazione coperta in un posto tiepido (il forno spento con la sola luce accesa è perfetto) finché non raddoppia davvero di volume: 1 ora e mezza, anche 2 se la casa è fresca. Conta il volume, non l'orologio.
+5. Dividi in 8 pezzi da ~65 g di impasto, arrotondali a pallina e appiattiscili appena, a dischi spessi 2 cm: più sottili diventano biscotti. Su carta forno, coperti, altri 40-45 minuti, finché non si gonfiano di nuovo.
+6. Fossette con i polpastrelli, rosmarino e un pizzico di sale sopra. Forno già caldo a 200 °C, 14-16 minuti, finché non sono dorate anche sotto. Appena sfornate coprile con un canovaccio mentre si raffreddano: restano morbide.
+7. Fredde, in freezer a coppie: 3 minuti in forno o tostapane la mattina.
 
-Conservazione: frigo 4 giorni · freezer 3 mesi.
+> La colazione salata della settimana: pochi minuti di lavoro e tanta attesa, quindi l'impasto parte per primo la domenica. Se escono basse e dure, quasi sempre è uno di tre motivi: lievito sbagliato o morto (la prova della schiuma lo dice subito), lievitazione troppo corta in una casa fresca, dischi troppo sottili. Resa da cotte stimata (~58 g a focaccina): se pesandole ti viene diversa, va corretta.
+
+Conservazione: frigo 3 giorni · freezer 2 mesi.
 
 ---
 
-## 5 · Lenticchie verdi cotte
-**Resa: ~500 g** · Tempo attivo: 3 min · Tempo totale: 25 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Lenticchie verdi secche | 200 g |
-
-**Procedura**
-1. 25 minuti in acqua non salata, scolate.
-
-Conservazione: frigo 4 giorni · freezer 3 mesi.
-
----
-
-## 6 · Pulled chicken
+## 3 · Pulled chicken
 **Resa: ~890 g** · Tempo attivo: 10 min · Tempo totale: 130 min
 
 | Ingrediente | Quantità |
@@ -133,58 +88,7 @@ Conservazione: frigo 3 giorni · freezer 2 mesi.
 
 ---
 
-## 7 · Focaccine integrali
-**Resa: ~432 g** (8 pezzi) · Tempo attivo: 20 min · Tempo totale: 130 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Farina integrale | 230 g |
-| Farina 0 | 60 g |
-| Acqua | 190 g |
-| Lievito di birra secco | 3 g |
-| Olio EVO | 15 g |
-| Sale | 5 g |
-| Zucchero | 3 g |
-| Rosmarino | 1 pz |
-
-**Procedura**
-1. Impastatrice: farine, lievito, zucchero, acqua tiepida, 3 minuti; poi olio e sale, altri 5 minuti a velocità media.
-2. Lievitazione coperta 60-90 minuti, finché non raddoppia.
-3. Dividi in 8 pezzi da ~55 g, schiacciali a dischi da 1 cm su carta forno, rosmarino e un pizzico di sale sopra. Altri 20 minuti coperti.
-4. Forno 220 °C, 12-14 minuti. Fredde, in freezer a coppie: 3 minuti in forno o tostapane la mattina.
-
-> La colazione salata della settimana. Con l'impastatrice sono 8 minuti di lavoro e un'ora e mezza di attesa: fai partire l'impasto per primo la domenica e informale tra una cosa e l'altra.
-
-Conservazione: frigo 3 giorni · freezer 2 mesi.
-
----
-
-## 8 · Pane integrale ai semi
-**Resa: ~800 g** · Tempo attivo: 15 min · Tempo totale: 200 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Farina integrale | 450 g |
-| Farina 0 | 50 g |
-| Semi misti | 60 g |
-| Acqua | 350 g |
-| Lievito di birra secco | 5 g |
-| Sale | 9 g |
-| Miele | 5 g |
-
-**Procedura**
-1. Impastatrice: farine, semi, lievito, miele, acqua tiepida, 3 minuti; poi il sale, 8 minuti a velocità media.
-2. Lievitazione coperta 90 minuti.
-3. Forma la pagnotta su carta forno, incidi la superficie, altri 40 minuti coperta.
-4. Forno 220 °C per 15 minuti, poi 200 °C per altri 25. Fredda completamente prima di tagliarla.
-
-> Una pagnotta da 800 g. Tagliala a fette da 40-50 g e congelale: si tostano da congelate. Vale anche come "modulo +150" (50 g) nelle sere in cui la cena è una zuppa.
-
-Conservazione: frigo 3 giorni · freezer 2 mesi (a fette).
-
----
-
-## 9 · Crema di zucca arrosto e ceci
+## 4 · Crema di zucca arrosto e ceci
 **Resa: ~2000 g** (5 porzioni) · Tempo attivo: 15 min · Tempo totale: 55 min
 
 | Ingrediente | Quantità |
@@ -202,7 +106,7 @@ Conservazione: frigo 3 giorni · freezer 2 mesi (a fette).
 1. Zucca a cubi da 3 cm e cipolla a spicchi in una teglia con olio, rosmarino, aglio in camicia e sale: forno 200 °C per 35-40 minuti, finché i bordi non caramellano.
 2. Butta il rosmarino, sbuccia l'aglio, versa tutto in pentola con i ceci e il brodo caldo.
 3. Frulla a immersione fino a crema liscia. Se è troppo densa, altro brodo; se troppo liquida, 5 minuti sul fuoco scoperta.
-4. Dividi in 5 porzioni uguali: 2-3 in frigo, il resto in freezer.
+4. Dividi in 5 porzioni uguali: in frigo quelle dei prossimi 3-4 giorni, il resto in freezer.
 
 > 5 porzioni da ~400 g. La zucca arrostita in forno invece che bollita è quello che fa la differenza: caramella e la crema non ha bisogno d'altro.
 
@@ -210,35 +114,7 @@ Conservazione: frigo 4 giorni · freezer 3 mesi.
 
 ---
 
-## 10 · Zuppa di lenticchie e cavolo nero
-**Resa: ~2000 g** (5 porzioni) · Tempo attivo: 15 min · Tempo totale: 40 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Lenticchie verdi cotte (base) | 500 g |
-| Cavolo nero | 300 g |
-| Patate | 250 g |
-| Soffritto lungo frullato (base) | 200 g |
-| Passata di pomodoro | 120 g |
-| Olio EVO | 18 g |
-| Aglio | 5 g |
-| Rosmarino | 1 pz |
-| Brodo (o acqua) | 900 g |
-| Sale | 6 g |
-
-**Procedura**
-1. Soffritto, olio, aglio e rosmarino in pentola, 2 minuti.
-2. Patate a cubetti, passata e brodo: 12 minuti.
-3. Cavolo nero a striscioline (solo la foglia) e lenticchie: altri 15 minuti.
-4. Togli il rosmarino e frulla tutto a immersione, fino a crema. Dividi in 5 porzioni.
-
-> 5 porzioni da ~400 g. Si fa sui fornelli mentre il forno è occupato. Per lui va frullata tutta: il cavolo nero cotto ma a strisce è fuori vincolo.
-
-Conservazione: frigo 4 giorni · freezer 3 mesi.
-
----
-
-## 11 · Crema di cavolfiore e porri
+## 5 · Crema di cavolfiore e porri
 **Resa: ~2000 g** (5 porzioni) · Tempo attivo: 15 min · Tempo totale: 55 min
 
 | Ingrediente | Quantità |
@@ -263,60 +139,36 @@ Conservazione: frigo 4 giorni · freezer 3 mesi.
 
 ---
 
-## 12 · Minestra di orzo, borlotti e verza
-**Resa: ~2400 g** (6 porzioni) · Tempo attivo: 15 min · Tempo totale: 65 min
+## 6 · Plumcake yogurt e pera
+**Resa: ~720 g** (10 pezzi) · Tempo attivo: 12 min · Tempo totale: 55 min
 
 | Ingrediente | Quantità |
 |---|---|
-| Orzo perlato | 200 g |
-| Fagioli borlotti cotti (base) | 600 g |
-| Verza | 500 g |
-| Patate | 200 g |
-| Soffritto lungo frullato (base) | 250 g |
-| Passata di pomodoro | 150 g |
-| Alloro | 10 pz |
-| Rosmarino | 1 pz |
-| Olio EVO | 20 g |
-| Brodo (o acqua) | 1,3 kg |
-| Sale | 8 g |
+| Farina integrale | 150 g |
+| Fiocchi d'avena | 50 g |
+| Yogurt greco 0% | 200 g |
+| Uova | 1 pz |
+| Albumi | 1 pz |
+| Miele | 40 g |
+| Olio EVO | 15 g |
+| Pere | 200 g |
+| Lievito per dolci | 8 g |
+| Cannella | 2 g |
+| Sale | 1 g |
 
 **Procedura**
-1. Soffritto, olio, alloro e rosmarino in pentola, 2 minuti.
-2. Verza a strisce, patate a cubetti, passata, metà dei borlotti e il brodo: 25 minuti.
-3. Togli alloro e rosmarino; frulla tutto liscio.
-4. Rimetti sul fuoco con l'orzo sciacquato e i borlotti rimasti: 25-30 minuti, finché l'orzo non è tenero. Se stringe, altro brodo. Dividi in 6 porzioni.
+1. Sbatti uova, albumi, miele, olio e yogurt.
+2. Unisci farina, avena, lievito, cannella e sale; poi la pera a dadini.
+3. Stampo da plumcake foderato, forno 180 °C per 40 minuti. Stecchino asciutto.
+4. Freddo del tutto, poi 10 fette.
 
-> 6 porzioni da ~400 g. La verza e metà dei borlotti vengono frullati prima di aggiungere l'orzo: la minestra lega, resta rustica e per lui la verdura è passata.
+> 10 fette da ~72 g. Tagliato e congelato a fette, ne esce una alla volta.
 
-Conservazione: frigo 4 giorni · freezer 3 mesi.
+Conservazione: frigo 3 giorni · freezer 2 mesi (a fette).
 
 ---
 
-## 13 · Crema di broccoli e patate
-**Resa: ~2000 g** (5 porzioni) · Tempo attivo: 15 min · Tempo totale: 45 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Broccoli | 800 g |
-| Patate | 400 g |
-| Porri | 200 g |
-| Aglio | 8 g |
-| Olio EVO | 20 g |
-| Brodo (o acqua) | 900 g |
-| Sale | 8 g |
-
-**Procedura**
-1. Broccoli a cimette e porri a rondelle in teglia con olio, aglio e sale: forno 200 °C per 25 minuti.
-2. Intanto le patate a cubi cuociono nel brodo, 15 minuti.
-3. Tutto insieme in pentola, frulla a immersione fino a crema. Dividi in 5 porzioni.
-
-> 5 porzioni da ~400 g. I broccoli in forno bruciano facilmente: 25 minuti, non di più.
-
-Conservazione: frigo 4 giorni · freezer 3 mesi.
-
----
-
-## 14 · Crema di carote arrosto e lenticchie rosse allo zenzero
+## 7 · Crema di carote arrosto e lenticchie rosse allo zenzero
 **Resa: ~2200 g** (5 porzioni) · Tempo attivo: 15 min · Tempo totale: 50 min
 
 | Ingrediente | Quantità |
@@ -344,36 +196,31 @@ Conservazione: frigo 4 giorni · freezer 3 mesi.
 
 ---
 
-## 15 · Muffin avena, ricotta e mela
-**Resa: ~660 g** (12 pezzi) · Tempo attivo: 12 min · Tempo totale: 40 min
+## 8 · Crema di broccoli e patate
+**Resa: ~2000 g** (5 porzioni) · Tempo attivo: 15 min · Tempo totale: 45 min
 
 | Ingrediente | Quantità |
 |---|---|
-| Fiocchi d'avena | 120 g |
-| Farina integrale | 60 g |
-| Ricotta magra | 200 g |
-| Albumi | 1 pz |
-| Uova | 1 pz |
-| Miele | 30 g |
-| Mele | 150 g |
-| Olio EVO | 10 g |
-| Lievito per dolci | 8 g |
-| Cannella | 3 g |
-| Sale | 1 g |
+| Broccoli | 800 g |
+| Patate | 400 g |
+| Porri | 200 g |
+| Aglio | 8 g |
+| Olio EVO | 20 g |
+| Brodo (o acqua) | 900 g |
+| Sale | 8 g |
 
 **Procedura**
-1. Frulla ricotta, albumi, uovo, miele e olio fino a crema liscia.
-2. Unisci avena, farina, lievito, cannella e sale; per ultima la mela a dadini piccoli.
-3. 12 pirottini, forno 180 °C per 22-24 minuti: lo stecchino deve uscire asciutto.
-4. Freddi su una griglia, poi in freezer.
+1. Broccoli a cimette e porri a rondelle in teglia con olio, aglio e sale: forno 200 °C per 25 minuti.
+2. Intanto le patate a cubi cuociono nel brodo, 15 minuti.
+3. Tutto insieme in pentola, frulla a immersione fino a crema. Dividi in 5 porzioni.
 
-> 12 muffin da ~55 g. La mela cuoce dentro, quindi va bene anche per lui. Congelali a coppie: 20 secondi di microonde o 5 minuti in forno la mattina.
+> 5 porzioni da ~400 g. I broccoli in forno bruciano facilmente: 25 minuti, non di più.
 
-Conservazione: frigo 3 giorni · freezer 2 mesi.
+Conservazione: frigo 4 giorni · freezer 3 mesi.
 
 ---
 
-## 16 · Muffin zucca e cannella
+## 9 · Muffin zucca e cannella
 **Resa: ~680 g** (12 pezzi) · Tempo attivo: 12 min · Tempo totale: 45 min
 
 | Ingrediente | Quantità |
@@ -403,36 +250,36 @@ Conservazione: frigo 3 giorni · freezer 2 mesi.
 
 ---
 
-## 17 · Plumcake yogurt e pera
-**Resa: ~720 g** (10 pezzi) · Tempo attivo: 12 min · Tempo totale: 55 min
+## 10 · Muffin avena, ricotta e mela
+**Resa: ~660 g** (12 pezzi) · Tempo attivo: 12 min · Tempo totale: 40 min
 
 | Ingrediente | Quantità |
 |---|---|
-| Farina integrale | 150 g |
-| Fiocchi d'avena | 50 g |
-| Yogurt greco 0% | 200 g |
-| Uova | 1 pz |
+| Fiocchi d'avena | 120 g |
+| Farina integrale | 60 g |
+| Ricotta magra | 200 g |
 | Albumi | 1 pz |
-| Miele | 40 g |
-| Olio EVO | 15 g |
-| Pere | 200 g |
+| Uova | 1 pz |
+| Miele | 30 g |
+| Mele | 150 g |
+| Olio EVO | 10 g |
 | Lievito per dolci | 8 g |
-| Cannella | 2 g |
+| Cannella | 3 g |
 | Sale | 1 g |
 
 **Procedura**
-1. Sbatti uova, albumi, miele, olio e yogurt.
-2. Unisci farina, avena, lievito, cannella e sale; poi la pera a dadini.
-3. Stampo da plumcake foderato, forno 180 °C per 40 minuti. Stecchino asciutto.
-4. Freddo del tutto, poi 10 fette.
+1. Frulla ricotta, albumi, uovo, miele e olio fino a crema liscia.
+2. Unisci avena, farina, lievito, cannella e sale; per ultima la mela a dadini piccoli.
+3. 12 pirottini, forno 180 °C per 22-24 minuti: lo stecchino deve uscire asciutto.
+4. Freddi su una griglia, poi in freezer.
 
-> 10 fette da ~72 g. Tagliato e congelato a fette, ne esce una alla volta.
+> 12 muffin da ~55 g. La mela cuoce dentro, quindi va bene anche per lui. Congelali a coppie: 20 secondi di microonde o 5 minuti in forno la mattina.
 
-Conservazione: frigo 3 giorni · freezer 2 mesi (a fette).
+Conservazione: frigo 3 giorni · freezer 2 mesi.
 
 ---
 
-## 18 · Crackers integrali ai semi
+## 11 · Crackers integrali ai semi
 **Resa: ~380 g** · Tempo attivo: 15 min · Tempo totale: 40 min
 
 | Ingrediente | Quantità |
@@ -455,7 +302,230 @@ Conservazione: frigo 10 giorni in scatola di latta · freezer —.
 
 ---
 
-## 19 · Chili di ceci e fagioli neri
+## 12 · Ragù al coltello
+**Resa: ~800 g** · Tempo attivo: 15 min · Tempo totale: 100 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Manzo magro per ragù | 500 g |
+| Soffritto lungo frullato (base) | 400 g |
+| Passata di pomodoro | 200 g |
+| Vino rosso | 150 g |
+| Olio EVO | 10 g |
+| Alloro | 10 pz |
+| Sale | 6 g |
+
+**Procedura**
+1. Rosola la carne a fuoco alto e in due riprese: tutta insieme bolle invece di rosolare.
+2. Sfuma col vino rosso.
+3. Unisci soffritto, passata e alloro. Fuoco bassissimo, 90 minuti.
+
+Conservazione: frigo 3 giorni · freezer 3 mesi.
+
+---
+
+## 13 · Soffritto lungo frullato
+**Resa: ~1650 g** · Tempo attivo: 20 min · Tempo totale: 95 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Cipolle dorate | 1,3 kg |
+| Carote | 700 g |
+| Sedano | 350 g |
+| Peperoni rossi | 575 g |
+| Aglio | 22 g |
+| Olio EVO | 45 g |
+| Pomodori pelati | 600 g |
+| Concentrato di pomodoro | 30 g |
+| Sale | 13 g |
+
+**Procedura**
+1. Trita tutto grossolanamente col robot da cucina, a impulsi, non a purea.
+2. Pentola larga, olio, tutte le verdure: coperchio, fuoco basso, 45 minuti. Mescola ogni 15. Devono collassare, non rosolare.
+3. Scoperchia, unisci pelati e concentrato. Altri 45 minuti a fuoco basso, scoperto: è qui che perde acqua.
+4. Frulla a immersione fino a crema perfettamente liscia.
+5. Dividi subito: quello che serve alla settimana in frigo, il resto in freezer in porzioni da 250 g.
+
+> Dose dimezzata rispetto al vecchio piano: ora è una base tra le altre, non il centro di tutto. Frulla finché non è perfettamente liscia: è questo passaggio che la rende compatibile con il vincolo di lui.
+
+Conservazione: frigo 5 giorni · freezer 3 mesi.
+
+---
+
+## 14 · Minestra di orzo, borlotti e verza
+**Resa: ~2400 g** (6 porzioni) · Tempo attivo: 15 min · Tempo totale: 65 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Orzo perlato | 200 g |
+| Fagioli borlotti cotti (base) | 600 g |
+| Verza | 500 g |
+| Patate | 200 g |
+| Soffritto lungo frullato (base) | 250 g |
+| Passata di pomodoro | 150 g |
+| Alloro | 10 pz |
+| Rosmarino | 1 pz |
+| Olio EVO | 20 g |
+| Brodo (o acqua) | 1,3 kg |
+| Sale | 8 g |
+
+**Procedura**
+1. Soffritto, olio, alloro e rosmarino in pentola, 2 minuti.
+2. Verza a strisce, patate a cubetti, passata, metà dei borlotti e il brodo: 25 minuti.
+3. Togli alloro e rosmarino; frulla tutto liscio.
+4. Rimetti sul fuoco con l'orzo sciacquato e i borlotti rimasti: 25-30 minuti, finché l'orzo non è tenero. Se stringe, altro brodo. Dividi in 6 porzioni.
+
+> 6 porzioni da ~400 g. La verza e metà dei borlotti vengono frullati prima di aggiungere l'orzo: la minestra lega, resta rustica e per lui la verdura è passata.
+
+Conservazione: frigo 4 giorni · freezer 3 mesi.
+
+---
+
+## 15 · Cipolle caramellate frullate
+**Resa: ~250 g** · Tempo attivo: 8 min · Tempo totale: 45 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Cipolle dorate | 500 g |
+| Olio EVO | 15 g |
+| Aceto di riso | 20 g |
+| Acqua | 100 g |
+| Sale | 4 g |
+
+**Procedura**
+1. Fuoco basso 40 minuti finché non sono brune e dolci.
+2. Frulla.
+
+> Il condimento di hot dog e burger, e il sostituto strutturale di qualsiasi cipolla cruda per lui.
+
+Conservazione: frigo 5 giorni · freezer 2 mesi.
+
+---
+
+## 16 · Ceci cotti
+**Resa: ~1130 g** · Tempo attivo: 5 min · Tempo totale: 40 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Ceci secchi | 450 g |
+| Bicarbonato | 3 g |
+| Alloro | 10 pz |
+| Sale | 8 g |
+
+**Procedura**
+1. Ammollo 12 ore con il bicarbonato.
+2. Scola. Pentola a pressione 40 minuti con l'alloro.
+3. Sala a fine cottura. Tieni un po' di acqua di cottura se fai l'hummus.
+
+> Se quella settimana fai anche i falafel, ammolla insieme anche i ceci secchi del loro impasto (la quantità è nella scheda dei falafel): quelli restano crudi.
+
+Conservazione: frigo 4 giorni · freezer 3 mesi.
+
+---
+
+## 17 · Zuppa di lenticchie e cavolo nero
+**Resa: ~2000 g** (5 porzioni) · Tempo attivo: 15 min · Tempo totale: 40 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Lenticchie verdi cotte (base) | 500 g |
+| Cavolo nero | 300 g |
+| Patate | 250 g |
+| Soffritto lungo frullato (base) | 200 g |
+| Passata di pomodoro | 120 g |
+| Olio EVO | 18 g |
+| Aglio | 5 g |
+| Rosmarino | 1 pz |
+| Brodo (o acqua) | 900 g |
+| Sale | 6 g |
+
+**Procedura**
+1. Soffritto, olio, aglio e rosmarino in pentola, 2 minuti.
+2. Patate a cubetti, passata e brodo: 12 minuti.
+3. Cavolo nero a striscioline (solo la foglia) e lenticchie: altri 15 minuti.
+4. Togli il rosmarino e frulla tutto a immersione, fino a crema. Dividi in 5 porzioni.
+
+> 5 porzioni da ~400 g. Si fa sui fornelli mentre il forno è occupato. Per lui va frullata tutta: il cavolo nero cotto ma a strisce è fuori vincolo.
+
+Conservazione: frigo 4 giorni · freezer 3 mesi.
+
+---
+
+## 18 · Fagioli neri cotti
+**Resa: ~1000 g** · Tempo attivo: 5 min · Tempo totale: 35 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Fagioli neri secchi | 400 g |
+| Alloro | 10 pz |
+| Sale | 7 g |
+
+**Procedura**
+1. Ammollo 12 ore.
+2. Pentola a pressione 35 minuti.
+3. Sala a fine cottura.
+
+Conservazione: frigo 4 giorni · freezer 3 mesi.
+
+---
+
+## 19 · Vellutata di lenticchie rosse e zucca
+**Resa: ~1500 g** · Tempo attivo: 10 min · Tempo totale: 35 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Lenticchie rosse secche | 200 g |
+| Zucca | 1,1 kg |
+| Cipolle dorate | 100 g |
+| Zenzero fresco | 15 g |
+| Brodo (o acqua) | 1,2 kg |
+| Olio EVO | 15 g |
+| Curcuma | 3 g |
+| Sale | 9 g |
+
+**Procedura**
+1. Tutto in pentola, 30 minuti.
+2. Frulla.
+
+> Serve solo al curry di sovracosce: l'app la scala al bisogno. A dose piena avanza molto, ed è un ottimo contorno caldo.
+
+Conservazione: frigo 4 giorni · freezer 3 mesi.
+
+---
+
+## 20 · Fagioli borlotti cotti
+**Resa: ~750 g** · Tempo attivo: 5 min · Tempo totale: 30 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Fagioli borlotti secchi | 300 g |
+| Alloro | 10 pz |
+| Sale | 5 g |
+
+**Procedura**
+1. Ammollo 12 ore.
+2. Pentola a pressione 30 minuti.
+3. Sala a fine cottura.
+
+Conservazione: frigo 4 giorni · freezer 3 mesi.
+
+---
+
+## 21 · Lenticchie verdi cotte
+**Resa: ~500 g** · Tempo attivo: 3 min · Tempo totale: 25 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Lenticchie verdi secche | 200 g |
+
+**Procedura**
+1. 25 minuti in acqua non salata, scolate.
+
+Conservazione: frigo 4 giorni · freezer 3 mesi.
+
+---
+
+## 22 · Chili di ceci e fagioli neri
 **Resa: ~1400 g** · Tempo attivo: 8 min · Tempo totale: 20 min
 
 | Ingrediente | Quantità |
@@ -481,116 +551,26 @@ Conservazione: frigo 4 giorni · freezer 3 mesi.
 
 ---
 
-## 20 · Ragù al coltello
-**Resa: ~800 g** · Tempo attivo: 15 min · Tempo totale: 100 min
+## 23 · Riso basmati cotto
+**Resa: ~690 g** · Tempo attivo: 3 min · Tempo totale: 15 min
 
 | Ingrediente | Quantità |
 |---|---|
-| Manzo magro per ragù | 500 g |
-| Soffritto lungo frullato (base) | 400 g |
-| Passata di pomodoro | 200 g |
-| Vino rosso | 150 g |
-| Olio EVO | 10 g |
-| Alloro | 10 pz |
-| Sale | 6 g |
-
-**Procedura**
-1. Rosola la carne a fuoco alto e in due riprese: tutta insieme bolle invece di rosolare.
-2. Sfuma col vino rosso.
-3. Unisci soffritto, passata e alloro. Fuoco bassissimo, 90 minuti.
-
-Conservazione: frigo 3 giorni · freezer 3 mesi.
-
----
-
-## 21 · Vellutata di lenticchie rosse e zucca
-**Resa: ~1500 g** · Tempo attivo: 10 min · Tempo totale: 35 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Lenticchie rosse secche | 200 g |
-| Zucca | 1,1 kg |
-| Cipolle dorate | 100 g |
-| Zenzero fresco | 15 g |
-| Brodo (o acqua) | 1,2 kg |
-| Olio EVO | 15 g |
-| Curcuma | 3 g |
-| Sale | 9 g |
-
-**Procedura**
-1. Tutto in pentola, 30 minuti.
-2. Frulla.
-
-> Serve solo al curry di sovracosce: l'app la scala al bisogno. A dose piena avanza molto, ed è un ottimo contorno caldo.
-
-Conservazione: frigo 4 giorni · freezer 3 mesi.
-
----
-
-## 22 · Salsa yogurt, aglio e menta secca
-**Resa: ~560 g** · Tempo attivo: 5 min · Tempo totale: 5 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Yogurt greco 0% | 500 g |
-| Aglio | 6 g |
-| Menta secca | 4 g |
-| Limoni | 1 frutto (~15 g di succo) |
-| Sale | 4 g |
-| Olio EVO | 10 g |
-
-**Procedura**
-1. Mescola tutto. Riposo in frigo almeno un'ora.
-
-> Menta secca, non fresca: essiccata ha un profilo più resinoso ed è quella giusta per questa salsa. Risolve anche il vincolo di lui.
-
-Conservazione: frigo 4 giorni · freezer —.
-
----
-
-## 23 · Cipolle caramellate frullate
-**Resa: ~250 g** · Tempo attivo: 8 min · Tempo totale: 45 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Cipolle dorate | 500 g |
-| Olio EVO | 15 g |
-| Aceto di riso | 20 g |
-| Acqua | 100 g |
+| Riso basmati | 250 g |
+| Acqua | 440 g |
 | Sale | 4 g |
 
 **Procedura**
-1. Fuoco basso 40 minuti finché non sono brune e dolci.
-2. Frulla.
+1. Riso, acqua e sale, coperchio, 12 minuti.
+2. Raffredda in fretta allargandolo su un vassoio.
 
-> Il condimento di hot dog e burger, e il sostituto strutturale di qualsiasi cipolla cruda per lui.
+> Il riso cotto si conserva massimo 3 giorni e va raffreddato in fretta, allargato su un vassoio. Se ti serve più avanti nella settimana, cuocilo fresco: sono 15 minuti.
 
-Conservazione: frigo 5 giorni · freezer 2 mesi.
-
----
-
-## 24 · Hummus
-**Resa: ~420 g** · Tempo attivo: 10 min · Tempo totale: 10 min
-
-| Ingrediente | Quantità |
-|---|---|
-| Ceci cotti (base) | 250 g |
-| Tahina | 50 g |
-| Limoni | 1 frutto (~35 g di succo) |
-| Acqua | 60 g |
-| Olio EVO | 15 g |
-| Aglio | 5 g |
-| Cumino | 3 g |
-| Sale | 4 g |
-
-**Procedura**
-1. Frulla tutto a lungo, aggiungendo l'acqua di cottura dei ceci poco per volta.
-
-Conservazione: frigo 5 giorni · freezer 2 mesi.
+Conservazione: frigo 3 giorni · freezer —.
 
 ---
 
-## 25 · Impasto falafel
+## 24 · Impasto falafel
 **Resa: ~600 g** (12 pezzi) · Tempo attivo: 15 min · Tempo totale: 75 min
 
 | Ingrediente | Quantità |
@@ -618,22 +598,45 @@ Conservazione: frigo 3 giorni (da crudo) · freezer —.
 
 ---
 
-## 26 · Riso basmati cotto
-**Resa: ~690 g** · Tempo attivo: 3 min · Tempo totale: 15 min
+## 25 · Hummus
+**Resa: ~420 g** · Tempo attivo: 10 min · Tempo totale: 10 min
 
 | Ingrediente | Quantità |
 |---|---|
-| Riso basmati | 250 g |
-| Acqua | 440 g |
+| Ceci cotti (base) | 250 g |
+| Tahina | 50 g |
+| Limoni | 1 frutto (~35 g di succo) |
+| Acqua | 60 g |
+| Olio EVO | 15 g |
+| Aglio | 5 g |
+| Cumino | 3 g |
 | Sale | 4 g |
 
 **Procedura**
-1. Riso, acqua e sale, coperchio, 12 minuti.
-2. Raffredda in fretta allargandolo su un vassoio.
+1. Frulla tutto a lungo, aggiungendo l'acqua di cottura dei ceci poco per volta.
 
-> Il riso cotto si conserva massimo 3 giorni e va raffreddato in fretta, allargato su un vassoio. Se ti serve più avanti nella settimana, cuocilo fresco: sono 15 minuti.
+Conservazione: frigo 5 giorni · freezer 2 mesi.
 
-Conservazione: frigo 3 giorni · freezer —.
+---
+
+## 26 · Salsa yogurt, aglio e menta secca
+**Resa: ~560 g** · Tempo attivo: 5 min · Tempo totale: 5 min
+
+| Ingrediente | Quantità |
+|---|---|
+| Yogurt greco 0% | 500 g |
+| Aglio | 6 g |
+| Menta secca | 4 g |
+| Limoni | 1 frutto (~15 g di succo) |
+| Sale | 4 g |
+| Olio EVO | 10 g |
+
+**Procedura**
+1. Mescola tutto. Riposo in frigo almeno un'ora.
+
+> Menta secca, non fresca: essiccata ha un profilo più resinoso ed è quella giusta per questa salsa. Risolve anche il vincolo di lui.
+
+Conservazione: frigo 4 giorni · freezer —.
 
 ---
 
@@ -658,15 +661,15 @@ Calcolato da `node genera-doc.js` con la stessa `calcola()` dell'app — non ric
 
 | Base | Serve | Produce (a dose piena) | Margine |
 |---|---|---|---|
-| Soffritto lungo frullato | 900 g | 900 g | 0 g |
-| Ceci cotti | 560 g | 560 g | 0 g |
-| Lenticchie verdi cotte | 500 g | 500 g | 0 g |
+| Focaccine integrali | 350 g | 465 g | +115 g |
 | Pulled chicken | 300 g | 300 g | 0 g |
-| Focaccine integrali | 325 g | 430 g | +110 g |
 | Crema di zucca arrosto e ceci | 800 g | 2 kg | +1,2 kg |
-| Zuppa di lenticchie e cavolo nero | 1,2 kg | 2 kg | +800 g |
 | Muffin avena, ricotta e mela | 440 g | 660 g | +220 g |
+| Soffritto lungo frullato | 900 g | 900 g | 0 g |
 | Cipolle caramellate frullate | 80 g | 250 g | +170 g |
+| Ceci cotti | 560 g | 560 g | 0 g |
+| Zuppa di lenticchie e cavolo nero | 1,2 kg | 2 kg | +800 g |
+| Lenticchie verdi cotte | 500 g | 500 g | 0 g |
 | Riso basmati cotto | 280 g | 280 g | 0 g |
 
 # PARTE 4 — Lista della spesa (settimana tipo, ricetta intera dove previsto)
@@ -698,13 +701,13 @@ Calcolato da `node genera-doc.js` con la stessa `calcola()` dell'app — non ric
 | Ingrediente | Quantità |
 |---|---|
 | Ceci secchi | 225 g |
-| Farina 0 | 60 g |
-| Farina integrale | 290 g |
+| Farina 0 | 90 g |
+| Farina integrale | 260 g |
 | Farina per polenta integrale | 70 g |
 | Fiocchi d'avena | 120 g |
 | Lenticchie rosse secche | 60 g |
 | Lenticchie verdi secche | 200 g |
-| Lievito di birra secco | 3 g |
+| Lievito di birra secco | 4 g |
 | Lievito per dolci | 8 g |
 | Orzo perlato | 100 g |
 | Pangrattato | 16 g |
@@ -765,7 +768,7 @@ Calcolato da `node genera-doc.js` con la stessa `calcola()` dell'app — non ric
 | Semi di zucca | 16 g |
 | Senape | 16 g |
 | Vino bianco | 40 g |
-| Zucchero | 3 g |
+| Zucchero | 4 g |
 
 **Spezie ed erbe secche**
 

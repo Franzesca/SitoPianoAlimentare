@@ -126,3 +126,37 @@ function formatta(nome, q, ING){
   if (r >= 1000) return (r/1000).toFixed(r % 1000 === 0 ? 0 : 1).replace('.', ',') + ' kg';
   return String(r).replace('.', ',') + ' g';
 }
+
+/* --- testi delle basi riscalati sulla dose -----------------------------------
+   Nei testi delle basi (proc, nota) i numeri che dipendono dalla dose non si
+   scrivono a mano ma come segnaposto, così una dose ridotta non dice
+   "dividi in 5 porzioni" quando ne stai facendo 2:
+     {porz}             numero di porzioni che escono dalla dose che prepari
+     {porz:sing|plur}   idem, con la parola accordata ("1 porzione", "5 porzioni")
+     {pezzi} / {pezzi:sing|plur}   stessa cosa per i pezzi (muffin, focaccine…)
+     {resa}             peso totale prodotto ("380 g", "1,6 kg")
+     {g:N}              N grammi della ricetta intera, riscalati
+     {n:N}              N oggetti contabili della ricetta intera, riscalati (min 1)
+     {ridotta:testo}    compare solo se prepari meno di una dose intera
+     {multipla:testo}   compare solo se prepari più di una dose intera
+   f = grammi prodotti / resa della ricetta (1 = intera, 2 = doppia, 0,4 = 40%).
+   Usata dall'app (vista Basi) e da genera-doc.js (sempre con f = 1). */
+function contaScalata(N, f){ return Math.max(1, Math.round(N * f)); }
+function testoBase(s, b, f){
+  if (!s) return s;
+  if (f == null || !isFinite(f) || f <= 0) f = 1;
+  const parola = (n, forme) => {
+    if (!forme) return String(n);
+    const [sing, plur] = forme.split('|');
+    return n + ' ' + (n === 1 ? sing : (plur || sing));
+  };
+  return s
+    .replace(/\{ridotta:([^}]*)\}/g,  (_, t) => f < 0.95 ? t : '')
+    .replace(/\{multipla:([^}]*)\}/g, (_, t) => f > 1.05 ? t : '')
+    .replace(/\{porz(?::([^}]*))?\}/g,  (_, forme) => parola(contaScalata(b.porz  || 1, f), forme))
+    .replace(/\{pezzi(?::([^}]*))?\}/g, (_, forme) => parola(contaScalata(b.pezzi || 1, f), forme))
+    .replace(/\{resa\}/g,               () => formatta('', b.resa * f, {}))
+    .replace(/\{g:(\d+(?:\.\d+)?)\}/g,  (_, N) => formatta('', +N * f, {}))
+    .replace(/\{n:(\d+)\}/g,            (_, N) => String(contaScalata(+N, f)))
+    .replace(/[ \t]{2,}/g, ' ').trim();
+}

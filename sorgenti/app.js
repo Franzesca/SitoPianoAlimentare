@@ -276,6 +276,14 @@ function nomeIng(i){
   if (i.soloLui) s += '<em>solo lui</em>';
   return s;
 }
+// un ingrediente del pasto moltiplicato per n porzioni, con la stessa regola
+// di calcola(): le finiture soloLei/soloLui valgono per metà delle porzioni
+// (una a testa in ogni coppia), tutto il resto per tutte
+function scalaIng(i, n){
+  const molt = (i.soloLei || i.soloLui) ? Math.round(n / 2) : n;
+  return Object.assign({}, i, {q: (i.q || 0) * molt});
+}
+const etichettaPorz = n => n === 1 ? '1 porzione' : n + ' porzioni';
 // solo id ancora esistenti nel catalogo corrente (pasti rimossi/rinominati non contano)
 const nPorzioni = () => Object.entries(stato.sel).reduce((a,[id,n]) => a + (PASTO_BY_ID[id] ? (n||0) : 0), 0);
 const nPasti    = () => Object.entries(stato.sel).filter(([id,n]) => PASTO_BY_ID[id] && (n||0) > 0).length;
@@ -319,9 +327,12 @@ function schedaPasto(p){
       <button data-step="${p.id}|1" aria-label="Aggiungi una porzione">+</button>
     </div>`;
 
+  // le grammature seguono le porzioni impostate col + e −: con 2 porzioni
+  // vedi le quantità per 2; senza porzioni scelte, quelle per 1
+  const nMostra = n > 0 ? n : 1;
   const righe = (p.ing||[]).map(i => `<div class="riga">
       <span class="ing">${nomeIng(i)}</span>
-      <span class="q${(i.q||i.qb)?'':' zero'}">${fmtQ(i)}</span>
+      <span class="q${(i.q||i.qb)?'':' zero'}">${fmtQ(scalaIng(i, nMostra))}</span>
     </div>`).join('');
 
   const vincolo = p.vincolo ? `<div class="vincolo">
@@ -382,12 +393,13 @@ function schedaPasto(p){
     <div class="p-corpo">
       ${p.desc ? `<p class="p-desc">${esc(p.desc)}</p>` : ''}
       ${righe ? `<div class="gram">
-        <div class="intest"><span></span><span>Porzione</span></div>
+        <div class="intest"><span>Quantità per ${etichettaPorz(nMostra)}</span><span></span></div>
         ${righe}</div>` : ''}
       ${p.proc ? `<div class="proc">${esc(p.proc)}</div>` : ''}
       ${vincolo}${nota}${notaMia}
       ${modificaForm}
       <div class="riga-btn">
+        <button class="btn" data-cucina="${p.id}">CUCINA ORA</button>
         <button class="btn ghost" data-cucinato="${p.id}">L'HO CUCINATO</button>
         ${p.mia
           ? `<button class="btn ghost" data-elimina-ricetta="${p.id}">ELIMINA</button>`
@@ -601,7 +613,7 @@ function schedaBase(b){
   const salta = v.modo === 'salta';
   const f = salta ? 0 : v.produci / b.resa;
   const scarso = v.serve > b.resa;
-  const porzText = b.porz ? ` · ~${Math.ceil(v.produci/(b.resa/b.porz))} porzioni` : '';
+  const porzText = b.porz ? ` · ${testoBase('{porz:porzione|porzioni}', b, f)}` : '';
   const segControl = `<div class="seg" style="margin-top:11px;max-width:300px">
       <button data-modo="${b.id}|esatto" aria-pressed="${v.modo==='esatto'}">Quantità esatta</button>
       <button data-modo="${b.id}|intero" aria-pressed="${v.modo==='intero'}">${v.ricette>1?v.ricette+' ricette':'Ricetta intera'}</button>
@@ -626,7 +638,7 @@ function schedaBase(b){
       <div style="flex:1;min-width:0">
         <div class="eyebrow">${b.ordine} · ${b.tempoTot} min</div>
         <div class="card-t" style="margin-top:4px">${esc(b.nome)}</div>
-        <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ~${Math.ceil(v.produci/(b.resa/b.pezzi))} pezzi` : ''}${porzText}</div>
+        <div class="qta-base">ti servono <b>${fmtG(v.serve)}</b> · produci <b>${fmtG(v.produci)}</b>${v.avanzo > 5 ? ` · avanzano ${fmtG(v.avanzo)}` : ''}${b.pezzi ? ` · ${testoBase('{pezzi:pezzo|pezzi}', b, f)}` : ''}${porzText}</div>
       </div>
     </div>
     ${segControl}
@@ -641,7 +653,7 @@ function schedaBase(b){
           <span class="ing">${nome}</span><span class="q">${testo}</span></div>`;
       }).join('')}
     </div>
-    ${b.proc ? `<ol class="passi">${b.proc.map(p => `<li>${esc(p)}</li>`).join('')}</ol>` : ''}
+    ${b.proc ? `<ol class="passi">${b.proc.map(p => `<li>${esc(testoBase(p, b, f))}</li>`).join('')}</ol>` : ''}
     ${(b.timer||[]).map(([nome,min], i) => {
       const chiave = b.id + '|' + i;
       const att = timersAttivi[chiave];
@@ -651,7 +663,7 @@ function schedaBase(b){
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
       <span class="timer-testo">${testo}</span></button>`;
     }).join('')}
-    ${b.nota ? `<div class="nota">${esc(b.nota)}</div>` : ''}
+    ${b.nota ? `<div class="nota">${esc(testoBase(b.nota, b, f))}</div>` : ''}
     <div class="qta-base" style="margin-top:11px">Frigo ${b.conserva[0]} · Freezer ${b.conserva[1]}</div>
     <div class="riga-btn"><button class="btn ghost" data-base-fatta="${b.id}">HO PREPARATO QUESTA BASE</button></div>
   </div>`;
@@ -920,11 +932,132 @@ function verdetto(p){
 }
 
 /* ==========================================================================
+   VISTA · CUCINA ORA (schermo intero)
+   Si apre da una scheda pasto. Ha un suo contatore di porzioni, separato da
+   quello della lista: cambiarlo qui non tocca la settimana pianificata.
+   Stato solo locale (non sincronizzato): è la ricetta che hai davanti adesso.
+   ========================================================================== */
+let cucina = null;            // {id, n, fatti:Set di indici ingrediente spuntati}
+let wakeLock = null;
+async function tieniSchermoAcceso(on){
+  try {
+    if (on && !wakeLock && 'wakeLock' in navigator){
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } else if (!on && wakeLock){
+      await wakeLock.release(); wakeLock = null;
+    }
+  } catch(e){ /* non supportato o negato: pazienza, lo schermo si spegnerà da solo */ }
+}
+// la procedura è un testo unico: a schermo intero si legge meglio a passi,
+// uno per frase
+function dividiPassi(proc){
+  if (!proc) return [];
+  return String(proc).replace(/([.!?])\s+(?=[A-ZÀ-ÖØ-Ý0-9])/g, '$1\u0001')
+    .split('\u0001').map(x => x.trim()).filter(Boolean);
+}
+function apriCucina(id){
+  if (!PASTO_BY_ID[id]) return;
+  const nSel = stato.sel[id] || 0;
+  cucina = {id, n: nSel > 0 ? nSel : 2, fatti: new Set()};
+  try { history.pushState({dcCucina:true}, ''); } catch(e){}
+  renderCucina();
+  tieniSchermoAcceso(true);
+}
+function chiudiCucinaSubito(){
+  cucina = null;
+  renderCucina();
+  tieniSchermoAcceso(false);
+}
+function chiudiCucina(){
+  // se l'apertura ha aggiunto una voce alla cronologia, la togliamo: così il
+  // tasto "indietro" del telefono e la X fanno la stessa cosa
+  if (history.state && history.state.dcCucina) history.back();
+  else chiudiCucinaSubito();
+}
+window.addEventListener('popstate', () => { if (cucina) chiudiCucinaSubito(); });
+document.addEventListener('visibilitychange', () => {
+  if (cucina && document.visibilityState === 'visible') tieniSchermoAcceso(true);
+});
+function renderCucina(){
+  const box = $('#cucina');
+  if (!box) return;
+  if (!cucina){
+    box.classList.remove('on'); box.innerHTML = '';
+    document.body.classList.remove('bloccato');
+    return;
+  }
+  const p = PASTO_BY_ID[cucina.id];
+  if (!p){ chiudiCucinaSubito(); return; }
+  const n = cucina.n;
+  const scroll = box.querySelector('.c-corpo') ? box.querySelector('.c-corpo').scrollTop : 0;
+
+  const righe = (p.ing||[]).map((i, k) => {
+    const fatto = cucina.fatti.has(k);
+    return `<button type="button" class="c-riga${fatto?' fatto':''}" data-cspunta="${k}" aria-pressed="${fatto}">
+        <span class="c-check" aria-hidden="true"></span>
+        <span class="ing">${nomeIng(i)}</span>
+        <span class="q">${fmtQ(scalaIng(i, n))}</span>
+      </button>`;
+  }).join('');
+  const passi = dividiPassi(p.proc);
+  const vincolo = p.vincolo ? `<div class="vincolo">
+      <span class="eyebrow" style="color:var(--harissa)">Il vincolo · lei</span>
+      <p>${esc(p.vincolo.lei)}</p>
+      <span class="eyebrow" style="color:var(--harissa)">Lui</span>
+      <p>${esc(p.vincolo.lui)}</p>
+    </div>` : '';
+  const haFinitureDivise = (p.ing||[]).some(i => i.soloLei || i.soloLui);
+
+  box.innerHTML = `<div class="c-pannello" role="dialog" aria-modal="true" aria-labelledby="c-titolo">
+    <div class="c-top">
+      <button type="button" class="c-chiudi" data-cchiudi aria-label="Chiudi">×</button>
+      <div class="c-titolo" id="c-titolo">${esc(p.nome)}</div>
+    </div>
+    <div class="c-corpo">
+      <div class="c-porz">
+        <div>
+          <div class="eyebrow">Quante porzioni cucini adesso</div>
+          <div class="c-porz-sub">Non cambia la lista della settimana</div>
+        </div>
+        <div class="step on c-step">
+          <button type="button" data-cstep="-1" aria-label="Una porzione in meno">−</button>
+          <span>${n}</span>
+          <button type="button" data-cstep="1" aria-label="Una porzione in più">+</button>
+        </div>
+      </div>
+      <div class="c-meta">
+        ${pillValori(p)}<span class="c-porz-sub" style="align-self:center">a porzione</span>
+        ${p.tempo ? `<span class="tag tempo">${p.tempo} min</span>` : ''}
+        ${p.difficolta ? `<span class="tag diff-${p.difficolta}">${esc(p.difficolta)}</span>` : ''}
+      </div>
+      ${righe ? `<h3 class="c-h">Ingredienti · ${etichettaPorz(n)}</h3>
+      <div class="c-ing">${righe}</div>
+      <p class="c-hint">Tocca un ingrediente quando l'hai preso o pesato.${haFinitureDivise ? ' Le voci "solo lei" e "solo lui" sono già contate una a testa per ogni coppia di porzioni.' : ''}</p>` : ''}
+      ${passi.length ? `<h3 class="c-h">Come si fa</h3>
+      <ol class="c-passi">${passi.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : ''}
+      ${vincolo}
+      ${p.nota ? `<div class="nota">${esc(p.nota)}</div>` : ''}
+      ${p.notaMia ? `<div class="nota">📌 ${esc(p.notaMia)}</div>` : ''}
+      <div class="riga-btn" style="margin-top:22px">
+        <button type="button" class="btn" data-cucinato-chiudi="${p.id}">L'HO CUCINATO</button>
+        <button type="button" class="btn ghost" data-cchiudi>CHIUDI</button>
+      </div>
+    </div>
+  </div>`;
+  box.classList.add('on');
+  document.body.classList.add('bloccato');
+  const corpo = box.querySelector('.c-corpo');
+  if (corpo) corpo.scrollTop = scroll;
+}
+
+/* ==========================================================================
    ORCHESTRAZIONE
    ========================================================================== */
 function renderTutto(){
   ricalcola();
   renderCatalogo(); renderLista(); renderSpesa(); renderBasi(); renderPeso(); renderScorte(); renderWishlist();
+  renderCucina();
   const n = nPorzioni();
   $('#b-lista').textContent = n ? String(n) : '';
 }
@@ -941,6 +1074,20 @@ document.addEventListener('click', e => {
   const nav = t.closest('nav button');        if (nav){ vaiA(nav.dataset.v); return; }
   const vai = t.closest('[data-vai]');        if (vai){ vaiA(vai.dataset.vai); return; }
   if (t.closest('#tema-switch')){ impostaTema(temaCorrente() === 'chiaro' ? 'scuro' : 'chiaro'); return; }
+
+  // --- vista Cucina ora
+  const apriC = t.closest('[data-cucina]');
+  if (apriC){ apriCucina(apriC.dataset.cucina); return; }
+  if (cucina){
+    if (t.id === 'cucina' || t.closest('[data-cchiudi]')){ chiudiCucina(); return; }
+    const cs = t.closest('[data-cstep]');
+    if (cs){ cucina.n = Math.max(1, Math.min(20, cucina.n + (+cs.dataset.cstep))); renderCucina(); return; }
+    const sp = t.closest('[data-cspunta]');
+    if (sp){ const k = +sp.dataset.cspunta;
+      cucina.fatti.has(k) ? cucina.fatti.delete(k) : cucina.fatti.add(k); renderCucina(); return; }
+    const fatto = t.closest('[data-cucinato-chiudi]');
+    if (fatto){ const id = fatto.dataset.cucinatoChiudi; chiudiCucina(); segnaCucinato(id); return; }
+  }
 
   const step = t.closest('[data-step]');
   if (step){
@@ -1247,6 +1394,7 @@ document.addEventListener('change', e => {
 
 $('#cerca').addEventListener('input', () => renderCatalogo());
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && cucina){ chiudiCucina(); return; }
   if (e.key === 'Enter' && e.target.id === 'extra-n'){ e.preventDefault(); $('#extra-add').click(); }
 });
 

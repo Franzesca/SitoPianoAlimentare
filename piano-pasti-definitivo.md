@@ -55,7 +55,7 @@ Le quantità sono **per persona**, in grammi salvo unità pz: porzione unica, le
 
 | | Porzione |
 |---|---|
-| **Focaccine integrali** (base) | 54 g |
+| **Focaccine integrali** (base) | 58 g |
 | Uova | 1 (55 g) |
 | Sale | q.b. |
 
@@ -70,7 +70,7 @@ Le quantità sono **per persona**, in grammi salvo unità pz: porzione unica, le
 ## Focaccina con fesa di tacchino
 | | Porzione |
 |---|---|
-| **Focaccine integrali** (base) | 54 g |
+| **Focaccine integrali** (base) | 58 g |
 | Fesa di tacchino affettata | 40 g |
 
 **Come si fa.** Focaccina calda tagliata a metà, la fesa dentro. Da mangiare anche per strada.
@@ -829,7 +829,7 @@ Le quantità sono **per persona**, in grammi salvo unità pz: porzione unica, le
 | Olio EVO | 3 g |
 | Pane integrale | 15 g |
 
-**Come si fa.** Gli spinaci vanno cotti 15 minuti in pochissima acqua e frullati: 400 g freschi diventano una crema verde densa. Intanto rosola il pollo a cubi, mettilo da parte. Nella stessa pentola: spezie, soffritto, ceci, latte di cocco, 10 minuti. Unisci la crema di spinaci e il pollo, altri 5 minuti. Yogurt fuori dal fuoco. Pane per raccogliere, al posto del riso.
+**Come si fa.** Gli spinaci vanno cotti 15 minuti in pochissima acqua e frullati: diventano una crema verde densa. Intanto rosola il pollo a cubi, mettilo da parte. Nella stessa pentola: spezie, soffritto, ceci, latte di cocco, 10 minuti. Unisci la crema di spinaci e il pollo, altri 5 minuti. Yogurt fuori dal fuoco. Pane per raccogliere, al posto del riso.
 
 **Valori.** ~**600 kcal · 54 g P**
 
@@ -866,7 +866,7 @@ Le quantità sono **per persona**, in grammi salvo unità pz: porzione unica, le
 
 | | Porzione |
 |---|---|
-| **Focaccine integrali** (base) | 54 g |
+| **Focaccine integrali** (base) | 58 g |
 
 **Valori.** ~**145 kcal · 5 g P**
 

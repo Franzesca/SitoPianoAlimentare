@@ -14,7 +14,7 @@ cipolla rossa), in quello di lui le stesse note da salse cotte o frullate.
 la differenza di consistenza (crudo per lei, cotto/frullato per lui), non più una
 differenza di quantità.
 
-Target: 1.450 kcal / 115 g proteine, uguale per entrambi.
+Target (piano autunno 2026): 1.250 kcal / ≥100 g proteine, uguale per entrambi — vedi `TARGET` in `dati.js`.
 
 ## I file
 
@@ -173,3 +173,43 @@ dati statici solo a runtime in `sorgenti/app.js`:
   lenticchie e polenta): il peso a crudo dei legumi pesa più di quanto sembri a occhio.
   Se aggiungi un pasto nuovo con legumi/cereali/carne in quantità simili, gira lo script
   prima di fidarti del numero.
+
+## Testi delle basi riscalati sulla dose (dal 2026-10-01)
+
+Nei testi di `proc` e `nota` delle basi i numeri che dipendono dalla dose **non si
+scrivono a mano**: si usano segnaposto risolti da `testoBase(testo, base, f)` in
+`motore.js` (f = grammi prodotti / resa). Così con "quantità esatta" per 2 porzioni
+la scheda dice "Dividi in 2 porzioni", non "in 5". `genera-doc.js` li risolve a f = 1.
+
+- `{porz}` / `{porz:porzione|porzioni}` — porzioni che escono (da `porz`)
+- `{pezzi}` / `{pezzi:pezzo|pezzi}` — pezzi che escono (da `pezzi`)
+- `{resa}` — peso totale prodotto · `{g:N}` — N grammi della ricetta intera, riscalati
+- `{n:N}` — N oggetti contabili della ricetta intera, riscalati (minimo 1)
+- `{ridotta:testo}` / `{multipla:testo}` — frase mostrata solo sotto / sopra una dose intera
+
+I pesi *per porzione o per pezzo* ("da ~400 g", "da 50 g") restano fissi: non cambiano
+con la dose. Se aggiungi una base, usa i segnaposto per ogni conteggio nel testo.
+
+## Scheda pasto e "Cucina ora"
+
+- Le grammature nella scheda pasto seguono il contatore `+`/`−` (porzioni in lista):
+  con 2 porzioni mostra le quantità per 2. Senza porzioni scelte, per 1.
+  `scalaIng()` in `app.js` applica la stessa regola di `calcola()` alle finiture
+  `soloLei`/`soloLui` (metà delle porzioni).
+- Il pulsante **CUCINA ORA** apre una vista a schermo intero (`#cucina`,
+  `renderCucina()`) con un contatore di porzioni **proprio**, che non tocca
+  `stato.sel`: default = porzioni in lista, o 2 se il pasto non è in lista.
+  Ingredienti spuntabili mentre li pesi, procedura divisa a passi per frase,
+  schermo tenuto acceso (Wake Lock, dove supportato), chiusura con X, Esc o il
+  tasto indietro del telefono (una voce in `history`). Stato solo locale.
+
+## Focaccine (rifatte il 2026-10-01)
+
+La prima versione usciva bassa e dura (idratazione 65% con 80% di integrale, dischi da
+1 cm, seconda lievitazione di 20 minuti). Ora: 200 g integrale + 90 g farina 0, 74% di
+acqua, 4 g di lievito secco con prova della schiuma, palline schiacciate a 2 cm, seconda
+lievitazione 40-45 minuti, 200 °C. La resa da cotte (464 g, ~58 g a pezzo) è **stimata**:
+se pesandole risulta diversa, correggi `resa` e la `q` dei tre pasti che usano le focaccine.
+
+Nota: `audit-nutrizionale.js` non gira più (si ferma alla riga 80) già da prima di queste
+modifiche — i valori ora sono calcolati direttamente da `ING` in `dati.js`.

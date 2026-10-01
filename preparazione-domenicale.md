@@ -487,7 +487,7 @@ Conservazione: frigo 4 giorni · freezer 3 mesi.
 1. Tutto in pentola, 30 minuti.
 2. Frulla.
 
-> Serve solo al curry di sovracosce: l'app la scala al bisogno. A dose piena avanza molto, ed è un ottimo contorno caldo.
+> Serve solo al curry di sovracosce: l'app la scala al bisogno. A dose piena avanza molto, ed è un ottimo contorno caldo. La resa (1500 g) non è stata misurata: la prima volta pesala. Se viene di più, le kcal per porzione del curry scendono un po' (la stima attuale è prudente).
 
 Conservazione: frigo 4 giorni · freezer 3 mesi.
 
@@ -571,7 +571,7 @@ Conservazione: frigo 3 giorni · freezer —.
 ---
 
 ## 24 · Impasto falafel
-**Resa: ~600 g** (12 pezzi) · Tempo attivo: 15 min · Tempo totale: 75 min
+**Resa: ~450 g** (12 pezzi) · Tempo attivo: 15 min · Tempo totale: 75 min
 
 | Ingrediente | Quantità |
 |---|---|
@@ -589,10 +589,10 @@ Conservazione: frigo 3 giorni · freezer —.
 **Procedura**
 1. Frulla a impulsi fino a granuloso, non a crema.
 2. Riposo in frigo 1 ora.
-3. Forma 12 palline da 50 g.
+3. Forma 12 palline da ~38 g.
 4. Al momento: forno 200 °C per 20 minuti, girati a metà, spennellati d'olio.
 
-> Ceci ammollati e crudi, mai cotti: con quelli cotti l'impasto non lega e si disfa in forno. 12 pezzi da 50 g; si infornano al momento, non la domenica.
+> Ceci ammollati e crudi, mai cotti: con quelli cotti l'impasto non lega e si disfa in forno. 12 pezzi da ~38 g; si infornano al momento, non la domenica. La resa (450 g) è una stima: i ceci secchi ammollati pesano circa il doppio del secco. La prima volta pesa l'impasto e, se viene diverso, dividilo in pezzi da ~38 g lo stesso.
 
 Conservazione: frigo 3 giorni (da crudo) · freezer —.
 
@@ -620,7 +620,7 @@ Conservazione: frigo 5 giorni · freezer 2 mesi.
 ---
 
 ## 26 · Salsa yogurt, aglio e menta secca
-**Resa: ~560 g** · Tempo attivo: 5 min · Tempo totale: 5 min
+**Resa: ~540 g** · Tempo attivo: 5 min · Tempo totale: 5 min
 
 | Ingrediente | Quantità |
 |---|---|
@@ -652,7 +652,7 @@ La selezione che carica il pulsante "CARICA LA SETTIMANA TIPO" nell'app. Lei pra
 | Giovedì | Muffin avena e mela, con skyr | _(fuori)_ | Polpette di tacchino al sugo con purè di patate e zucca |
 | Venerdì | Focaccina con uovo sodo | Zuppa di lenticchie e cavolo nero con tacchino | Teglia di pollo e patate dolci, con crema di broccoli |
 | Sabato | Focaccina con uovo sodo | Zuppa di lenticchie e cavolo nero con tacchino | Harira e tacchino alla piastra |
-| Domenica | Focaccina con uovo sodo | Orzotto alla zucca con straccetti di pollo | Burger di manzo con cipolle caramellate e patate al forno |
+| Domenica | Focaccina con uovo sodo | Orzotto alla zucca con straccetti di pollo | Pollo al limone con purè di cavolfiore e patate |
 
 
 # PARTE 3 — Bilancio delle basi (sulla settimana tipo)
@@ -666,7 +666,6 @@ Calcolato da `node genera-doc.js` con la stessa `calcola()` dell'app — non ric
 | Crema di zucca arrosto e ceci | 800 g | 2 kg | +1,2 kg |
 | Muffin avena, ricotta e mela | 440 g | 660 g | +220 g |
 | Soffritto lungo frullato | 900 g | 900 g | 0 g |
-| Cipolle caramellate frullate | 80 g | 250 g | +170 g |
 | Ceci cotti | 560 g | 560 g | 0 g |
 | Zuppa di lenticchie e cavolo nero | 1,2 kg | 2 kg | +800 g |
 | Lenticchie verdi cotte | 500 g | 500 g | 0 g |
@@ -679,8 +678,7 @@ Calcolato da `node genera-doc.js` con la stessa `calcola()` dell'app — non ric
 | Ingrediente | Quantità |
 |---|---|
 | Macinato di tacchino | 280 g |
-| Manzo magro macinato | 320 g |
-| Petto di pollo | 760 g |
+| Petto di pollo | 1,1 kg |
 | Petto di tacchino | 880 g |
 | Sovracosce di pollo disossate senza pelle | 840 g |
 
@@ -689,12 +687,12 @@ Calcolato da `node genera-doc.js` con la stessa `calcola()` dell'app — non ric
 | Ingrediente | Quantità |
 |---|---|
 | Albumi | 7 pz |
-| Grana grattugiato | 46 g |
-| Latte parzialmente scremato | 140 g |
+| Grana grattugiato | 66 g |
+| Latte parzialmente scremato | 220 g |
 | Ricotta magra | 260 g |
 | Skyr 0% | 960 g |
 | Uova | 7 pz |
-| Yogurt greco 0% | 120 g |
+| Yogurt greco 0% | 60 g |
 
 **Legumi, cereali e farine**
 
@@ -717,28 +715,27 @@ Calcolato da `node genera-doc.js` con la stessa `calcola()` dell'app — non ric
 
 | Ingrediente | Quantità |
 |---|---|
-| Pane integrale | 200 g |
-| Panino piccolo | 2 pz |
+| Pane integrale | 260 g |
 
 **Ortofrutta**
 
 | Ingrediente | Quantità |
 |---|---|
-| Aglio | 61 g |
+| Aglio | 71 g |
 | Broccoli | 400 g |
 | Carote | 380 g |
-| Cavolfiore | 500 g |
+| Cavolfiore | 1 kg |
 | Cavolo nero | 300 g |
-| Cipolle dorate | 1,5 kg |
+| Cipolle dorate | 990 g |
 | Cipollotto | 15 g |
-| Limoni | 2 frutti (~65 g di succo) |
+| Limoni | 3 frutti (~95 g di succo) |
 | Mele | 150 g |
 | Patate | 1,1 kg |
 | Patate dolci | 400 g |
 | Peperoni rossi | 315 g |
 | Piselli surgelati | 160 g |
 | Prezzemolo fresco | 6 g |
-| Rosmarino | 12 pz |
+| Rosmarino | 14 pz |
 | Sedano | 190 g |
 | Zenzero fresco | 8 g |
 | Zucca | 2 kg |
@@ -756,17 +753,16 @@ Calcolato da `node genera-doc.js` con la stessa `calcola()` dell'app — non ric
 
 | Ingrediente | Quantità |
 |---|---|
-| Aceto di riso | 36 g |
+| Aceto di riso | 16 g |
 | Bicarbonato | 1,5 g |
 | Gochujang | 50 g |
 | Miele | 40 g |
 | Olio di sesamo | 6 g |
-| Olio EVO | 180 g |
-| Sale | 41 g |
+| Olio EVO | 175 g |
+| Sale | 37 g |
 | Salsa di soia | 20 g |
 | Semi di sesamo | 6 g |
 | Semi di zucca | 16 g |
-| Senape | 16 g |
 | Vino bianco | 40 g |
 | Zucchero | 4 g |
 
@@ -779,7 +775,7 @@ Calcolato da `node genera-doc.js` con la stessa `calcola()` dell'app — non ric
 | Cannella | 5 g |
 | Cumino | 3,5 g |
 | Curcuma | 4 g |
-| Paprika affumicata | 10,5 g |
+| Paprika affumicata | 8,5 g |
 | Pepe nero | 1 g |
 
 
@@ -787,4 +783,4 @@ Calcolato da `node genera-doc.js` con la stessa `calcola()` dell'app — non ric
 
 ## Totale nutrizionale della settimana tipo
 
-**14.435 kcal · 1182 g proteine** in totale sui giorni con pranzo in piano; media da confrontare con il target di 1250 kcal / 100 g P al giorno nell'app, che conta correttamente i giorni con pranzo fuori.
+**14.435 kcal · 1204 g proteine** in totale sui giorni con pranzo in piano; media da confrontare con il target di 1250 kcal / 100 g P al giorno nell'app, che conta correttamente i giorni con pranzo fuori.

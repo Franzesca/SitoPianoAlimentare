@@ -387,13 +387,13 @@ const BASI = [
 
 { id:'vellutata', nome:'Vellutata di lenticchie rosse e zucca', resa:1500, gruppo:'fornelli', tempoAtt:10, tempoTot:35,
   conserva:['4 giorni','3 mesi'],
-  nota:'Serve solo al curry di sovracosce: l\'app la scala al bisogno. A dose piena avanza molto, ed è un ottimo contorno caldo.',
+  nota:'Serve solo al curry di sovracosce: l\'app la scala al bisogno. A dose piena avanza molto, ed è un ottimo contorno caldo. La resa (1500 g) non è stata misurata: la prima volta pesala. Se viene di più, le kcal per porzione del curry scendono un po\' (la stima attuale è prudente).',
   proc:['Tutto in pentola, 30 minuti.','Frulla.'],
   timer:[['Cottura',30]],
   ing:[['Lenticchie rosse secche',200],['Zucca',1100],['Cipolle dorate',100],['Zenzero fresco',15],
        ['Brodo (o acqua)',1200],['Olio EVO',15],['Curcuma',3],['Sale',9]] },
 
-{ id:'salsayogurt', nome:'Salsa yogurt, aglio e menta secca', resa:560, gruppo:'freddo', tempoAtt:5, tempoTot:5,
+{ id:'salsayogurt', nome:'Salsa yogurt, aglio e menta secca', resa:540, gruppo:'freddo', tempoAtt:5, tempoTot:5,
   conserva:['4 giorni','—'],
   nota:'Menta secca, non fresca: essiccata ha un profilo più resinoso ed è quella giusta per questa salsa. Risolve anche il vincolo di lui.',
   proc:['Mescola tutto. Riposo in frigo almeno un\'ora.'],
@@ -412,10 +412,10 @@ const BASI = [
   ing:[['@ceci',250],['Tahina',50],['Limoni',35],['Acqua',60],['Olio EVO',15],
        ['Aglio',5],['Cumino',3],['Sale',4]] },
 
-{ id:'falafel', nome:'Impasto falafel', resa:600, pezzi:12, gruppo:'freddo', tempoAtt:15, tempoTot:75,
+{ id:'falafel', nome:'Impasto falafel', resa:450, pezzi:12, gruppo:'freddo', tempoAtt:15, tempoTot:75,
   conserva:['3 giorni (da crudo)','—'],
-  nota:'Ceci ammollati e crudi, mai cotti: con quelli cotti l\'impasto non lega e si disfa in forno. {pezzi:pezzo|pezzi} da 50 g; si infornano al momento, non la domenica.',
-  proc:['Frulla a impulsi fino a granuloso, non a crema.','Riposo in frigo 1 ora.','Forma {pezzi:pallina|palline} da 50 g.',
+  nota:'Ceci ammollati e crudi, mai cotti: con quelli cotti l\'impasto non lega e si disfa in forno. {pezzi:pezzo|pezzi} da ~38 g; si infornano al momento, non la domenica. La resa (450 g) è una stima: i ceci secchi ammollati pesano circa il doppio del secco. La prima volta pesa l\'impasto e, se viene diverso, dividilo in pezzi da ~38 g lo stesso.',
+  proc:['Frulla a impulsi fino a granuloso, non a crema.','Riposo in frigo 1 ora.','Forma {pezzi:pallina|palline} da ~38 g.',
         'Al momento: forno 200 °C per 20 minuti, girati a metà, spennellati d\'olio.'],
   timer:[['Riposo in frigo',60],['Forno 200 °C',20]],
   ing:[['Ceci secchi',150],['Cipolle dorate',50],['Aglio',8],['Prezzemolo fresco',20],
@@ -643,7 +643,7 @@ const PASTI = [
 { id:'pra-falafel', nome:'Wrap di falafel', tipo:'pranzo', crudo:true,
   tempo:25, difficolta:'media',
   desc:'I falafel si infornano adesso: domenica hai preparato solo l\'impasto.',
-  ing:[{b:'falafel',q:150},{b:'hummus',q:25},{b:'salsayogurt',q:40},
+  ing:[{b:'falafel',q:112},{b:'hummus',q:25},{b:'salsayogurt',q:40},
        {n:'Tortilla integrale media',q:1},{n:'Limoni',q:5},
        {n:'Pomodoro fresco',q:60},{n:'Cetriolo',q:50},{n:'Menta fresca',q:5}],
   proc:'Falafel in forno 200 °C per 20 minuti, girati a metà, su carta forno e spennellati d\'olio. Tortilla 20 secondi per lato. Hummus, salsa yogurt, i 3 falafel, pomodoro a dadini, cetriolo, menta, limone.',
@@ -871,7 +871,7 @@ const SETTIMANA_TIPO = {
     {g:'Giovedì',   col:'col-muffin-skyr',      pra:null,             cena:'cen-polpette',     praPorz:0},
     {g:'Venerdì',   col:'col-focaccina-uovo',   pra:'zup-lenticchie', cena:'cen-teglia-pollo', praPorz:1},
     {g:'Sabato',    col:'col-focaccina-uovo',   pra:'zup-lenticchie', cena:'zup-harira',       praPorz:2},
-    {g:'Domenica',  col:'col-focaccina-uovo',   pra:'pra-orzotto',    cena:'cen-burger',       praPorz:2},
+    {g:'Domenica',  col:'col-focaccina-uovo',   pra:'pra-orzotto',    cena:'cen-pollo-limone', praPorz:2},
   ],
 };
 // selezione {pastoId: porzioni} ricavata dalla tabella sopra (colazioni e cene ×2)
@@ -916,6 +916,39 @@ function valoriPasto(pasto, chi){
     else { const g = _grammi(i.n, i.q); k += ING[i.n].k * g / 100; p += ING[i.n].p * g / 100; }
   });
   return [Math.round(k / 5) * 5, Math.round(p)];
+}
+// Variante tollerante, per le ricette modificate o create dall'utente: un nome
+// che non è in ING (o una base sconosciuta) non lancia, viene saltato e
+// segnalato in `ignoti`. kcal/proteine risultano parziali, ma l'app non si
+// rompe (valoriPasto, sopra, resta severa: serve ai test sul catalogo).
+function valoriPastoSafe(pasto, chi){
+  let k = 0, p = 0;
+  const ignoti = [];
+  (pasto.ing || []).forEach(i => {
+    if (i.qb || !i.q) return;
+    if (chi === 'lei' && i.soloLui) return;
+    if (chi === 'lui' && i.soloLei) return;
+    if (i.b){
+      if (!BASI.find(x => x.id === i.b)){ if (!ignoti.includes(i.b)) ignoti.push(i.b); return; }
+      const v = valoriBase100(i.b); k += v.k * i.q / 100; p += v.p * i.q / 100;
+    } else {
+      const m = ING[i.n];
+      if (!m){ if (!ignoti.includes(i.n)) ignoti.push(i.n); return; }
+      const g = m.u === 'pz' ? i.q * (m.pz || 0) : i.q;
+      k += m.k * g / 100; p += m.p * g / 100;
+    }
+  });
+  return { val: [Math.round(k / 5) * 5, Math.round(p)], ignoti };
+}
+function ignotiIn(ing){
+  const out = [];
+  (ing || []).forEach(i => {
+    if (i.qb || !i.q) return;
+    const nome = i.b || i.n;
+    const noto = i.b ? BASI.some(x => x.id === i.b) : !!ING[i.n];
+    if (!noto && !out.includes(nome)) out.push(nome);
+  });
+  return out;
 }
 BASI.forEach(b => { const v = valoriBase100(b.id); b.kcal100 = Math.round(v.k); b.p100 = Math.round(v.p * 10) / 10; });
 PASTI.forEach(p => {

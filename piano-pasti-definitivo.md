@@ -492,7 +492,7 @@ Le quantità sono **per persona**, in grammi salvo unità pz: porzione unica, le
 
 | | Porzione |
 |---|---|
-| **Impasto falafel** (base) | 150 g |
+| **Impasto falafel** (base) | 112 g |
 | **Hummus** (base) | 25 g |
 | **Salsa yogurt, aglio e menta secca** (base) | 40 g |
 | Tortilla integrale media | 1 (50 g) |
@@ -807,7 +807,7 @@ Le quantità sono **per persona**, in grammi salvo unità pz: porzione unica, le
 - **Lei:** Salsa yogurt con prezzemolo fresco tritato sopra.
 - **Lui:** Salsa yogurt liscia: è già fatta con menta secca, quindi va bene com'è dal contenitore.
 
-**Valori.** ~**605 kcal · 47 g P**
+**Valori.** ~**610 kcal · 48 g P**
 
 ---
 

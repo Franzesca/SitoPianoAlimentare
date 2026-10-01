@@ -63,12 +63,16 @@ ai semi) per non stare troppo sotto.
 ## La web app
 
 Viste: **Pasti** (catalogo per categoria o per base, senza giorni obbligati,
-con "carica la settimana tipo"), **Lista** (pasti scelti, media kcal/proteine
-vs target), **Dispensa → Spesa** (spunta cosa hai, poi la lista vera),
-**Basi** (le preparazioni domenicali scalate sul bisogno reale), **Scorte**
-(dispensa virtuale persistente), **Peso** (grafico, verdetto, azzera
-storico), **Wishlist**, **+ Nuova ricetta** (kcal/proteine calcolati dagli
-ingredienti, non stimati a mano).
+con "carica la settimana tipo"; le grammature seguono le porzioni impostate, e
+**CUCINA ORA** apre la ricetta a schermo intero con porzioni proprie e
+ingredienti spuntabili), **Lista** (pasti scelti, scarto kcal e proteine
+rispetto al target dei soli pasti scelti), **Dispensa → Spesa** (spunta cosa hai,
+poi la lista vera), **Basi** (le preparazioni domenicali scalate sul bisogno
+reale, con i testi riscalati sulla dose), **Scorte** (dispensa virtuale
+persistente: le voci accese compaiono già spuntate in Dispensa; quando cucini o
+prepari una base ti chiede cosa hai finito davvero), **Peso** (grafico,
+verdetto, azzera storico), **Wishlist**, **+ Nuova ricetta** (kcal/proteine
+calcolati dagli ingredienti, non stimati a mano).
 
 Account e dati condivisi: invariato rispetto a prima (Firebase Auth +
 Firestore per household).
@@ -77,10 +81,12 @@ Firestore per household).
 
 ```bash
 cd sorgenti
-node build.js       # riscrive ../cucina.html assemblando shell.html + i moduli
-node test.js         # verifiche automatiche: riferimenti, cicli, banda kcal, settimana tipo
-node genera-doc.js    # rigenera ../piano-pasti-definitivo.md e ../preparazione-domenicale.md da dati.js
+node build.js       # test → riscrive ../cucina.html → controlla la sintassi → rigenera i due .md
+node test.js         # solo i test
+node genera-doc.js    # solo i documenti (build.js lo fa già)
 ```
+
+`build.js` si ferma **prima** di scrivere `cucina.html` se un test fallisce.
 
 - [`sorgenti/dati.js`](sorgenti/dati.js) — **la fonte unica.** `ING` (ingredienti
   con kcal/proteine per 100 g), `BASI` (26 preparazioni domenicali, alcune con
@@ -100,10 +106,12 @@ node genera-doc.js    # rigenera ../piano-pasti-definitivo.md e ../preparazione-
 - [`sorgenti/shell.html`](sorgenti/shell.html) — HTML e CSS. `build.js`
   sostituisce nell'ordine i segnaposto `/*__FIREBASE_CONFIG__*/`, `/*__AUTH__*/`,
   `/*__DATI__*/`, `/*__MOTORE__*/`, `/*__APP__*/`.
-- [`sorgenti/test.js`](sorgenti/test.js) — controlla che ogni ingrediente/base
-  citato esista, che non ci siano cicli tra le basi, che ogni pasto sia dentro
-  banda ±15% dal target del suo tipo, e che la settimana tipo sia coerente col
-  target giornaliero.
+- [`sorgenti/test.js`](sorgenti/test.js) — riferimenti a ingredienti/basi, cicli,
+  banda ±15% di ogni pasto, settimana tipo (kcal ±100 e ≥ 100 g di proteine ogni
+  giorno con pranzo in piano), vincolo di lui (niente crudo fuori da `soloLei`),
+  rese plausibili (una base non rende più di ciò che pesano i suoi ingredienti),
+  testi delle basi senza numeri fissi, nomi ingrediente sicuri per Firestore,
+  logica delle Scorte, calcolo tollerante sugli ingredienti sconosciuti.
 - [`sorgenti/genera-doc.js`](sorgenti/genera-doc.js) — genera i due `.md`
   autorevoli da `dati.js`, senza ricalcoli a mano.
 
@@ -115,7 +123,7 @@ ingredienti con una tabella nutrizionale di riferimento (valori medi per
 controllato il calcolo due volte con motori indipendenti: una volta in
 JavaScript (le funzioni in `dati.js`, usate anche dall'app), una volta con
 una riscrittura in Python dello stesso algoritmo a partire dagli stessi dati
-grezzi — le 49 schede pasto coincidono esattamente tra i due.
+grezzi — le 48 schede pasto coincidono esattamente tra i due.
 
 **Limite dichiarato:** la tabella nutrizionale in `ING` sono valori medi da
 tabelle di composizione standard, non i dati dei prodotti che comprate
@@ -129,7 +137,9 @@ l'ingrediente non è nel piano.
 - **Non inventare valori nutrizionali.** Le kcal/proteine si calcolano da
   `dati.js`; se aggiungi un ingrediente nuovo, servono k (kcal/100 g) e p
   (proteine/100 g) da una fonte nutrizionale, non a occhio.
-- `test.js` verifica riferimenti, cicli e banda kcal: farlo passare prima di
-  dire che una modifica è finita.
+- `test.js` deve passare prima di dire che una modifica è finita (`node build.js`
+  lo lancia da solo).
+- Le Scorte **non cancellano ingredienti dalla lista**: decide la Dispensa. Vedi
+  `CLAUDE.md` per la logica completa.
 - `piano-pasti-definitivo.md` e `preparazione-domenicale.md` sono **generati**:
   non editarli a mano, editare `dati.js` e rilanciare `genera-doc.js`.

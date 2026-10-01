@@ -25,10 +25,13 @@ function costruisciIndici(BASI){
 /*  selezione: { pastoId: n }   n = numero di porzioni totali (entrambi insieme)
     modiBase:  { idBase: 'esatto' | 'intero' }
     scorte:    { ingredienti:{nome:true}, basi:{idBase:true} } — quello che hai
-               già in dispensa (dalla vista Scorte). Una base già in casa non
-               si ricalcola come "da fare"; un ingrediente già in casa non
-               pesa sulla spesa. Sostituibile in ogni momento: basta togliere
-               la spunta in Scorte per farla ricomparire.
+               già in casa (vista Scorte). Contano SOLO per le basi: una base
+               già pronta non si rifà e non porta in lista i suoi ingredienti.
+               Gli ingredienti freschi restano SEMPRE nel risultato, in
+               quantità piena: se uno è in Scorte lo decide la vista Dispensa
+               (lo mostra già spuntato, e solo quello che resta non spuntato
+               va nella Spesa). Così "ce l'ho" non cancella un ingrediente
+               dalla lista in silenzio, qualunque sia la quantità che serve.
     ritorna: {ing:{nome:qta}, basi:{id:{serve,produci}}, val:[kcal,p]}  */
 function calcola(selezione, modiBase, DATI, scorte){
   const {BASI, PASTI, ING} = DATI;
@@ -92,11 +95,6 @@ function calcola(selezione, modiBase, DATI, scorte){
       else add(n, q * f);
     });
   });
-
-  // un ingrediente fresco già segnato "ce l'ho" in Scorte non pesa sulla spesa
-  if (scorte && scorte.ingredienti){
-    Object.keys(scorte.ingredienti).forEach(n => { if (scorte.ingredienti[n]) delete ing[n]; });
-  }
 
   return {ing, basi, val, usoPasti};
 }

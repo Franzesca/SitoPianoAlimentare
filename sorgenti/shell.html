@@ -154,6 +154,15 @@ ol.c-passi{margin:0 0 0 24px;font-size:17px;line-height:1.6;color:var(--panna)}
 ol.c-passi li{margin-bottom:12px;padding-left:4px}
 ol.c-passi li::marker{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--curcuma)}
 
+/* ---------- dialog "cosa hai finito?" ---------- */
+#finito{position:fixed;inset:0;z-index:120;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55)}
+#finito.on{display:flex}
+.f-foglio{display:flex;flex-direction:column;width:100%;max-width:560px;max-height:88%;background:var(--pepe);
+  border:1px solid var(--bordo2);border-radius:18px 18px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom))}
+.f-foglio .sub{font-size:13px;margin:6px 0 0}
+.f-corpo{flex:1;overflow-y:auto;margin-top:8px}
+@media (min-width:700px){#finito{align-items:center}.f-foglio{border-radius:18px}}
+
 /* ---------- scheda pasto ---------- */
 .pasto{background:var(--pentola);border:1px solid var(--bordo);border-radius:var(--r);margin-top:11px;overflow:hidden;transition:border-color .2s}
 .pasto.sel{border-color:var(--accento)}
@@ -286,7 +295,7 @@ ol.passi li{margin-bottom:6px}
 @media print{
   body{background:#fff;color:#000;padding:0}
   body::before,header,nav,.seg,.riga-btn,.btn,.vuoto svg,#toast,.progress,
-  #extra-n,#extra-add,[data-delx],#cucina{display:none!important}
+  #extra-n,#extra-add,[data-delx],#cucina,#finito{display:none!important}
   .vista{display:none!important}.vista.on{display:block!important}
   .card,.rep{border-color:#ccc;background:#fff}
   .voce{border-bottom:1px solid #ddd}
@@ -446,7 +455,7 @@ ol.passi li{margin-bottom:6px}
   <section class="vista" id="v-scorte">
     <div class="eyebrow">Dispensa virtuale</div>
     <h1 class="display">Scorte</h1>
-    <p class="sub">Accendi quello che hai in casa. Le tre lettere accanto a ogni voce dicono quanto conta: <b>F</b>ondamentale blocca il consiglio se manca, <b>M</b> lo segnala soltanto, <b>O</b>pzionale non conta mai.</p>
+    <p class="sub">Accendi quello che hai in casa: in Dispensa lo ritrovi già spuntato (lo togli se ne hai poco) e non finisce nella spesa; una base accesa non va rifatta. Quando cucini un pasto o prepari una base ti chiedo cosa hai finito davvero. Le tre lettere accanto a ogni voce dicono quanto conta: <b>F</b>ondamentale blocca il consiglio se manca, <b>M</b> lo segnala soltanto, <b>O</b>pzionale non conta mai.</p>
     <div id="scorte-corpo"></div>
   </section>
 
@@ -537,6 +546,7 @@ ol.passi li{margin-bottom:6px}
 
 <div id="toast" role="status" aria-live="polite"></div>
 <div id="cucina"></div>
+<div id="finito"></div>
 </div>
 
 <script type="module">

@@ -1,225 +1,220 @@
 # DietaCosi
 
-Piano alimentare settimanale per una coppia, costruito su batch cooking domenicale,
-più la web app `cucina.html` che lo rende usabile.
+Piano alimentare settimanale per una coppia (autunno 2026), costruito su batch
+cooking domenicale, più la web app `cucina.html` che lo rende usabile in cucina.
 
 ## Il vincolo che spiega tutto
 
-Lui non tollera verdura e frutta crude o poco processate. La soluzione strutturale è il
-**soffritto lungo frullato** (verdure cotte 90 minuti e passate al mixer) e il principio
-**"una pentola, due finiture"**: nel piatto di lei le finiture crude (coriandolo, lime,
-cipolla rossa), in quello di lui le stesse note da salse cotte o frullate.
+Lui non tollera verdura e frutta crude o poco processate. La soluzione strutturale
+è il **soffritto lungo frullato** (verdure cotte a lungo e passate al mixer) e il
+principio **"una pentola, due finiture"**: nel piatto di lei le finiture crude
+(coriandolo, cipolla rossa, kimchi…), in quello di lui le stesse note da salse
+cotte o frullate. Le zuppe e creme sono frullate per tutti e due.
 
-**Dal 2026-08-20, porzione unica:** lui mangia le stesse grammature di lei — resta solo
-la differenza di consistenza (crudo per lei, cotto/frullato per lui), non più una
-differenza di quantità.
+**Porzione unica** (dal 2026-08-20): lui mangia le stesse grammature di lei, resta
+solo la differenza di consistenza.
 
-Target (piano autunno 2026): 1.250 kcal / ≥100 g proteine, uguale per entrambi — vedi `TARGET` in `dati.js`.
+**Target (piano autunno 2026): 1.250 kcal e ≥ 100 g di proteine al giorno**, uguale
+per entrambi — vedi `TARGET` in `dati.js`. Ripartizione: colazione 200 · pranzo 450 ·
+cena 600. 1.250 è il **pavimento**: non si scende sotto. Lui pranza fuori per lavoro
+(il suo reale è più alto); lei pranza da sola lunedì, mercoledì e venerdì, e quei
+pranzi sono i soli dove stanno le verdure crude (pasti con `crudo:true`).
 
 ## I file
 
 | File | Cos'è |
 |---|---|
-| `piano-pasti-definitivo.md` | **Fonte autorevole dei pasti.** 27 pasti, ingredienti divisi basi/fresco in grammi (porzione unica), procedure, varianti vincolo, stime kcal/proteine. |
-| `preparazione-domenicale.md` | **Fonte autorevole delle basi.** 14 preparazioni domenicali con rese e ingredienti crudi lordi, mappa pasti→basi, bilancio delle basi. |
-| `piano-alimentare-settimanale.md` | Prima versione, superata. Utile solo per fabbisogni, sostituzioni e taratura. |
-| `cucina.html` | **La web app attuale.** Generata da `sorgenti/`, non modificarla a mano. |
+| `piano-pasti-definitivo.md` | **Generato** da `dati.js` (`genera-doc.js`). Non editarlo a mano. |
+| `preparazione-domenicale.md` | **Generato** da `dati.js`: le basi con rese e procedure, la settimana tipo, il bilancio delle basi. Non editarlo a mano. |
+| `cucina.html` | **La web app.** Generata da `sorgenti/`: non editarla a mano. |
 | `sorgenti/` | I sorgenti di `cucina.html`. |
-| `piano-cucina.html` | Vecchia app ordinata per giorno, sui valori della prima versione. Backup, non toccare. |
-| `Cucina — piano settimanale.html` + `_files/` | Salvataggio da browser di `piano-cucina.html`. Non è una fonte. |
+| `piano-alimentare-settimanale.md`, `piano-cucina.html`, `Cucina — piano settimanale.html` + `_files/` | Piano e app di agosto 2026 (1.450 kcal). **Superati**, tenuti come backup: non toccarli e non prenderli come fonte. |
+| `firestore.rules` | Regole di sicurezza Firestore. Si pubblicano a mano sulla console Firebase. |
 
-## Come si lavora su cucina.html
-
-**Non editare `cucina.html`: è generato.** Modifica i sorgenti e ricompila.
+## Come si lavora
 
 ```bash
 cd sorgenti
-node build.js             # riscrive ../cucina.html
-node test.js              # verifiche incrociate contro i documenti
-node audit-nutrizionale.js   # stima kcal/proteine dagli ingredienti grezzi, pasto per pasto
+node build.js              # test → riscrive ../cucina.html → controlla la sintassi → rigenera i due .md
+node build.js --senza-test # solo per provare qualcosa al volo
+node test.js               # solo i test
 ```
 
-- `sorgenti/dati.js` — registro ingredienti (`ING`), le 14 basi (`BASI`), i 27 pasti (`PASTI`), i target. **È qui che si aggiungono o correggono pasti.**
-- `sorgenti/motore.js` — `calcola()`: esplode ricorsivamente le basi negli ingredienti crudi scalando sulla resa, e `formatta()` per le quantità.
-- `sorgenti/app.js` — tutta la UI: catalogo, lista, dispensa/spesa, basi, peso.
-- `sorgenti/auth.js` — login, registrazione, creazione/adesione a un household.
-- `sorgenti/firebase-config.js` — chiavi del progetto Firebase.
-- `sorgenti/shell.html` — struttura HTML e CSS. I segnaposto `/*__FIREBASE_CONFIG__*/`, `/*__AUTH__*/`, `/*__DATI__*/`, `/*__MOTORE__*/`, `/*__APP__*/` vengono sostituiti da build.js, in quest'ordine, dentro un unico `<script type="module">`.
-- `sorgenti/audit-nutrizionale.js` — non entra in `cucina.html`. Esplode ogni pasto nei
-  suoi ingredienti grezzi (via `calcola()`, lo stesso motore dell'app) e li confronta con
-  una tabella di riferimento nutrizionale (kcal/proteine per 100 g, valori standard tipo
-  USDA/CREA — non i dati dei prodotti realmente comprati). Segnala i pasti dove lo scarto
-  supera il 15% e 30 kcal. È un controllo di plausibilità, non una fonte: se un pasto
-  viene segnalato, il numero da correggere in `dati.js` deve comunque venire da una fonte
-  nutrizionale vera, non dalla stima di questo script.
+`build.js` si ferma **prima** di scrivere `cucina.html` se un test fallisce, e dà errore
+se lo script dentro `cucina.html` non è sintatticamente valido. Non pubblicare mai
+senza averlo lanciato: altrimenti i `.md` restano indietro rispetto ai dati.
+
+- `sorgenti/dati.js` — **fonte unica**: `ING` (ingredienti con kcal e proteine per
+  100 g), `BASI` (26 preparazioni domenicali), `PASTI` (48: 8 colazioni, 21 pranzi,
+  13 cene, 6 extra), `TARGET`, `SETTIMANA_TIPO`. kcal e proteine di basi e pasti
+  **si calcolano qui** (`valoriBase100`, `valoriPasto`), non si dichiarano.
+- `sorgenti/motore.js` — `calcola()`: esplode ricorsivamente le basi negli ingredienti
+  crudi scalando sulla resa; `formatta()` per le quantità; `testoBase()` per i testi
+  delle basi riscalati sulla dose.
+- `sorgenti/app.js` — tutta la UI e la sincronizzazione Firestore.
+- `sorgenti/auth.js`, `firebase-config.js` — login, household, chiavi del progetto.
+- `sorgenti/shell.html` — struttura HTML e CSS. I segnaposto `/*__FIREBASE_CONFIG__*/`,
+  `/*__AUTH__*/`, `/*__DATI__*/`, `/*__MOTORE__*/`, `/*__APP__*/` sono sostituiti da
+  `build.js`, in quest'ordine, dentro un unico `<script type="module">`.
+- `sorgenti/test.js`, `genera-doc.js`, `build.js` — strumenti, non entrano nell'app.
 
 ## Account e dati condivisi
 
-Dal 2026-08-20 l'app richiede login (Firebase Auth) e i dati di pianificazione
-(pasti scelti, dispensa, spesa, basi) sono condivisi in tempo reale tra i due
-account collegati allo stesso "household" — non più `localStorage` come unica
-fonte. Il peso resta personale, attribuito automaticamente a chi è loggato.
+L'app richiede login (Firebase Auth). I dati di pianificazione (pasti scelti, dispensa,
+spesa, basi, scorte) sono condivisi in tempo reale tra i due account dello stesso
+"household". Il peso resta personale, attribuito a chi è loggato.
 
-- `sorgenti/firebase-config.js` — chiavi del progetto Firebase (pubbliche per
-  design, la sicurezza è nelle regole Firestore).
-- `sorgenti/auth.js` — login, registrazione, creazione/adesione a un household
-  tramite codice condiviso, gestisce la schermata di accesso.
-- `firestore.rules` (radice del progetto) — regole di sicurezza: un utente legge/
-  scrive solo l'household a cui il proprio profilo è collegato, e scrive solo il
-  proprio peso. Da pubblicare manualmente sulla console Firebase dopo ogni modifica.
-- In `sorgenti/app.js`, `stato.sel/modiBase/hoGia/preso/extra` vivono ora su
-  Firestore (`households/{id}/stato/corrente`, sincronizzato con `onSnapshot`);
-  `stato.pesi` vive in `households/{id}/pesi` (una collezione, non un documento
-  solo); `stato.aperti/grp/filtro/passo` restano in `localStorage` — sono
-  preferenze del dispositivo, non dati da condividere.
-- `localStorage['dietacosi.v1']` (il vecchio formato) resta leggibile solo per la
-  migrazione una tantum al primo accesso — non è più scritto da nessuna parte.
+- `households/{id}/stato/corrente` — `sel`, `modiBase`, `hoGia`, `preso`, `extra`.
+  `households/{id}/scorte/corrente`, `importanza/corrente` — vedi sotto.
+  `households/{id}/pesi` — una collezione (un documento a misura).
+- `stato.aperti/grp/filtro/passo/pesoUid` restano in `localStorage`
+  (`dietacosi.ui.v1`): sono preferenze del dispositivo.
+- `households/{id}/pastiExtra/{pastoId}` — override su un pasto: `nome`, `tempo`,
+  `difficolta`, `nota`, `archiviato`, `ing` (lista completa, sostituisce quella di
+  `dati.js`), `proc`. `households/{id}/ricetteExtra/{autoId}` — ricette create da
+  zero, stessa forma di un pasto più `mia:true`. `households/{id}/wishlist/{autoId}`
+  — promemoria semplici, non entrano nel calcolo.
+- `PASTO_BY_ID`/`tuttiIPasti()` in `app.js` contengono sempre i pasti già fusi con gli
+  override (`pastoEffettivo()`), ricostruiti da `ricostruisciPastoById()` a ogni
+  cambiamento. Qualsiasi punto che legge un pasto deve prenderlo da lì, mai da
+  `PASTI` direttamente (eccezione: "Carica la settimana tipo", che usa gli id).
+  Un pasto che non si ricostruisce non ferma gli altri (try/catch per pasto).
 
-### Scorte, archiviazione, ricette proprie (dal 2026-08-21)
+### Vincoli da non rompere sulla sincronizzazione
 
-`PASTI`/`BASI`/`ING` restano statici da `dati.js` — le funzionalità sotto vivono
-tutte come override/aggiunte in Firestore, per household, e si fondono con i
-dati statici solo a runtime in `sorgenti/app.js`:
+- **Mai `setDoc` dell'intero documento** `stato/corrente`, `scorte/corrente`,
+  `importanza/corrente`. Le scritture passano da `syncStato()`/`syncScorte()`/
+  `syncImportanza()`, che aggiornano solo il campo cambiato (debounce 400 ms). Due
+  telefoni possono modificare nello stesso momento: un `setDoc` completo
+  cancellerebbe la modifica dell'altro. Le voci "fuori piano" (testo libero) usano
+  `FieldPath`/`arrayUnion`/`arrayRemove`: il testo può contenere un punto.
+- **Usare `aggiornaDoc()`, non `updateDoc()` diretto.** Gli household creati prima del
+  2026-08-21 non hanno `scorte/corrente` né `importanza/corrente`: `updateDoc` fallisce
+  con "not-found". `aggiornaDoc()` crea il documento vuoto (`setDoc(ref, {}, {merge:true})`,
+  innocuo se esiste già) e ripete la scrittura.
+- I nomi degli ingredienti finiscono in percorsi come `scorte.<nome>`: nessun `.`, `/`,
+  `[`, `]`, `*`, `~` nei nomi (lo verifica `test.js`).
 
-- `households/{id}/scorte/corrente` — dispensa virtuale (`ingredienti`/`basi`,
-  booleano acceso/spento). `households/{id}/importanza/corrente` — override
-  per-ingrediente del livello (`fondamentale`/`medio`/`opzionale`); default
-  calcolato dal reparto se non sovrascritto (`importanzaDefault()` in app.js).
-- `households/{id}/pastiExtra/{pastoId}` — override su un pasto esistente
-  (`nome`, `tempo`, `difficolta`, `nota`, `archiviato`, e ora anche `ing` —
-  lista ingredienti completa, sostituisce quella di `dati.js` — e `proc` —
-  procedura/modalità di cottura). Si applicano sia ai 27 pasti di `dati.js`
-  sia alle ricette proprie sotto, quindi anche una ricetta "mia" può avere un
-  override sopra. Un pasto senza documento qui usa `dati.js`/la ricetta
-  originale così com'è. **`ing`/`proc` non toccano `val` (kcal/proteine)**:
-  se cambi ingredienti in modo sostanziale, il kcal/proteine mostrato resta
-  quello dichiarato originariamente e può non essere più accurato — l'app non
-  lo ricalcola da sola (vedi "Non inventare valori nutrizionali" sotto).
-- `households/{id}/ricetteExtra/{autoId}` — ricette create da zero dal form
-  "+ Nuova ricetta" in Pasti. Stessa forma di un pasto di `dati.js` (`ing`,
-  `val`, ecc.) più `mia:true`. kcal è obbligatorio in quel form (proteine no)
-  per evitare che una ricetta senza dati nutrizionali sommi silenziosamente
-  zero nei totali della settimana.
-- `PASTO_BY_ID`/`tuttiIPasti()` in `app.js` contengono sempre i pasti (i 27 +
-  le ricette proprie) già fusi con `pastoEffettivo()` — ricostruiti da
-  `ricostruisciPastoById()` a ogni cambiamento di `pastiExtra`/`ricetteExtra`.
-  Così `calcola()`, la ricerca nel catalogo, `pastoFattibile()` ecc. vedono
-  automaticamente ingredienti/procedura modificati senza dover richiamare
-  `pastoEffettivo()` in ogni punto — se aggiungi un nuovo posto che legge un
-  pasto, prendilo da `tuttiIPasti()`/`PASTO_BY_ID`, non da `PASTI` diretto.
-  Usato ovunque al posto di `PASTI` diretto (catalogo, lista, calcolo,
-  Scorte) — eccetto "Carica la settimana intera", che resta scoped ai soli
-  27 originali.
-- `households/{id}/wishlist/{autoId}` — semplici promemoria (`nome`, `link`,
-  `nota`), non sono pasti veri: niente ingredienti, non entrano nel calcolo.
+## Logica Scorte · Dispensa · Spesa
+
+Le Scorte sono un sì/no ("ce l'ho"), **non tengono le quantità**. Da questo derivano
+le regole:
+
+- **Basi.** Una base accesa in Scorte è già pronta: `calcola()` la mette in modo
+  `salta`, non la rifà e non porta in lista i suoi ingredienti. Una scelta esplicita
+  ("quantità esatta"/"ricetta intera") in Basi vince sul default.
+- **Ingredienti.** `calcola()` **non** toglie mai un ingrediente perché è in Scorte: la
+  quantità piena resta nel risultato. Lo decide la Dispensa: `inCasa(n)` = spuntato
+  questa settimana (`stato.hoGia`) **oppure** acceso in Scorte. In Dispensa le voci
+  accese sono già spuntate ma visibili; togliendo la spunta (ne ho poco) si spegne
+  anche la scorta. La Spesa mostra solo ciò che non è `inCasa`.
+- **Comprare non accende le Scorte.** Spuntare un acquisto in Spesa tocca solo
+  `stato.preso`. (Prima accendeva la scorta: così un ingrediente comprato spariva dalle
+  liste di tutte le settimane dopo, qualunque fosse la quantità che serviva.)
+- **"L'ho cucinato" e "Ho preparato questa base"** non sanno cosa è finito: aprono il
+  dialog "Cosa hai finito?" (`apriFinito()`), con **tutto spento di default**. Elenca
+  solo le voci che risultano in casa e che contano (le "opzionali" no, i q.b. no). Si
+  tolgono dalle scorte solo quelle che spunti. Preparare una base la accende sempre.
+- Importanza: `fondamentale` blocca il consiglio "Puoi cucinare adesso" se manca,
+  `medio` lo segnala, `opzionale` non conta. Default: spezie e dispensa = opzionale,
+  basi e tutto il resto = fondamentale (`importanzaDefault()`).
 
 ## Regole del modello dati
 
-- Le quantità nei pasti sono **per persona**, in grammi salvo unità `pz` — lei e lui
-  mangiano la stessa quantità, salvo le finiture non condivise (vedi sotto).
-- Un ingrediente che è una base si scrive `{b:'soffritto', q:120}`; uno fresco
-  `{n:'Uova', q:2}`. Il nome deve esistere in `ING`, o `test.js` lo segnala.
-- Le finiture non condivise portano un flag: `soloLei:true` (finitura a crudo, resta
-  solo nel piatto di lei) o `soloLui:true` (equivalente cotto/frullato, resta solo nel
-  piatto di lui). Sono tre casi in tutto il piano: la salsa di peperoni e la cipolla
-  stufata (sostituti cotti per lui) e la vellutata dell'hot dog di sabato (unico pasto
-  dove il contorno resta strutturalmente diverso, non solo di consistenza). In
-  `calcola()`, un ingrediente con uno di questi due flag pesa su **metà** delle porzioni
-  selezionate (una finitura a testa in ogni coppia di porzioni), gli altri su tutte.
-- Le **basi annidate** si scrivono `['@soffritto', 600]` dentro `BASI`. Il chili contiene
-  soffritto+ceci+fagioli, il ragù contiene soffritto, l'hummus contiene ceci. `calcola()` le
-  risolve per profondità decrescente, quindi l'ordine nell'array non conta.
-- Ogni base ha un interruttore *quantità esatta* / *ricetta intera*. Default: "intero"
-  solo sotto i 200 g (non ha senso preparare 40 g di hummus).
-- Lo stato sta in `localStorage` sotto `dietacosi.v1`. `stato.sel[pastoId]` è un numero
-  (porzioni totali selezionate, non più `{lei,lui}`).
+- Le quantità nei pasti sono **per persona**, in grammi salvo unità `pz`.
+- Un ingrediente che è una base: `{b:'soffritto', q:120}`; uno fresco: `{n:'Uova', q:2}`.
+  Il nome deve esistere in `ING`, o `test.js` lo segnala.
+- `qb:true` = quanto basta (non pesa sulla lista). `crudo:true` su un pasto = pranzo da
+  sola, ha verdure crude e non ha versione per lui.
+- **`soloLei` / `soloLui`**: finitura non condivisa (cruda per lei, equivalente cotta
+  per lui). In `calcola()` pesa su **metà** delle porzioni selezionate. Un ingrediente
+  con `lei:true` in `ING` può comparire in un pasto non-`crudo` **solo** con `soloLei`, e
+  non può stare dentro una base: lo verifica `test.js`. `scalaIng()` in `app.js`
+  applica la stessa regola alla scheda pasto.
+- **Salvare "Modifica" non deve perdere `soloLei`/`soloLui`/`qb`**: il form non ha campi
+  per loro, quindi si ereditano dalla voce originale con lo stesso nome.
+- Basi annidate: `['@soffritto', 600]` dentro `BASI`. `calcola()` le risolve per
+  profondità decrescente, l'ordine nell'array non conta.
+- Ogni base ha un interruttore *quantità esatta* / *ricetta intera*. Default "intero" per
+  le basi con `interoDefault:true` (zuppe, panificati: si fanno a dose piena e si
+  congelano) e sotto i 200 g / metà resa; altrimenti "esatto".
+- `stato.sel[pastoId]` è un numero: porzioni **totali** selezionate (entrambi insieme).
 
-## Vincoli da non rompere
+## Testi delle basi riscalati sulla dose
 
-- **Non scrivere mai l'intero documento `stato/corrente` (o `scorte/corrente`/
-  `importanza/corrente`) con `setDoc`.** Le scritture condivise passano da
-  `syncStato()`/`syncScorte()`/`syncImportanza()` in `app.js`, che aggiornano
-  con `updateDoc` solo il campo puntato cambiato (es. `sel.<pastoId>`). Due
-  persone possono modificare l'household nello stesso momento da telefoni
-  diversi: un `setDoc` dell'intero oggetto sovrascriverebbe silenziosamente
-  la modifica dell'altra persona se il suo snapshot arriva durante la
-  finestra di debounce (400 ms). Le voci "fuori piano" (testo libero in
-  `extra`/`preso`) sono un'eccezione: usano `FieldPath`/`arrayUnion`/
-  `arrayRemove` invece di un percorso puntato stringa, perché il testo può
-  contenere un punto che verrebbe letto come chiave annidata.
-- **Non inventare valori nutrizionali.** Tutte le grammature e le stime vengono dai due
-  documenti autorevoli. Due eccezioni dichiarate: il pranzo di venerdì (`ven-pra`, pasta
-  al pomodoro con pollo sfilacciato, valori stimati) e l'hot dog di sabato (`sab-pra`,
-  dove il valore kcal/proteine mostrato è quello di lei ma il contorno di lui pesa un
-  po' di più, non quantificato) — entrambe scritte nella `nota` del pasto.
-- **Il pulled chicken ha margine comodo:** 640 g sfilacciati sulla settimana contro una
-  resa di 890 g (+250 g). Prima della porzione unica era a somma quasi zero; ora c'è
-  spazio.
-- **Il soffritto dipende da come si preparano chili e ragù.** Se si scalano entrambi alla
-  quantità esatta (il comportamento di default dell'app per basi sopra i 200 g), servono
-  ~3.070 g contro 3.300 g di resa: comodo. Se invece si preparano **entrambi** a ricetta
-  intera (per fare scorta in freezer, come descritto in preparazione-domenicale.md),
-  servono ~3.420 g: **120 g più della resa**, perché chili e ragù a dose piena prelevano
-  comunque 600 g + 400 g di soffritto fissi, indipendentemente da quanto verrà davvero
-  mangiato. Non fare entrambe le basi a ricetta intera nella stessa domenica senza
-  controllare il margine soffritto in app.
-- `test.js` verifica queste quantità contro i documenti. Falle passare prima di dire
-  che una modifica è finita.
-- **Le stime kcal/proteine dei pasti tendono a essere sottostimate**, non sovrastimate:
-  un audit contro una tabella nutrizionale di riferimento (`audit-nutrizionale.js`,
-  2026-08-21) su tutti i pasti trova la stima calcolata più alta di quella dichiarata
-  in 24 pasti su 26, mediamente +8% sull'intera settimana. I peggiori sono i piatti con
-  legumi secchi o cereali in dose piena (chana saag, harira, kofta, wrap di falafel,
-  lenticchie e polenta): il peso a crudo dei legumi pesa più di quanto sembri a occhio.
-  Se aggiungi un pasto nuovo con legumi/cereali/carne in quantità simili, gira lo script
-  prima di fidarti del numero.
+Nei `proc`/`nota` delle basi i numeri che dipendono dalla dose **non si scrivono a
+mano**: si usano segnaposto risolti da `testoBase(testo, base, f)` (f = grammi prodotti
+/ resa). Con "quantità esatta" per 2 porzioni la scheda dice "Dividi in 2 porzioni", non
+"in 5". `genera-doc.js` li risolve a f = 1. `test.js` fallisce se trova un numero fisso
+davanti a porzioni/pezzi/fette/pirottini/palline/muffin.
 
-## Testi delle basi riscalati sulla dose (dal 2026-10-01)
-
-Nei testi di `proc` e `nota` delle basi i numeri che dipendono dalla dose **non si
-scrivono a mano**: si usano segnaposto risolti da `testoBase(testo, base, f)` in
-`motore.js` (f = grammi prodotti / resa). Così con "quantità esatta" per 2 porzioni
-la scheda dice "Dividi in 2 porzioni", non "in 5". `genera-doc.js` li risolve a f = 1.
-
-- `{porz}` / `{porz:porzione|porzioni}` — porzioni che escono (da `porz`)
-- `{pezzi}` / `{pezzi:pezzo|pezzi}` — pezzi che escono (da `pezzi`)
-- `{resa}` — peso totale prodotto · `{g:N}` — N grammi della ricetta intera, riscalati
-- `{n:N}` — N oggetti contabili della ricetta intera, riscalati (minimo 1)
-- `{ridotta:testo}` / `{multipla:testo}` — frase mostrata solo sotto / sopra una dose intera
-
-I pesi *per porzione o per pezzo* ("da ~400 g", "da 50 g") restano fissi: non cambiano
-con la dose. Se aggiungi una base, usa i segnaposto per ogni conteggio nel testo.
+`{porz}` / `{porz:porzione|porzioni}` · `{pezzi}` / `{pezzi:pezzo|pezzi}` · `{resa}` ·
+`{g:N}` (N g della ricetta intera, riscalati) · `{n:N}` (oggetti contabili, minimo 1) ·
+`{ridotta:testo}` / `{multipla:testo}` (frase mostrata solo sotto / sopra una dose
+intera). I pesi per porzione o per pezzo ("da ~400 g") restano fissi.
 
 ## Scheda pasto e "Cucina ora"
 
-- Le grammature nella scheda pasto seguono il contatore `+`/`−` (porzioni in lista):
-  con 2 porzioni mostra le quantità per 2. Senza porzioni scelte, per 1.
-  `scalaIng()` in `app.js` applica la stessa regola di `calcola()` alle finiture
-  `soloLei`/`soloLui` (metà delle porzioni).
-- Il pulsante **CUCINA ORA** apre una vista a schermo intero (`#cucina`,
-  `renderCucina()`) con un contatore di porzioni **proprio**, che non tocca
-  `stato.sel`: default = porzioni in lista, o 2 se il pasto non è in lista.
-  Ingredienti spuntabili mentre li pesi, procedura divisa a passi per frase,
-  schermo tenuto acceso (Wake Lock, dove supportato), chiusura con X, Esc o il
-  tasto indietro del telefono (una voce in `history`). Stato solo locale.
+- Le grammature nella scheda seguono il contatore `+`/`−`: con 2 porzioni mostra le
+  quantità per 2; senza porzioni scelte, per 1.
+- **CUCINA ORA** apre `#cucina` (`renderCucina()`) a schermo intero con un contatore di
+  porzioni **proprio**, che non tocca `stato.sel` (default: porzioni in lista, o 2).
+  Ingredienti spuntabili, procedura a passi, schermo acceso (Wake Lock, dove
+  supportato), chiusura con X, Esc o tasto indietro. Stato solo locale.
 
-## Focaccine (rifatte il 2026-10-01)
+## Valori nutrizionali
 
-La prima versione usciva bassa e dura (idratazione 65% con 80% di integrale, dischi da
-1 cm, seconda lievitazione di 20 minuti). Ora: 200 g integrale + 90 g farina 0, 74% di
-acqua, 4 g di lievito secco con prova della schiuma, palline schiacciate a 2 cm, seconda
-lievitazione 40-45 minuti, 200 °C. La resa da cotte (464 g, ~58 g a pezzo) è **stimata**:
-se pesandole risulta diversa, correggi `resa` e la `q` dei tre pasti che usano le focaccine.
+- kcal e proteine si calcolano da `ING` (valori medi per 100 g, tabelle tipo CREA/USDA,
+  su prodotto crudo e al netto). **Non inventarli:** un ingrediente nuovo ha bisogno di
+  `k` e `p` da una fonte nutrizionale.
+- Margine di incertezza reale: 5-10% (taglio, marca, acquosità delle verdure).
+- **Ricette modificate o create dall'utente** usano `valoriPastoSafe()`: un ingrediente
+  non presente in `ING` non rompe niente, viene saltato e segnalato (`p.ignoti`); la
+  scheda mostra "≥" e un avviso, la Lista un "totale parziale". `valoriPasto()` resta
+  severa e serve ai test sul catalogo. Le ricette proprie ricalcolano i valori a ogni
+  caricamento (non usano più quello salvato alla creazione).
+- **Media e target nella Lista:** il confronto è con il target dei **soli pasti scelti**
+  (200/450/600 per tipo; gli extra non hanno target), così un pranzo fuori non fa
+  sembrare "in deficit" una settimana a posto. Le proteine sono normalizzate: "g P ogni
+  1.250 kcal". Rosso se le kcal sono oltre il 3% sotto il target dei pasti, o se le
+  proteine normalizzate sono sotto 100. La media per persona/giorno (una colazione =
+  un giorno-persona) è solo informativa.
+- Formattare le migliaia con `migliaia()`, non con `toLocaleString('it')`: in italiano
+  quest'ultimo non raggruppa i numeri a 4 cifre ("1250").
 
-Nota: `audit-nutrizionale.js` non gira più (si ferma alla riga 80) già da prima di queste
-modifiche — i valori ora sono calcolati direttamente da `ING` in `dati.js`.
+### Rese stimate, non misurate
 
-## Documenti `corrente` mancanti (fix 2026-10-01)
+Queste rese sono stime e vanno corrette alla prima pesata:
 
-Gli household creati prima del 2026-08-21 non hanno `scorte/corrente` né
-`importanza/corrente` (all'epoca `auth.js` creava solo `stato/corrente`), quindi ogni
-`updateDoc` falliva con "not-found". Tutte le scritture puntate passano ora da
-`aggiornaDoc()` in `app.js`: al primo "not-found" crea il documento vuoto con
-`setDoc(ref, {}, {merge:true})` (innocuo se esiste già) e ripete la stessa scrittura.
-Se aggiungi un nuovo documento condiviso aggiornato con percorsi puntati, usa
-`aggiornaDoc()`, non `updateDoc()` diretto.
+- **Focaccine** `resa:464` (~58 g a pezzo da cotte).
+- **Falafel** `resa:450`: 150 g di ceci secchi ammollati pesano circa il doppio (×2,1).
+  Porzione di 112 g = 3 pezzi da ~38 g. Con la resa vecchia (600) il wrap era sottostimato.
+- **Vellutata** `resa:1500`: non misurata. Probabilmente è sottostimata (le kcal del curry
+  di sovracosce sarebbero un po' più basse): stima prudente.
+
+Se pesando cambiano, correggi `resa` in `dati.js` e, se serve, la `q` dei pasti che usano
+la base: il test sulle rese e quello sulla banda kcal ti dicono se è coerente.
+
+## Altri vincoli
+
+- **Settimana tipo:** ogni giorno con pranzo in piano deve stare entro ±100 kcal dal
+  target e avere ≥ 100 g di proteine (`test.js`). I giorni con pranzo fuori (martedì e
+  giovedì) non sono valutabili sul totale.
+- **Il soffritto è il vincolo stretto.** Se più basi annidate (chili, ragù…) vengono
+  preparate a ricetta intera nella stessa domenica, prelevano comunque le loro dosi
+  fisse di soffritto: controlla il margine in Basi (l'app avvisa quando serve più di
+  una dose piena).
+- Il tempo attivo della domenica è limitato a 2 ore: Basi avvisa quando si sfora.
+
+## Storico dei fix
+
+- **2026-10-01** — Focaccine rifatte (idratazione 74%, lievito con prova della schiuma,
+  dischi da 2 cm, seconda lievitazione 40-45 min, 200 °C). Grammature della scheda pasto
+  per le porzioni impostate. Vista Cucina ora. Testi delle basi riscalati sulla dose.
+- **2026-10-01** — Errore di sincronizzazione "not-found" sulle Scorte: `aggiornaDoc()`.
+- **2026-10-01** — Revisione generale: logica Scorte/Dispensa/Spesa (vedi sopra), dialog
+  "Cosa hai finito?", ricette con ingredienti fuori registro, "Modifica" che perdeva
+  `soloLei`/`soloLui`/`qb`, media della Lista, falafel (resa impossibile) e salsa yogurt,
+  domenica della settimana tipo sotto le proteine minime (cena: burger → pollo al limone),
+  `build.js` che lancia test, sintassi e documenti, test nuovi. Rimosso
+  `audit-nutrizionale.js` (rotto e ormai circolare: i valori ora vengono da `ING`).

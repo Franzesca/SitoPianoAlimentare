@@ -15,8 +15,9 @@ const CAT_LABEL = Object.fromEntries(CATEGORIE);
 const tuttiIPasti = () => Object.values(PASTO_BY_ID);
 function ricostruisciPastoById(){
   const out = {};
-  PASTI.forEach(p => { out[p.id] = pastoEffettivo(p); });
-  stato.ricetteExtra.forEach(p => { out[p.id] = pastoEffettivo(p); });
+  const sicuro = p => { try { return pastoEffettivo(p); } catch(err){ console.error('Pasto non ricostruibile:', p.id, err); return p; } };
+  PASTI.forEach(p => { out[p.id] = sicuro(p); });
+  stato.ricetteExtra.forEach(p => { out[p.id] = sicuro(p); });
   PASTO_BY_ID = out;
 }
 
@@ -188,8 +189,13 @@ function pastoEffettivo(p){
   const ing = ex.ing || p.ing;
   // se gli ingredienti sono stati cambiati da "MODIFICA", kcal/proteine vanno
   // ricalcolati dagli ingredienti nuovi — altrimenti la scheda mostra ancora
-  // i valori di prima della modifica
-  const ricalcolare = !!ex.ing;
+  // i valori di prima della modifica. Lo stesso per le ricette proprie: il
+  // valore salvato alla creazione resterebbe vecchio se cambiano le basi.
+  // Il calcolo è tollerante: un ingrediente non presente nel registro non
+  // rompe niente, viene segnalato in `ignoti` e le kcal risultano parziali.
+  const ricalcolare = !!ex.ing || !!p.mia;
+  const lei = ricalcolare ? valoriPastoSafe({ing}, 'lei') : null;
+  const lui = ricalcolare ? valoriPastoSafe({ing}, 'lui') : null;
   return Object.assign({}, p, {
     nome: ex.nome || p.nome,
     tempo: ex.tempo != null ? ex.tempo : p.tempo,
@@ -198,8 +204,9 @@ function pastoEffettivo(p){
     proc: ex.proc != null ? ex.proc : p.proc,
     notaMia: ex.nota || '',
     archiviato: !!ex.archiviato,
-    val: ricalcolare ? valoriPasto({ing}, 'lei') : p.val,
-    valLui: ricalcolare ? valoriPasto({ing}, 'lui') : p.valLui
+    val: ricalcolare ? lei.val : p.val,
+    valLui: ricalcolare ? lui.val : p.valLui,
+    ignoti: ignotiIn(ing)
   });
 }
 
@@ -236,29 +243,77 @@ function pastoFattibile(p){
   }
   return mancano;
 }
+/* ---------- "cosa hai finito?" ----------
+   Le Scorte sono un sì/no, non tengono le quantità: quindi cucinare un pasto o
+   preparare una base NON può sapere da solo cosa è finito (una porzione di
+   crema di zucca non finisce la crema; un petto di pollo da 130 g non finisce
+   tutto il pollo comprato). Lo chiede, con tutto spento di default: si tolgono
+   dalle scorte solo le voci che spunti. Compaiono solo quelle che risultano
+   in casa e che contano (le "opzionali" no). */
+function vociFinibili(elenco){
+  const visti = new Set(), out = [];
+  elenco.forEach(({nome, isBase}) => {
+    if (!nome) return;
+    const chiave = (isBase ? 'b' : 'i') + '|' + nome;
+    if (visti.has(chiave)) return;
+    visti.add(chiave);
+    if (importanzaDi(nome, isBase) === 'opzionale') return;
+    if (!ceLho(nome, isBase)) return;
+    out.push({ chiave, isBase, label: isBase ? (BASE_BY_ID[nome] ? BASE_BY_ID[nome].nome : nome) : nome });
+  });
+  return out;
+}
+let finitoAperto = false;
+function apriFinito(sotto, voci){
+  const box = $('#finito');
+  box.innerHTML = `<div class="f-foglio" role="dialog" aria-modal="true" aria-labelledby="f-titolo">
+      <div class="card-t" id="f-titolo">Cosa hai finito?</div>
+      <p class="sub">${esc(sotto)}</p>
+      <div class="f-corpo"><div class="rep" style="margin-top:0">${voci.map(v => `<label class="voce">
+        <input type="checkbox" data-fvoce="${esc(v.chiave)}">
+        <span class="n">${esc(v.label)}${v.isBase ? '<small>base</small>' : ''}</span>
+      </label>`).join('')}</div></div>
+      <div class="riga-btn">
+        <button type="button" class="btn" data-fconferma>CONFERMA</button>
+        <button type="button" class="btn ghost" data-fchiudi>ANNULLA</button>
+      </div>
+    </div>`;
+  box.classList.add('on');
+  document.body.classList.add('bloccato');
+  finitoAperto = true;
+}
+function chiudiFinito(){
+  finitoAperto = false;
+  const box = $('#finito');
+  box.classList.remove('on'); box.innerHTML = '';
+  if (!cucina) document.body.classList.remove('bloccato');
+}
+function confermaFinito(){
+  const scelte = $$('#finito [data-fvoce]:checked').map(x => x.dataset.fvoce);
+  scelte.forEach(ch => {
+    const i = ch.indexOf('|');
+    impostaScorta(ch.slice(i + 1), ch.slice(0, i) === 'b', false);
+  });
+  chiudiFinito();
+  renderTutto();
+  toast(!scelte.length ? 'Scorte invariate'
+    : scelte.length === 1 ? '1 voce tolta dalle scorte' : scelte.length + ' voci tolte dalle scorte');
+}
 function segnaCucinato(pastoId){
   const p = PASTO_BY_ID[pastoId];
   if (!p) return;
-  (p.ing||[]).forEach(i => {
-    const isBase = !!i.b, nome = isBase ? i.b : i.n;
-    if (!nome || i.qb) return;
-    if (importanzaDi(nome, isBase) === 'opzionale') return;
-    impostaScorta(nome, isBase, false);
-  });
-  renderTutto();
-  toast('Scorte aggiornate');
+  const voci = vociFinibili((p.ing || []).filter(i => !i.qb).map(i => ({ nome: i.b || i.n, isBase: !!i.b })));
+  if (!voci.length){ toast('Nessuna scorta da aggiornare: di questo pasto non avevi segnato niente'); return; }
+  apriFinito('Hai cucinato «' + p.nome + '». Spunta solo quello che è finito del tutto: il resto resta nelle scorte.', voci);
 }
 function segnaBasePreparata(baseId){
   const b = BASE_BY_ID[baseId];
   if (!b) return;
   impostaScorta(baseId, true, true);
-  b.ing.forEach(([n]) => {
-    if (n[0] === '@') return;
-    if (importanzaDi(n, false) === 'opzionale') return;
-    impostaScorta(n, false, false);
-  });
   renderTutto();
-  toast('Scorte aggiornate');
+  const voci = vociFinibili(b.ing.map(([n]) => n[0] === '@' ? { nome: n.slice(1), isBase: true } : { nome: n, isBase: false }));
+  if (!voci.length){ toast('«' + b.nome + '» segnata come pronta'); return; }
+  apriFinito('«' + b.nome + '» è segnata come pronta. Spunta solo gli ingredienti che hai finito davvero: quelli che ti servono ancora (i ceci secchi dei falafel, per dire) restano.', voci);
 }
 
 function toast(m){
@@ -271,6 +326,7 @@ const nf = n => {
   const r = Math.round(n * 10) / 10;
   return String(r % 1 === 0 ? r : r.toFixed(1)).replace('.', ',');
 };
+const migliaia = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 const fmtG = g => g >= 1000 ? nf(Math.round(g/100)/10) + ' kg' : nf(Math.round(g)) + ' g';
 function fmtQ(i){
   if (i.qb) return 'q.b.';
@@ -297,6 +353,11 @@ function scalaIng(i, n){
   return Object.assign({}, i, {q: (i.q || 0) * molt});
 }
 const etichettaPorz = n => n === 1 ? '1 porzione' : n + ' porzioni';
+// In Dispensa un ingrediente è "in casa" se l'hai spuntato questa settimana
+// oppure se è acceso in Scorte. Le Scorte non lo tolgono dalla lista: lo
+// mostrano già spuntato, e togliendo la spunta (ne hai poco) si spegne anche
+// la scorta. Solo ciò che resta non spuntato va nella Spesa.
+const inCasa = n => !!stato.hoGia[n] || !!stato.scorte.ingredienti[n];
 // solo id ancora esistenti nel catalogo corrente (pasti rimossi/rinominati non contano)
 const nPorzioni = () => Object.entries(stato.sel).reduce((a,[id,n]) => a + (PASTO_BY_ID[id] ? (n||0) : 0), 0);
 const nPasti    = () => Object.entries(stato.sel).filter(([id,n]) => PASTO_BY_ID[id] && (n||0) > 0).length;
@@ -323,10 +384,15 @@ function vociSpesa(){                     // ingredienti ordinati per reparto
    ========================================================================== */
 function pillValori(p){
   const vLui = p.valLui || p.val;
+  const parz = p.ignoti && p.ignoti.length;
+  const pre = parz ? '≥ ' : '';
+  const tit = parz ? ` title="Parziale: ${esc(p.ignoti.join(', '))} non è nel registro ingredienti"` : '';
   const diff = Math.abs(p.val[0] - vLui[0]) >= 15;
-  if (!diff) return `<span class="pill"><b>${p.val[0]}</b> kcal · <b>${p.val[1]}</b> g P</span>`;
-  return `<span class="pill"><b>${p.val[0]}</b>/<b>${vLui[0]}</b> kcal · <b>${p.val[1]}</b>/<b>${vLui[1]}</b> g P</span>`;
+  if (!diff) return `<span class="pill"${tit}>${pre}<b>${p.val[0]}</b> kcal · <b>${p.val[1]}</b> g P</span>`;
+  return `<span class="pill"${tit}>${pre}<b>${p.val[0]}</b>/<b>${vLui[0]}</b> kcal · <b>${p.val[1]}</b>/<b>${vLui[1]}</b> g P</span>`;
 }
+const avvisoParziale = p => (p.ignoti && p.ignoti.length)
+  ? `<div class="avviso">Kcal e proteine sono parziali: ${esc(p.ignoti.join(', '))} non è nel registro ingredienti, quindi non è contato.</div>` : '';
 function schedaPasto(p){
   const n = stato.sel[p.id] || 0;
   const attivo = n > 0;
@@ -405,6 +471,7 @@ function schedaPasto(p){
     </div>
     <div class="p-corpo">
       ${p.desc ? `<p class="p-desc">${esc(p.desc)}</p>` : ''}
+      ${avvisoParziale(p)}
       ${righe ? `<div class="gram">
         <div class="intest"><span>Quantità per ${etichettaPorz(nMostra)}</span><span></span></div>
         ${righe}</div>` : ''}
@@ -488,21 +555,39 @@ function renderLista(){
   const colazioni = tuttiIPasti().filter(p => p.tipo === 'colazione')
     .reduce((a,p) => a + (stato.sel[p.id]||0), 0);
 
+  // Il confronto è col target dei SOLI pasti scelti (200 colazione · 450 pranzo ·
+  // 600 cena): un pranzo fuori non fa sembrare "in deficit" una settimana che
+  // è a posto. Le proteine sono normalizzate: quanti grammi faresti in una
+  // giornata da 1.250 kcal mangiando con questa proporzione.
   const mediaBlocco = () => {
+    let attesi = 0, pranzi = 0;
+    tuttiIPasti().forEach(p => {
+      const n = stato.sel[p.id] || 0;
+      if (!n) return;
+      if (TARGET.pasti[p.tipo]) attesi += n * TARGET.pasti[p.tipo];
+      if (p.tipo === 'pranzo') pranzi += n;
+    });
+    if (!attesi || !v[0]) return '';
+    const scarto = Math.round(v[0] - attesi), pct = (v[0] - attesi) / attesi * 100;
+    const pd = Math.round(v[1] / v[0] * TARGET.kcal);
+    const sotto = pct < -3;                     // oltre il 3% sotto il target dei pasti = sotto il pavimento
+    const colK = sotto ? 'var(--harissa)' : 'var(--pistacchio)';
+    const colP = pd < TARGET.p ? 'var(--harissa)' : 'var(--pistacchio)';
     const gg = colazioni;
-    if (!gg) return '';
-    const k = Math.round(v[0]/gg), p = Math.round(v[1]/gg);
-    const d = k - TARGET.kcal, dp = p - TARGET.p;
-    const col = x => x > 0 ? 'var(--harissa)' : 'var(--pistacchio)';
+    const mk = gg ? Math.round(v[0] / gg) : 0, mp = gg ? Math.round(v[1] / gg) : 0;
+    const segno = x => (x > 0 ? '+' : x < 0 ? '−' : '±');
     return `<div style="margin-top:9px">
-      <div class="eyebrow">Media su ${gg} giorn${gg===1?'o':'i'}</div>
+      <div class="eyebrow">Rispetto al target dei pasti scelti</div>
       <div class="mono" style="font-size:14px;margin-top:4px">
-        <b style="font-size:19px">${k}</b> kcal
-        <span style="color:${col(d)}">(${d>0?'+':''}${d} vs target)</span>
-        · <b style="font-size:19px">${p}</b> g P
-        <span style="color:${col(-dp)}">(${dp>0?'+':''}${dp})</span>
-      </div></div>`;
+        <b style="font-size:19px;color:${colK}">${segno(scarto)}${migliaia(Math.abs(scarto))}</b> kcal
+        <span style="color:${colK}">(${segno(pct)}${Math.abs(pct).toFixed(1).replace('.', ',')}%${sotto ? ' · sotto il pavimento' : ''})</span>
+        · <b style="font-size:19px;color:${colP}">${pd}</b> g P ogni ${migliaia(TARGET.kcal)} kcal
+        <span style="color:${colP}">(target ≥ ${TARGET.p})</span>
+      </div>
+      ${gg ? `<p class="sub" style="font-size:12.5px;margin-top:8px">Media per persona e per giorno: ${migliaia(mk)} kcal · ${mp} g P (${gg} colazioni in lista${pranzi < gg ? `, ${pranzi} pranzi: i giorni senza pranzo in lista abbassano la media, che per questo non si confronta col target di ${migliaia(TARGET.kcal)}` : ''}).</p>` : ''}
+    </div>`;
   };
+  const parziali = tuttiIPasti().filter(p => (stato.sel[p.id] || 0) > 0 && p.ignoti && p.ignoti.length);
 
   const gruppi = CATEGORIE.map(([k,label]) => [label, tuttiIPasti().filter(p => {
     return !p.archiviato && p.cat === k && (stato.sel[p.id]||0) > 0;
@@ -512,10 +597,11 @@ function renderLista(){
     <div class="card">
       <div class="eyebrow">Totale della lista</div>
       <div class="mono" style="margin-top:7px;font-size:14px">
-        <span style="color:var(--curcuma)">${Math.round(v[0]).toLocaleString('it')} kcal · ${Math.round(v[1])} g P</span>
+        <span style="color:var(--curcuma)">${migliaia(v[0])} kcal · ${Math.round(v[1])} g P</span>
       </div>
       ${mediaBlocco()}
-      <p class="sub" style="font-size:12.5px;margin-top:11px">La media giornaliera conta una colazione = un giorno. Target: ${TARGET.kcal} kcal / ${TARGET.p} g P (${TARGET.pasti.colazione} · ${TARGET.pasti.pranzo} · ${TARGET.pasti.cena}). 1.250 è il pavimento: non andare sotto, nelle settimane senza eccezioni conta un modulo +150.</p>
+      ${parziali.length ? `<div class="avviso" style="margin-top:11px">Totale parziale: ${parziali.map(p => esc(p.nome)).join(', ')} ha ingredienti senza valori nutrizionali.</div>` : ''}
+      <p class="sub" style="font-size:12.5px;margin-top:11px">Target per pasto: ${TARGET.pasti.colazione} · ${TARGET.pasti.pranzo} · ${TARGET.pasti.cena} kcal, ${migliaia(TARGET.kcal)} kcal e ${TARGET.p} g P al giorno. ${migliaia(TARGET.kcal)} è il pavimento: non andare sotto; nelle settimane senza eccezioni conta un modulo +150.</p>
       <div class="riga-btn">
         <button class="btn" data-vai="spesa">VAI ALLA DISPENSA</button>
         <button class="btn ghost" id="svuota-sel-2">SVUOTA</button>
@@ -535,7 +621,7 @@ function renderSpesa(){
   $('#spesa-eyebrow').textContent = dispensa ? 'Passo 2' : 'Passo 3';
   $('#spesa-titolo').textContent = dispensa ? 'Dispensa' : 'Spesa';
   $('#spesa-sub').textContent = dispensa
-    ? 'Tutto quello che serve per i pasti scelti, basi comprese. Spunta quello che hai già in casa: il resto diventa la lista della spesa.'
+    ? 'Tutto quello che serve per i pasti scelti, basi comprese. Spunta quello che hai già in casa (le voci accese in Scorte sono già spuntate: toglile se ne hai poco): il resto diventa la lista della spesa.'
     : 'Quello che non hai spuntato nella dispensa. Spunta mano a mano che lo metti nel carrello.';
 
   if (!nPasti()){
@@ -552,11 +638,11 @@ function renderSpesa(){
 
   let tot = 0, fatti = 0;
   const blocchi = vociSpesa().map(([k, label, righe]) => {
-    const vis = dispensa ? righe : righe.filter(([n]) => !stato.hoGia[n]);
+    const vis = dispensa ? righe : righe.filter(([n]) => !inCasa(n));
     if (!vis.length) return '';
     const conta = k !== 'nc';
     const voci = vis.map(([n, q]) => {
-      const spuntato = dispensa ? !!stato.hoGia[n] : !!stato.preso[n];
+      const spuntato = dispensa ? inCasa(n) : !!stato.preso[n];
       if (conta){ tot++; if (spuntato) fatti++; }
       const m = ING[n] || {};
       return `<label class="voce${spuntato?' fatta':''}">
@@ -602,11 +688,11 @@ function testoLista(){
   const d = new Date().toLocaleDateString('it-IT');
   let out = (stato.passo === 'dispensa' ? 'DISPENSA' : 'LISTA DELLA SPESA') + ' — ' + d + '\n';
   vociSpesa().forEach(([k, label, righe]) => {
-    const vis = stato.passo === 'dispensa' ? righe : righe.filter(([n]) => !stato.hoGia[n]);
+    const vis = stato.passo === 'dispensa' ? righe : righe.filter(([n]) => !inCasa(n));
     if (!vis.length || k === 'nc') return;
     out += '\n' + label.toUpperCase() + '\n';
     vis.forEach(([n, q]) => {
-      const done = stato.passo === 'dispensa' ? stato.hoGia[n] : stato.preso[n];
+      const done = stato.passo === 'dispensa' ? inCasa(n) : stato.preso[n];
       out += (done ? '[x] ' : '[ ] ') + n + ' — ' + formatta(n, q, ING) + '\n';
     });
   });
@@ -1052,6 +1138,7 @@ function renderCucina(){
       ${vincolo}
       ${p.nota ? `<div class="nota">${esc(p.nota)}</div>` : ''}
       ${p.notaMia ? `<div class="nota">📌 ${esc(p.notaMia)}</div>` : ''}
+      ${avvisoParziale(p)}
       <div class="riga-btn" style="margin-top:22px">
         <button type="button" class="btn" data-cucinato-chiudi="${p.id}">L'HO CUCINATO</button>
         <button type="button" class="btn ghost" data-cchiudi>CHIUDI</button>
@@ -1087,6 +1174,13 @@ document.addEventListener('click', e => {
   const nav = t.closest('nav button');        if (nav){ vaiA(nav.dataset.v); return; }
   const vai = t.closest('[data-vai]');        if (vai){ vaiA(vai.dataset.vai); return; }
   if (t.closest('#tema-switch')){ impostaTema(temaCorrente() === 'chiaro' ? 'scuro' : 'chiaro'); return; }
+
+  // --- dialog "cosa hai finito?" (sta sopra a tutto: gestito per primo)
+  if (finitoAperto){
+    if (t.closest('[data-fconferma]')){ confermaFinito(); return; }
+    if (t.id === 'finito' || t.closest('[data-fchiudi]')){ chiudiFinito(); return; }
+    return;
+  }
 
   // --- vista Cucina ora
   const apriC = t.closest('[data-cucina]');
@@ -1181,20 +1275,31 @@ document.addEventListener('click', e => {
     const nota = ($('#mo-nota').value || '').trim();
     const proc = ($('#mo-proc').value || '').trim();
     const ing = [];
+    // il form non ha campi per "solo lei", "solo lui" e "quanto basta": si
+    // ereditano dalla voce originale con lo stesso nome, altrimenti salvare
+    // una modifica li perderebbe in silenzio (la finitura cruda finirebbe
+    // anche nel piatto di lui, il q.b. sparirebbe)
+    const orig = (PASTO_BY_ID[id] || {}).ing || [];
     $$('#mo-ingredienti .ing-riga').forEach(riga => {
       const tipoRiga = riga.querySelector('.ing-tipo').value;
       const q = parseFloat(riga.querySelector('.ing-q').value) || 0;
-      if (!q) return;
+      let voce = null;
       if (tipoRiga === 'b'){
         const bSel = riga.querySelector('.ing-base');
-        if (bSel) ing.push({ b: bSel.value, q });
+        if (bSel) voce = { b: bSel.value };
       } else {
         const nSel = riga.querySelector('.ing-nome');
-        const nomeIngRiga = nSel ? nSel.value.trim() : '';
-        if (nomeIngRiga) ing.push({ n: nomeIngRiga, q });
+        const nm = nSel ? nSel.value.trim() : '';
+        if (nm) voce = { n: nm };
       }
+      if (!voce) return;
+      const o = orig.find(x => voce.b ? x.b === voce.b : x.n === voce.n);
+      if (o){ if (o.soloLei) voce.soloLei = true; if (o.soloLui) voce.soloLui = true; if (o.qb) voce.qb = true; }
+      if (!q && !voce.qb) return;
+      voce.q = q;
+      ing.push(voce);
     });
-    if (!ing.length){ toast('Serve almeno un ingrediente con quantità'); return; }
+    if (!ing.some(i => i.q)){ toast('Serve almeno un ingrediente con quantità'); return; }
     const campi = { ing };
     if (nome) campi.nome = nome;
     if (!isNaN(tempo)) campi.tempo = tempo;
@@ -1203,7 +1308,10 @@ document.addEventListener('click', e => {
     if (proc) campi.proc = proc;
     impostaPastoExtra(id, campi);
     modificaAperta = null;
-    toast('Modifiche salvate');
+    const ignoti = ignotiIn(ing);
+    toast(ignoti.length
+      ? 'Salvato, ma «' + ignoti.join('», «') + '» non è nel registro: kcal e proteine saranno parziali'
+      : 'Modifiche salvate');
     return;
   }
 
@@ -1266,21 +1374,17 @@ document.addEventListener('click', e => {
     if (!ing.length){ toast('Aggiungi almeno un ingrediente con quantità'); return; }
     // kcal/proteine calcolate dagli ingredienti (come i pasti del catalogo),
     // non chieste all'utente: evita di dover inventare una stima a mano
-    let k = 0, p = 0;
-    try {
-      ing.forEach(i => {
-        if (i.b){ const v = valoriBase100(i.b); k += v.k * i.q / 100; p += v.p * i.q / 100; }
-        else if (ING[i.n]) { const g = ING[i.n].u === 'pz' ? i.q * (ING[i.n].pz||0) : i.q; k += ING[i.n].k * g / 100; p += ING[i.n].p * g / 100; }
-      });
-    } catch(err){}
-    const ricetta = { nome, tipo, cat: zuppa ? 'zuppa' : tipo, val: [Math.round(k/5)*5, Math.round(p)], ing };
+    const calc = valoriPastoSafe({ ing }, 'lei');
+    const ricetta = { nome, tipo, cat: zuppa ? 'zuppa' : tipo, val: calc.val, ing };
     if (!isNaN(tempo)) ricetta.tempo = tempo;
     if (difficolta) ricetta.difficolta = difficolta;
     if (proc) ricetta.proc = proc;
     if (nota) ricetta.nota = nota;
     aggiungiRicetta(ricetta);
     svuotaFormRicetta();
-    toast('Ricetta aggiunta');
+    toast(calc.ignoti.length
+      ? 'Ricetta aggiunta, ma «' + calc.ignoti.join('», «') + '» non è nel registro: kcal e proteine parziali'
+      : 'Ricetta aggiunta');
     return;
   }
   const eliminaRic = t.closest('[data-elimina-ricetta]');
@@ -1332,7 +1436,8 @@ document.addEventListener('click', e => {
   if (t.closest('#reset-spunte')){
     const campo = stato.passo === 'dispensa' ? 'hoGia' : 'preso';
     if (stato.passo === 'dispensa') stato.hoGia = {}; else stato.preso = {};
-    renderSpesa(); syncStato(campo, {}); toast('Spunte azzerate'); return;
+    renderSpesa(); syncStato(campo, {});
+    toast(stato.passo === 'dispensa' ? 'Spunte azzerate (restano quelle accese in Scorte)' : 'Spunte azzerate'); return;
   }
   if (t.closest('#copia')){
     const testo = testoLista();
@@ -1372,41 +1477,54 @@ document.addEventListener('change', e => {
     return;
   }
 
+  const fv = e.target.closest('[data-fvoce]');
+  if (fv){ fv.closest('.voce').classList.toggle('fatta', fv.checked); return; }
+
   const sp = e.target.closest('[data-sp]');
   if (!sp) return;
   const n = sp.dataset.sp;
   const extra = n[0] === '+';
-  const campoMappa = stato.passo === 'dispensa' ? 'hoGia' : 'preso';
-  const mappa = stato.passo === 'dispensa' ? stato.hoGia : stato.preso;
-  if (sp.checked) mappa[n] = true; else delete mappa[n];
-  if (stato.passo === 'dispensa' && sp.checked) delete stato.preso[n];
-  if (stato.passo === 'spesa' && sp.checked && !extra) impostaScorta(n, false, true);
+  const dispensa = stato.passo === 'dispensa';
+  if (dispensa){
+    if (sp.checked){ stato.hoGia[n] = true; delete stato.preso[n]; }
+    else {
+      delete stato.hoGia[n];
+      // era acceso in Scorte: togliere la spunta vuol dire "ne ho poco / non ce l'ho"
+      if (stato.scorte.ingredienti[n]) impostaScorta(n, false, false);
+    }
+  } else {
+    // comprare NON accende le Scorte: le Scorte dicono cosa hai in casa adesso,
+    // le tieni tu (e "L'ho cucinato" ti chiede cosa hai finito)
+    if (sp.checked) stato.preso[n] = true; else delete stato.preso[n];
+  }
   sp.closest('.voce').classList.toggle('fatta', sp.checked);
   // ricalcola solo la barra, senza ridisegnare (per non perdere lo scroll)
   let tot = 0, fatti = 0;
-  const mp = stato.passo === 'dispensa' ? stato.hoGia : stato.preso;
   vociSpesa().forEach(([k, , righe]) => {
     if (k === 'nc') return;
-    (stato.passo === 'dispensa' ? righe : righe.filter(([x]) => !stato.hoGia[x]))
-      .forEach(([x]) => { tot++; if (mp[x]) fatti++; });
+    (dispensa ? righe : righe.filter(([x]) => !inCasa(x)))
+      .forEach(([x]) => { tot++; if (dispensa ? inCasa(x) : stato.preso[x]) fatti++; });
   });
-  if (stato.passo === 'spesa') stato.extra.forEach(x => { tot++; if (stato.preso['+'+x]) fatti++; });
+  if (!dispensa) stato.extra.forEach(x => { tot++; if (stato.preso['+'+x]) fatti++; });
   $('#barra').style.width = (tot ? Math.round(fatti/tot*100) : 0) + '%';
-  $('#b-spesa').textContent = stato.passo === 'dispensa' ? '' : String(tot - fatti || '');
+  $('#b-spesa').textContent = dispensa ? '' : String(tot - fatti || '');
   // le voci "fuori piano" sono testo libero: il nome può contenere un punto, che
   // in un percorso puntato verrebbe letto come una chiave annidata, quindi qui
   // serve FieldPath invece della stringa 'preso.'+n usata per gli ingredienti normali
   if (extra){
     if (HOUSEHOLD_ID) aggiornaDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), new FieldPath('preso', n), sp.checked ? true : deleteField())
       .catch(err => erroreSync('stato condiviso', err));
+  } else if (dispensa){
+    syncStato('hoGia.' + n, sp.checked ? true : deleteField());
+    if (sp.checked) syncStato('preso.' + n, deleteField());
   } else {
-    syncStato(campoMappa + '.' + n, sp.checked ? true : deleteField());
-    if (stato.passo === 'dispensa' && sp.checked) syncStato('preso.' + n, deleteField());
+    syncStato('preso.' + n, sp.checked ? true : deleteField());
   }
 });
 
 $('#cerca').addEventListener('input', () => renderCatalogo());
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && finitoAperto){ chiudiFinito(); return; }
   if (e.key === 'Escape' && cucina){ chiudiCucina(); return; }
   if (e.key === 'Enter' && e.target.id === 'extra-n'){ e.preventDefault(); $('#extra-add').click(); }
 });

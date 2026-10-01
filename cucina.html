@@ -1858,6 +1858,19 @@ function erroreSync(dove, err){
   toast('Errore di sincronizzazione (' + dove + '): ' + ((err && err.code) || err));
 }
 
+/* updateDoc fallisce con "not-found" se il documento non esiste ancora: succede
+   negli household creati prima che esistessero Scorte e Importanza (i loro
+   documenti `corrente` non sono mai stati creati). In quel caso il documento
+   si crea vuoto con setDoc(..., {}, {merge:true}) — che su un documento già
+   esistente non cambia niente, quindi non può cancellare una scrittura fatta
+   nel frattempo dall'altro telefono — e si ripete la stessa scrittura. */
+function aggiornaDoc(ref, ...args){
+  return updateDoc(ref, ...args).catch(err => {
+    if (!err || err.code !== 'not-found') throw err;
+    return setDoc(ref, {}, { merge: true }).then(() => updateDoc(ref, ...args));
+  });
+}
+
 /* ---------- sincronizzazione granulare: scrive solo i campi cambiati (mai l'intero
    documento), altrimenti un salvataggio in corso da un telefono può sovrascrivere
    una modifica appena fatta dall'altra persona sullo stesso household ---------- */
@@ -1870,7 +1883,7 @@ function creaSincronizzatore(collezione, dove, ritardo){
     clearTimeout(timer);
     timer = setTimeout(() => {
       const payload = sporchi; sporchi = {};
-      updateDoc(doc(db, 'households', HOUSEHOLD_ID, collezione, 'corrente'), payload)
+      aggiornaDoc(doc(db, 'households', HOUSEHOLD_ID, collezione, 'corrente'), payload)
         .catch(err => erroreSync(dove, err));
     }, ritardo);
   };
@@ -3092,7 +3105,7 @@ document.addEventListener('click', e => {
     if (!v) return;
     if (!stato.extra.includes(v)) stato.extra.push(v);
     $('#extra-n').value = ''; renderSpesa();
-    if (HOUSEHOLD_ID) updateDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), { extra: arrayUnion(v) })
+    if (HOUSEHOLD_ID) aggiornaDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), { extra: arrayUnion(v) })
       .catch(err => erroreSync('stato condiviso', err));
     return;
   }
@@ -3100,7 +3113,7 @@ document.addEventListener('click', e => {
   if (dx){ const i = +dx.dataset.delx; const v = stato.extra[i];
     delete stato.preso['+' + v];
     stato.extra.splice(i,1); renderSpesa();
-    if (HOUSEHOLD_ID) updateDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'),
+    if (HOUSEHOLD_ID) aggiornaDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'),
       'extra', arrayRemove(v), new FieldPath('preso', '+' + v), deleteField())
       .catch(err => erroreSync('stato condiviso', err));
     return; }
@@ -3173,7 +3186,7 @@ document.addEventListener('change', e => {
   // in un percorso puntato verrebbe letto come una chiave annidata, quindi qui
   // serve FieldPath invece della stringa 'preso.'+n usata per gli ingredienti normali
   if (extra){
-    if (HOUSEHOLD_ID) updateDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), new FieldPath('preso', n), sp.checked ? true : deleteField())
+    if (HOUSEHOLD_ID) aggiornaDoc(doc(db, 'households', HOUSEHOLD_ID, 'stato', 'corrente'), new FieldPath('preso', n), sp.checked ? true : deleteField())
       .catch(err => erroreSync('stato condiviso', err));
   } else {
     syncStato(campoMappa + '.' + n, sp.checked ? true : deleteField());

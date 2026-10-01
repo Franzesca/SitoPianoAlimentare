@@ -213,3 +213,13 @@ se pesandole risulta diversa, correggi `resa` e la `q` dei tre pasti che usano l
 
 Nota: `audit-nutrizionale.js` non gira più (si ferma alla riga 80) già da prima di queste
 modifiche — i valori ora sono calcolati direttamente da `ING` in `dati.js`.
+
+## Documenti `corrente` mancanti (fix 2026-10-01)
+
+Gli household creati prima del 2026-08-21 non hanno `scorte/corrente` né
+`importanza/corrente` (all'epoca `auth.js` creava solo `stato/corrente`), quindi ogni
+`updateDoc` falliva con "not-found". Tutte le scritture puntate passano ora da
+`aggiornaDoc()` in `app.js`: al primo "not-found" crea il documento vuoto con
+`setDoc(ref, {}, {merge:true})` (innocuo se esiste già) e ripete la stessa scrittura.
+Se aggiungi un nuovo documento condiviso aggiornato con percorsi puntati, usa
+`aggiornaDoc()`, non `updateDoc()` diretto.
